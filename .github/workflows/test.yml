@@ -1,0 +1,55 @@
+---
+name: Test
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# The workflow needs checks:write so the test reporter can publish a
+# first-class GitHub Check Run with parsed Bats/JUnit results.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Check and test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make bats shellcheck shfmt
+
+      - name: Run static checks
+        run: make check
+
+      - name: Run Bats tests
+        id: bats
+        continue-on-error: true
+        run: |
+          mkdir -p test-results
+          bats --formatter junit --output test-results tests/*.bats
+
+      - name: Publish Bats test results
+        uses: dorny/test-reporter@v1
+        permissions:
+          contents: read
+          checks: write
+
+        if: always()
+        with:
+          name: Bats tests
+          path: test-results/*.xml
+          reporter: java-junit
+          fail-on-error: false
+          fail-on-empty: true
+
+      - name: Fail if Bats failed
+        if: steps.bats.outcome == 'failure'
+        run: exit 1
