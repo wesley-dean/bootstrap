@@ -41,8 +41,8 @@ jobs:
         if: always()
         with:
           name: Bats tests
-          path: test-results/*.xml
-          reporter: java-junit
+          path: test-results/*.tap
+          reporter: tap
           fail-on-error: false
           fail-on-empty: true
 
