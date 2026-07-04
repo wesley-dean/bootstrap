@@ -16,7 +16,9 @@ jobs:
   test:
     name: Check and test
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: read
+      checks: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -38,10 +40,6 @@ jobs:
 
       - name: Publish Bats test results
         uses: dorny/test-reporter@v1
-        permissions:
-          contents: read
-          checks: write
-
         if: always()
         with:
           name: Bats tests
