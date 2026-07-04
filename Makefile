@@ -34,4 +34,4 @@ test:
 
 test-report:
 	mkdir -p $(TEST_RESULTS_DIR)
-	bats --formatter tap tests/*.bats > $(BATS_TAP)
+	bats --formatter junit tests/*.bats --output $(TEST_RESULTS_DIR) $(TEST_SCRIPTS)
