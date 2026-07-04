@@ -7,9 +7,11 @@ SHELL := /usr/bin/env bash
 
 SHELL_SCRIPTS := bootstrap.bash
 TEST_SCRIPTS := tests/*.bats
+TEST_RESULTS_DIR := test-results
+BATS_TAP := $(TEST_RESULTS_DIR)/bats.tap
 
-.PHONY: all check format test
-
+.PHONY: check format test test-report clean
+	:
 all: check test
 
 ##
@@ -29,3 +31,7 @@ format:
 #
 test:
 	bats $(TEST_SCRIPTS)
+
+test-report:
+	mkdir -p $(TEST_RESULTS_DIR)
+	bats --formatter tap tests/*.bats > $(BATS_TAP)

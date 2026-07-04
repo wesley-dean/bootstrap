@@ -34,9 +34,7 @@ jobs:
       - name: Run Bats tests
         id: bats
         continue-on-error: true
-        run: |
-          mkdir -p test-results
-          bats --formatter junit --output test-results tests/*.bats
+        run: make test-report
 
       - name: Publish Bats test results
         uses: dorny/test-reporter@v1
