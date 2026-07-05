@@ -34,4 +34,4 @@ test:
 
 test-report:
 	mkdir -p $(TEST_RESULTS_DIR)
-	bats --formatter junit tests/*.bats --output $(TEST_RESULTS_DIR) $(TEST_SCRIPTS)
+	bats --formatter junit $(TEST_SCRIPTS) > $(TEST_RESULTS_DIR)/bats.xml
