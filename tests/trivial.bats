@@ -106,11 +106,31 @@ setup() {
     [[ "$output" == *"unsupported option: --not-a-real-option"* ]]
 }
 
-@test "generated bootstrap.bash requires dry-run before planning manifest arguments" {
-    run "$SCRIPT" packages.txt
+@test "generated bootstrap.bash executes manifest arguments without dry-run" {
+    manifest="${BATS_TEST_TMPDIR}/packages.txt"
+    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    mkdir -p "$fake_bin"
 
-    [ "$status" -eq 64 ]
-    [[ "$output" == *"manifest planning currently requires --dry-run"* ]]
+    printf 'git\n' >"$manifest"
+
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${APT_GET_LOG}"
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$log_file" "$SCRIPT" "$manifest"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Execution results:"* ]]
+    [[ "$output" == *"package installation completed"* ]]
+    [ "$(cat "$log_file")" = "install -y git" ]
 }
 
 @test "generated bootstrap.bash requires help to be used alone" {

@@ -48,7 +48,7 @@ Options:
   --quiet    Suppress non-essential output.
 
 Arguments:
-  manifest   Optional package manifest path. Planning currently requires --dry-run.
+  manifest   Optional package manifest path. Without --dry-run, resolved actions are executed.
 HELP_TEXT
 }
 
@@ -85,8 +85,8 @@ bootstrap_print_usage_error() {
 #
 # The parser records option state in global variables for later roadmap phases.
 # At this stage, the flags are accepted and made available to the runtime, but
-# package manifests, execution plans, and package-manager operations are still
-# intentionally out of scope.
+# manifest planning and execution are handled after parsing so argument
+# validation remains separate from pipeline orchestration.
 #
 # @param ... Command-line arguments supplied by the user.
 # @retval 0 All arguments were parsed successfully.
@@ -523,6 +523,184 @@ bootstrap_run_dry_run_plan() {
 }
 
 ###############################################################################
+# @fn bootstrap_print_execution_result(status, exit_code, action, manager, package, message)
+# @brief Prints one human-readable execution result line.
+#
+# @details
+# Execution Results are the final records in the Phase 4 pipeline.  This renderer
+# keeps user-facing reporting separate from executor behavior so executors can
+# remain focused on performing resolved work and returning structured outcomes.
+#
+# @param status Execution Result status such as `success`, `already-satisfied`, or `failed`.
+# @param exit_code Process-style exit code attached to the result.
+# @param action Resolved Action type that was executed.
+# @param manager Backend or package manager that handled the action.
+# @param package Package name associated with the result.
+# @param message Human-readable execution result message.
+# @returns Human-readable execution output on standard output.
+# @retval 0 The Execution Result was printed successfully.
+###############################################################################
+bootstrap_print_execution_result() {
+  local action
+  local exit_code
+  local manager
+  local message
+  local package
+  local status
+
+  status="$1"
+  exit_code="$2"
+  action="${3:-}"
+  manager="${4:-}"
+  package="${5:-}"
+  message="${6:-}"
+
+  : "${exit_code}"
+
+  case "${status}" in
+  already-satisfied)
+    printf '  - %s %s package %s: %s\n' \
+      "${manager}" \
+      "${action}" \
+      "${package}" \
+      "${message}"
+    ;;
+  success)
+    printf '  - %s %s package %s: %s\n' \
+      "${manager}" \
+      "${action}" \
+      "${package}" \
+      "${message}"
+    ;;
+  failed)
+    printf '  - %s %s package %s failed: %s\n' \
+      "${manager}" \
+      "${action}" \
+      "${package}" \
+      "${message}"
+    ;;
+  *)
+    printf '  - %s %s package %s: %s\n' \
+      "${manager:-unknown}" \
+      "${action:-unknown}" \
+      "${package:-unknown}" \
+      "${message:-unknown result}"
+    ;;
+  esac
+}
+
+###############################################################################
+# @fn bootstrap_print_execution_results(result_file)
+# @brief Prints a human-readable execution summary from Execution Result records.
+#
+# @details
+# This helper renders the structured records emitted by the executor.  It keeps
+# output formatting outside the executor so executor tests can focus on record
+# contracts while CLI tests focus on user-visible behavior.
+#
+# @param result_file File containing pipe-delimited Execution Result records.
+# @returns Human-readable execution output on standard output.
+# @retval 0 Execution Results were printed successfully.
+###############################################################################
+bootstrap_print_execution_results() {
+  local action
+  local exit_code
+  local failed_count
+  local manager
+  local message
+  local package
+  local result_file
+  local status
+  local total_count
+
+  result_file="$1"
+  failed_count=0
+  total_count=0
+
+  printf 'Execution results:\n'
+
+  while IFS='|' read -r status exit_code action manager package message || [[ -n "${status:-}" ]]; do
+    total_count=$((total_count + 1))
+    if [[ "${status}" == "failed" ]]; then
+      failed_count=$((failed_count + 1))
+    fi
+
+    bootstrap_print_execution_result \
+      "${status}" \
+      "${exit_code}" \
+      "${action:-}" \
+      "${manager:-}" \
+      "${package:-}" \
+      "${message:-}"
+  done <"${result_file}"
+
+  if ((total_count == 0)); then
+    printf '  - no actions executed\n'
+  fi
+
+  printf 'Summary: %s action(s) executed; %s failure(s).\n' \
+    "${total_count}" \
+    "${failed_count}"
+}
+
+###############################################################################
+# @fn bootstrap_run_execution_plan()
+# @brief Parses, plans, resolves, executes, and prints execution results.
+#
+# @details
+# This path is the first CLI integration that performs resolved work.  It uses
+# the same parser, planner, and resolver pipeline as dry-run mode, then streams
+# Resolved Actions into the executor.
+#
+# Dry-run mode continues to stop before this function.  That keeps read-only
+# inspection and execution separated by a clear CLI boundary.
+#
+# @retval 0 The manifest was executed successfully or no actions were needed.
+# @retval 65 The manifest could not be parsed or planned.
+# @retval 69 The planned actions could not be resolved on this system.
+# @retval 70 At least one resolved action failed during execution.
+###############################################################################
+bootstrap_run_execution_plan() {
+  local action_file
+  local manifest_path
+  local resolved_file
+  local result_file
+  local status
+
+  manifest_path="$(bootstrap_context_get_manifest_path)"
+  action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-plan.XXXXXX")"
+  resolved_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-resolved.XXXXXX")"
+  result_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-results.XXXXXX")"
+
+  if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
+    :
+  else
+    status="$?"
+    rm -f "${action_file}" "${resolved_file}" "${result_file}"
+    return "${status}"
+  fi
+
+  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+    :
+  else
+    status="$?"
+    rm -f "${action_file}" "${resolved_file}" "${result_file}"
+    return "${status}"
+  fi
+
+  if bootstrap_executor_execute_resolved_actions <"${resolved_file}" >"${result_file}"; then
+    status="${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+  fi
+
+  bootstrap_print_execution_results "${result_file}"
+
+  rm -f "${action_file}" "${resolved_file}" "${result_file}"
+  return "${status}"
+}
+
+###############################################################################
 # @fn main(...)
 # @brief Runs the bootstrap command-line entry point.
 #
@@ -567,12 +745,12 @@ main() {
   bootstrap_parse_arguments "$@" || return "$?"
 
   if bootstrap_context_has_manifest_path; then
-    if ! bootstrap_context_is_dry_run; then
-      bootstrap_print_usage_error "manifest planning currently requires --dry-run"
-      return "${BOOTSTRAP_EXIT_USAGE}"
+    if bootstrap_context_is_dry_run; then
+      bootstrap_run_dry_run_plan
+      return "$?"
     fi
 
-    bootstrap_run_dry_run_plan
+    bootstrap_run_execution_plan
     return "$?"
   fi
 
