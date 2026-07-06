@@ -41,8 +41,11 @@ setup() {
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Usage:"* ]]
-    [[ "$output" == *"bootstrap.bash --help"* ]]
-    [[ "$output" == *"bootstrap.bash --version"* ]]
+    [[ "$output" == *"bootstrap.bash [options]"* ]]
+    [[ "$output" == *"--dry-run"* ]]
+    [[ "$output" == *"--explain"* ]]
+    [[ "$output" == *"--verbose"* ]]
+    [[ "$output" == *"--quiet"* ]]
 }
 
 @test "generated bootstrap.bash prints version metadata" {
@@ -54,9 +57,72 @@ setup() {
     [[ "$output" == *"commit="* ]]
 }
 
+@test "generated bootstrap.bash accepts dry-run option" {
+    run "$SCRIPT" --dry-run
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "bootstrap.bash: not yet implemented" ]
+}
+
+@test "generated bootstrap.bash accepts explain option" {
+    run "$SCRIPT" --explain
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "bootstrap.bash: not yet implemented" ]
+}
+
+@test "generated bootstrap.bash accepts verbose option" {
+    run "$SCRIPT" --verbose
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "bootstrap.bash: not yet implemented" ]
+}
+
+@test "generated bootstrap.bash accepts combined operational options" {
+    run "$SCRIPT" --dry-run --explain --verbose
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "bootstrap.bash: not yet implemented" ]
+}
+
+@test "generated bootstrap.bash quiet option suppresses placeholder output" {
+    run "$SCRIPT" --quiet
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "generated bootstrap.bash rejects verbose and quiet together" {
+    run "$SCRIPT" --verbose --quiet
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"--verbose and --quiet cannot be used together"* ]]
+}
+
 @test "generated bootstrap.bash rejects unsupported options" {
     run "$SCRIPT" --not-a-real-option
 
     [ "$status" -eq 64 ]
     [[ "$output" == *"unsupported option: --not-a-real-option"* ]]
+}
+
+@test "generated bootstrap.bash rejects unexpected positional arguments" {
+    run "$SCRIPT" packages.txt
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"unexpected argument: packages.txt"* ]]
+}
+
+@test "generated bootstrap.bash requires help to be used alone" {
+    run "$SCRIPT" --help --dry-run
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"--help does not accept additional arguments"* ]]
+}
+
+@test "generated bootstrap.bash requires version to be used alone" {
+    run "$SCRIPT" --version --dry-run
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"--version does not accept additional arguments"* ]]
 }
