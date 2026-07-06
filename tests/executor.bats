@@ -1,8 +1,11 @@
 #!/usr/bin/env bats
 
+load 'helpers'
+
 setup() {
     REPO_ROOT="${BATS_TEST_DIRNAME}/.."
     SCRIPT="${REPO_ROOT}/dist/bootstrap.bash"
+    TEST_TMPDIR="$(bootstrap_test_tmpdir)"
 }
 
 @test "execution result constructor creates pipe-delimited records" {
@@ -13,8 +16,8 @@ setup() {
 }
 
 @test "executor skips apt-get when apt package is already installed" {
-    fake_bin="${BATS_TEST_TMPDIR}/bin"
-    apt_log="${BATS_TEST_TMPDIR}/apt-get.log"
+    fake_bin="${TEST_TMPDIR}/bin"
+    apt_log="${TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
     cat >"${fake_bin}/dpkg-query" <<'STUB'
 #!/usr/bin/env bash
@@ -36,8 +39,8 @@ STUB
 }
 
 @test "executor invokes apt-get for missing apt packages" {
-    fake_bin="${BATS_TEST_TMPDIR}/bin"
-    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    fake_bin="${TEST_TMPDIR}/bin"
+    log_file="${TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
     cat >"${fake_bin}/dpkg-query" <<'STUB'
 #!/usr/bin/env bash
@@ -58,7 +61,7 @@ STUB
 }
 
 @test "executor preserves package identity in apt failure results" {
-    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    fake_bin="${TEST_TMPDIR}/bin"
     mkdir -p "$fake_bin"
     cat >"${fake_bin}/dpkg-query" <<'STUB'
 #!/usr/bin/env bash
@@ -77,8 +80,8 @@ STUB
 }
 
 @test "executor reports privilege failure before apt-get runs" {
-    fake_bin="${BATS_TEST_TMPDIR}/bin"
-    apt_log="${BATS_TEST_TMPDIR}/apt-get.log"
+    fake_bin="${TEST_TMPDIR}/bin"
+    apt_log="${TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
     cat >"${fake_bin}/dpkg-query" <<'STUB'
 #!/bin/sh
