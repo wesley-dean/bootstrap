@@ -71,7 +71,7 @@ bootstrap_print_usage_error() {
   message="$1"
 
   printf 'bootstrap.bash: %s\n' "${message}" >&2
-  printf 'Try `bootstrap.bash --help` for usage.\n' >&2
+  printf "Try 'bootstrap.bash --help' for usage.\n" >&2
 }
 
 ###############################################################################

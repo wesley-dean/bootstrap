@@ -26,6 +26,7 @@
 # Exit status used when the current system cannot resolve a requested action.
 ###############################################################################
 
+# shellcheck disable=SC2034
 BOOTSTRAP_EXIT_SUCCESS=0
 BOOTSTRAP_EXIT_USAGE=64
 BOOTSTRAP_EXIT_MANIFEST=65

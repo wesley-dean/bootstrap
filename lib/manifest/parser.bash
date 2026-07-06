@@ -1,4 +1,8 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2094
+# The manifest parser reads manifest files but never writes to them. ShellCheck
+# cannot infer that helper functions called inside redirected loops are read-only.
+
 ###############################################################################
 # @file lib/manifest/parser.bash
 # @brief Parses package manifests into a normalized internal representation.
