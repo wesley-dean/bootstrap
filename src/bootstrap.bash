@@ -604,26 +604,49 @@ bootstrap_print_execution_result() {
 ###############################################################################
 bootstrap_print_execution_results() {
   local action
+  local already_satisfied_count
   local exit_code
   local failed_count
   local manager
   local message
+  local not_executed_count
   local package
   local result_file
   local status
+  local success_count
   local total_count
+  local unknown_count
 
   result_file="$1"
+  already_satisfied_count=0
   failed_count=0
+  not_executed_count=0
+  success_count=0
   total_count=0
+  unknown_count=0
 
   printf 'Execution results:\n'
 
   while IFS='|' read -r status exit_code action manager package message || [[ -n "${status:-}" ]]; do
     total_count=$((total_count + 1))
-    if [[ "${status}" == "failed" ]]; then
+
+    case "${status}" in
+    already-satisfied)
+      already_satisfied_count=$((already_satisfied_count + 1))
+      ;;
+    failed)
       failed_count=$((failed_count + 1))
-    fi
+      ;;
+    not-executed)
+      not_executed_count=$((not_executed_count + 1))
+      ;;
+    success)
+      success_count=$((success_count + 1))
+      ;;
+    *)
+      unknown_count=$((unknown_count + 1))
+      ;;
+    esac
 
     bootstrap_print_execution_result \
       "${status}" \
@@ -638,9 +661,13 @@ bootstrap_print_execution_results() {
     printf '  - no actions executed\n'
   fi
 
-  printf 'Summary: %s action(s) executed; %s failure(s).\n' \
-    "${total_count}" \
-    "${failed_count}"
+  printf 'Summary:\n'
+  printf '  total:             %s\n' "${total_count}"
+  printf '  already satisfied: %s\n' "${already_satisfied_count}"
+  printf '  installed:         %s\n' "${success_count}"
+  printf '  failed:            %s\n' "${failed_count}"
+  printf '  not executed:      %s\n' "${not_executed_count}"
+  printf '  unknown:           %s\n' "${unknown_count}"
 }
 
 ###############################################################################
