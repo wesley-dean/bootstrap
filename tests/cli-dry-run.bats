@@ -1,9 +1,12 @@
 #!/usr/bin/env bats
 
+load 'helpers'
+
 setup() {
     REPO_ROOT="${BATS_TEST_DIRNAME}/.."
     SCRIPT="${REPO_ROOT}/dist/bootstrap.bash"
-    WORK_DIR="${BATS_TEST_TMPDIR}/cli-dry-run"
+    TEST_TMPDIR="$(bootstrap_test_tmpdir)"
+    WORK_DIR="${TEST_TMPDIR}/cli-dry-run"
     mkdir -p "$WORK_DIR"
 }
 

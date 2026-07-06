@@ -1,8 +1,11 @@
 #!/usr/bin/env bats
 
+load 'helpers'
+
 setup() {
     REPO_ROOT="${BATS_TEST_DIRNAME}/.."
     SCRIPT="${REPO_ROOT}/dist/bootstrap.bash"
+    TEST_TMPDIR="$(bootstrap_test_tmpdir)"
 }
 
 @test "root bootstrap scaffold has been removed" {
@@ -107,9 +110,9 @@ setup() {
 }
 
 @test "generated bootstrap.bash executes manifest arguments without dry-run" {
-    manifest="${BATS_TEST_TMPDIR}/packages.txt"
-    fake_bin="${BATS_TEST_TMPDIR}/bin"
-    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    manifest="${TEST_TMPDIR}/packages.txt"
+    fake_bin="${TEST_TMPDIR}/bin"
+    log_file="${TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
 
     cat >"${fake_bin}/sudo" <<'STUB'
