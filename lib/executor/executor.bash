@@ -100,61 +100,6 @@ bootstrap_executor_execute_resolved_action() {
 }
 
 ###############################################################################
-# @fn bootstrap_executor_execute_apt_install_package(package, operator, version)
-# @brief Executes one APT package installation request.
-#
-# @details
-# This helper is the first concrete executor backend.  It receives a package
-# name from an already-resolved action and delegates package installation to
-# apt-get.
-#
-# Version constraints remain attached to records for future backend-specific
-# interpretation, but they are not enforced in this first APT executor slice.
-# That keeps the patch focused on establishing execution of a resolved package
-# action without introducing package-version semantics prematurely.
-#
-# @param package Package name selected by the manifest, planner, and resolver pipeline.
-# @param operator Optional version constraint operator, currently preserved but not enforced.
-# @param version Optional version constraint value, currently preserved but not enforced.
-# @returns An Execution Result record on standard output.
-# @retval 0 The APT command completed successfully.
-# @retval 70 The APT command failed.
-###############################################################################
-bootstrap_executor_execute_apt_install_package() {
-  local package
-  local operator
-  local status
-  local version
-
-  package="$1"
-  operator="${2:-}"
-  version="${3:-}"
-
-  : "${operator}" "${version}"
-
-  if apt-get install -y "${package}" >/dev/null; then
-    bootstrap_execution_result_create \
-      'success' \
-      "${BOOTSTRAP_EXIT_SUCCESS}" \
-      'install-package' \
-      'apt' \
-      "${package}" \
-      'package installation completed'
-    return "${BOOTSTRAP_EXIT_SUCCESS}"
-  else
-    status="$?"
-    bootstrap_execution_result_create \
-      'failed' \
-      "${BOOTSTRAP_EXIT_EXECUTION}" \
-      'install-package' \
-      'apt' \
-      "${package}" \
-      "apt-get exited with status ${status}"
-    return "${BOOTSTRAP_EXIT_EXECUTION}"
-  fi
-}
-
-###############################################################################
 # @fn bootstrap_executor_execute_resolved_actions()
 # @brief Executes Resolved Actions from standard input.
 #
