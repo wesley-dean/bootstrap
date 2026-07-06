@@ -18,7 +18,11 @@
 #
 # @var BOOTSTRAP_EXIT_USAGE
 # Exit status used when command-line input is unsupported or invalid.
+#
+# @var BOOTSTRAP_EXIT_MANIFEST
+# Exit status used when manifest input cannot be read or parsed.
 ###############################################################################
 
 BOOTSTRAP_EXIT_SUCCESS=0
 BOOTSTRAP_EXIT_USAGE=64
+BOOTSTRAP_EXIT_MANIFEST=65
