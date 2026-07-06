@@ -4,10 +4,11 @@
 # @brief Owns runtime option state for a bootstrap invocation.
 #
 # @details
-# The command-line parser records operational flags in this module rather than
-# asking unrelated parts of the program to inspect raw arguments.  Later roadmap
-# phases can ask small, intention-revealing questions such as
-# bootstrap_context_is_dry_run instead of reading global variables directly.
+# The command-line parser records operational flags and the optional manifest
+# path in this module rather than asking unrelated parts of the program to
+# inspect raw arguments.  Later roadmap phases can ask small,
+# intention-revealing questions such as bootstrap_context_is_dry_run instead of
+# reading global variables directly.
 #
 # The state remains process-local Bash state.  This is deliberate for the early
 # bootstrap engine because it keeps the runtime small, inspectable, and free of
@@ -15,7 +16,7 @@
 # context.
 #
 # @var BOOTSTRAP_FLAG_DRY_RUN
-# True when the user requested parsing without system changes.
+# True when the user requested planning without system changes.
 #
 # @var BOOTSTRAP_FLAG_EXPLAIN
 # True when the user requested explanatory output for planned behavior.
@@ -25,12 +26,16 @@
 #
 # @var BOOTSTRAP_FLAG_QUIET
 # True when the user requested non-essential output suppression.
+#
+# @var BOOTSTRAP_MANIFEST_PATH
+# Optional package manifest path supplied as the single positional argument.
 ###############################################################################
 
 BOOTSTRAP_FLAG_DRY_RUN=false
 BOOTSTRAP_FLAG_EXPLAIN=false
 BOOTSTRAP_FLAG_VERBOSE=false
 BOOTSTRAP_FLAG_QUIET=false
+BOOTSTRAP_MANIFEST_PATH=""
 
 ###############################################################################
 # @fn bootstrap_context_reset()
@@ -49,6 +54,7 @@ bootstrap_context_reset() {
   BOOTSTRAP_FLAG_EXPLAIN=false
   BOOTSTRAP_FLAG_VERBOSE=false
   BOOTSTRAP_FLAG_QUIET=false
+  BOOTSTRAP_MANIFEST_PATH=""
 }
 
 ###############################################################################
@@ -85,6 +91,42 @@ bootstrap_context_enable_verbose() {
 ###############################################################################
 bootstrap_context_enable_quiet() {
   BOOTSTRAP_FLAG_QUIET=true
+}
+
+###############################################################################
+# @fn bootstrap_context_set_manifest_path(path)
+# @brief Records the manifest path supplied by the user.
+#
+# @details
+# The CLI accepts at most one manifest path.  This function stores the already
+# validated positional argument so downstream code can ask for the manifest path
+# without reparsing command-line input.
+#
+# @param path Package manifest path supplied as the positional argument.
+# @retval 0 Manifest path was recorded successfully.
+###############################################################################
+bootstrap_context_set_manifest_path() {
+  BOOTSTRAP_MANIFEST_PATH="$1"
+}
+
+###############################################################################
+# @fn bootstrap_context_has_manifest_path()
+# @brief Tests whether a manifest path was supplied.
+# @retval 0 A manifest path is available.
+# @retval 1 No manifest path was supplied.
+###############################################################################
+bootstrap_context_has_manifest_path() {
+  [[ -n "${BOOTSTRAP_MANIFEST_PATH}" ]]
+}
+
+###############################################################################
+# @fn bootstrap_context_get_manifest_path()
+# @brief Prints the manifest path associated with the current invocation.
+# @returns The manifest path on standard output.
+# @retval 0 The manifest path was printed successfully.
+###############################################################################
+bootstrap_context_get_manifest_path() {
+  printf '%s\n' "${BOOTSTRAP_MANIFEST_PATH}"
 }
 
 ###############################################################################

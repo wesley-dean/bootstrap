@@ -41,7 +41,7 @@ setup() {
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Usage:"* ]]
-    [[ "$output" == *"bootstrap.bash [options]"* ]]
+    [[ "$output" == *"bootstrap.bash [options] [manifest]"* ]]
     [[ "$output" == *"--dry-run"* ]]
     [[ "$output" == *"--explain"* ]]
     [[ "$output" == *"--verbose"* ]]
@@ -106,11 +106,11 @@ setup() {
     [[ "$output" == *"unsupported option: --not-a-real-option"* ]]
 }
 
-@test "generated bootstrap.bash rejects unexpected positional arguments" {
+@test "generated bootstrap.bash requires dry-run before planning manifest arguments" {
     run "$SCRIPT" packages.txt
 
     [ "$status" -eq 64 ]
-    [[ "$output" == *"unexpected argument: packages.txt"* ]]
+    [[ "$output" == *"manifest planning currently requires --dry-run"* ]]
 }
 
 @test "generated bootstrap.bash requires help to be used alone" {

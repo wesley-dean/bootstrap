@@ -37,7 +37,7 @@ set -euo pipefail
 bootstrap_print_help() {
   cat <<'HELP_TEXT'
 Usage:
-  bootstrap.bash [options]
+  bootstrap.bash [options] [manifest]
 
 Options:
   --help     Show this help text and exit.
@@ -46,6 +46,9 @@ Options:
   --explain  Request explanation output for planned behavior.
   --verbose  Request more detailed diagnostic output.
   --quiet    Suppress non-essential output.
+
+Arguments:
+  manifest   Optional package manifest path. Planning currently requires --dry-run.
 HELP_TEXT
 }
 
@@ -113,8 +116,11 @@ bootstrap_parse_arguments() {
       return "${BOOTSTRAP_EXIT_USAGE}"
       ;;
     *)
-      bootstrap_print_usage_error "unexpected argument: $1"
-      return "${BOOTSTRAP_EXIT_USAGE}"
+      if bootstrap_context_has_manifest_path; then
+        bootstrap_print_usage_error "unexpected argument: $1"
+        return "${BOOTSTRAP_EXIT_USAGE}"
+      fi
+      bootstrap_context_set_manifest_path "$1"
       ;;
     esac
 
@@ -143,6 +149,147 @@ bootstrap_parse_arguments() {
 ###############################################################################
 bootstrap_run_placeholder() {
   bootstrap_log_info 'bootstrap.bash: not yet implemented'
+}
+
+
+###############################################################################
+# @fn bootstrap_print_action_record(action, package, operator, version)
+# @brief Prints one human-readable dry-run line for an Action Record.
+#
+# @details
+# The planner emits abstract Action Records.  This function renders the small
+# install-package action model that exists today without resolving package
+# managers or command lines.  Unknown action types are reported as usage errors
+# because the CLI should not silently hide planner output it cannot explain.
+#
+# @param action Action Record type.
+# @param package Package name associated with the action.
+# @param operator Optional version constraint operator.
+# @param version Optional version constraint value.
+# @retval 0 The Action Record was rendered successfully.
+# @retval 65 The Action Record type was unsupported by this renderer.
+###############################################################################
+bootstrap_print_action_record() {
+  local action
+  local operator
+  local package
+  local version
+
+  action="$1"
+  package="$2"
+  operator="${3:-}"
+  version="${4:-}"
+
+  case "${action}" in
+  install-package)
+    if [[ -n "${operator}" || -n "${version}" ]]; then
+      printf '  - install package: %s (%s %s)\n' \
+        "${package}" \
+        "${operator}" \
+        "${version}"
+    else
+      printf '  - install package: %s\n' "${package}"
+    fi
+    ;;
+  *)
+    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    return "${BOOTSTRAP_EXIT_MANIFEST}"
+    ;;
+  esac
+}
+
+###############################################################################
+# @fn bootstrap_print_dry_run_plan(manifest_path, action_file)
+# @brief Renders a planned dry-run action list for a manifest.
+#
+# @details
+# Dry-run output is deliberately generated from Action Records rather than from
+# parser records.  This keeps the user-facing output aligned with the same
+# abstract plan that later resolver and executor phases will consume.
+#
+# Explain mode currently adds architectural context only.  It does not add
+# package-manager detail because resolver and executor phases have not yet bound
+# abstract actions to a platform-specific implementation.
+#
+# @param manifest_path Manifest path used to produce the plan.
+# @param action_file File containing tab-separated Action Records.
+# @returns Human-readable dry-run output on standard output.
+# @retval 0 The dry-run plan was printed successfully.
+# @retval 65 An Action Record could not be rendered.
+###############################################################################
+bootstrap_print_dry_run_plan() {
+  local action
+  local action_file
+  local operator
+  local package
+  local planned_count
+  local manifest_path
+  local version
+
+  manifest_path="$1"
+  action_file="$2"
+  planned_count=0
+
+  printf 'Dry run plan for manifest: %s\n' "${manifest_path}"
+
+  while IFS=$'\t' read -r action package operator version || [[ -n "${action:-}" ]]; do
+    planned_count=$((planned_count + 1))
+    bootstrap_print_action_record \
+      "${action}" \
+      "${package}" \
+      "${operator:-}" \
+      "${version:-}" || return "$?"
+  done <"${action_file}"
+
+  if ((planned_count == 0)); then
+    printf '  - no package actions planned\n'
+  fi
+
+  printf 'Summary: %s action(s) planned.\n' "${planned_count}"
+
+  if bootstrap_context_should_explain; then
+    printf '\nExplanation:\n'
+    printf '  The planner emitted abstract Action Records only.\n'
+    printf '  No package manager was selected and no system changes were made.\n'
+  fi
+}
+
+###############################################################################
+# @fn bootstrap_run_dry_run_plan()
+# @brief Parses the requested manifest and prints its abstract execution plan.
+#
+# @details
+# This is the first end-to-end read-only path through the engine.  It composes
+# the manifest parser and planner, captures the resulting Action Records, and
+# renders those records for the user without resolving or executing them.
+#
+# @retval 0 The manifest was parsed, planned, and displayed successfully.
+# @retval 65 The manifest could not be parsed or planned.
+###############################################################################
+bootstrap_run_dry_run_plan() {
+  local action_file
+  local manifest_path
+  local status
+
+  manifest_path="$(bootstrap_context_get_manifest_path)"
+  action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-plan.XXXXXX")"
+
+  if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
+    :
+  else
+    status="$?"
+    rm -f "${action_file}"
+    return "${status}"
+  fi
+
+  if bootstrap_print_dry_run_plan "${manifest_path}" "${action_file}"; then
+    status="${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+  fi
+  rm -f "${action_file}"
+
+  return "${status}"
 }
 
 ###############################################################################
@@ -188,6 +335,17 @@ main() {
   esac
 
   bootstrap_parse_arguments "$@" || return "$?"
+
+  if bootstrap_context_has_manifest_path; then
+    if ! bootstrap_context_is_dry_run; then
+      bootstrap_print_usage_error "manifest planning currently requires --dry-run"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+    fi
+
+    bootstrap_run_dry_run_plan
+    return "$?"
+  fi
+
   bootstrap_run_placeholder
 }
 
