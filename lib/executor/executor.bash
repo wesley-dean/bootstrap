@@ -8,9 +8,10 @@
 # Resolved Actions and produces Execution Results.  ADR-048 deliberately keeps
 # execution separate from manifest parsing, planning, and platform resolution.
 #
-# Backend-specific execution lives in separate executor modules.  This dispatcher
-# keeps the ADR-048 boundary visible by routing Resolved Actions to the selected
-# backend without parsing manifests, planning actions, or resolving platforms.
+# Backend-specific execution is reached through the package backend interface.
+# This dispatcher keeps the ADR-048 boundary visible by routing Resolved Actions
+# to the selected backend without parsing manifests, planning actions, or
+# resolving platforms.
 ###############################################################################
 
 ###############################################################################
@@ -66,14 +67,9 @@ bootstrap_executor_execute_resolved_action() {
 
   case "${action}" in
   install-package)
-    case "${manager}" in
-    apt)
-      bootstrap_executor_apt_install_package \
-        "${package}" \
-        "${operator:-}" \
-        "${version:-}"
-      ;;
-    *)
+    if ! bootstrap_backend_supports_capability \
+      "${manager}" \
+      package-execution >/dev/null; then
       bootstrap_execution_result_create \
         'not-executed' \
         "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
@@ -82,8 +78,13 @@ bootstrap_executor_execute_resolved_action() {
         "${package}" \
         'unsupported executor backend'
       return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
-      ;;
-    esac
+    fi
+
+    bootstrap_backend_install_package \
+      "${manager}" \
+      "${package}" \
+      "${operator:-}" \
+      "${version:-}"
     ;;
   *)
     printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2

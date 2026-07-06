@@ -150,3 +150,54 @@ bootstrap_backend_package_exists() {
     ;;
   esac
 }
+
+###############################################################################
+# @fn bootstrap_backend_install_package(manager, package, operator, version)
+# @brief Dispatches package installation to the selected backend implementation.
+#
+# @details
+# Phase 6 introduces execution while preserving the backend boundary created in
+# Phase 5.  Higher layers should ask the backend interface to install packages
+# instead of calling APT-specific executor helpers directly.  This keeps the
+# executor responsible for consuming Resolved Actions while keeping native
+# package-manager details behind the backend interface.
+#
+# The function intentionally accepts the same package fields carried by
+# Resolved Actions.  Current APT execution treats version constraints as already
+# validated by resolution and preserves them for future backend-specific
+# behavior.  Future backends, including APK, should be added by extending this
+# dispatcher rather than by adding package-manager branches to the executor.
+#
+# @param manager Backend identifier, such as `apt`.
+# @param package Package name to install.
+# @param operator Optional version constraint operator preserved from resolution.
+# @param version Optional version constraint value preserved from resolution.
+# @returns An Execution Result record from the selected backend on standard output.
+# @retval 0 The backend completed the request or found it already satisfied.
+# @retval 69 The backend does not support package execution.
+# @retval 70 The backend attempted execution and the native operation failed.
+# @retval 71 Required privilege escalation was unavailable.
+###############################################################################
+bootstrap_backend_install_package() {
+  local manager
+  local operator
+  local package
+  local version
+
+  manager="$1"
+  package="$2"
+  operator="${3:-}"
+  version="${4:-}"
+
+  case "${manager}" in
+  apt)
+    bootstrap_executor_apt_install_package \
+      "${package}" \
+      "${operator}" \
+      "${version}"
+    ;;
+  *)
+    bootstrap_backend_diagnostic_unsupported_manager "${manager}"
+    ;;
+  esac
+}

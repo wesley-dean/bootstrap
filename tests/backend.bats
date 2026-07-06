@@ -197,3 +197,27 @@ STUB
     [ "$status" -eq 69 ]
     [[ "$output" == *"backend capability not supported: apt imaginary-capability"* ]]
 }
+
+@test "backend install dispatch routes apt package execution" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+printf 'install ok installed\n'
+exit 0
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+printf 'apt-get should not run for an installed package\n' >&2
+exit 99
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env \
+        PATH="${fake_bin}:$PATH" \
+        "${BASH_BIN}" \
+        -c "source '$SCRIPT'; bootstrap_backend_install_package apt git '' ''"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "already-satisfied|0|install-package|apt|git|package already installed" ]
+}
