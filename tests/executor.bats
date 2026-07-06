@@ -28,7 +28,7 @@ exit 0
 STUB
     chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
 
-    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$apt_log" bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$apt_log" bash -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"already-satisfied|0|install-package|apt|git|package already installed"* ]]
@@ -50,7 +50,7 @@ exit 0
 STUB
     chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
 
-    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$log_file" bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$log_file" bash -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"success|0|install-package|apt|git|package installation completed"* ]]
@@ -70,10 +70,33 @@ exit 42
 STUB
     chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
 
-    run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; printf 'install-package|apt|openssl|>=|3.0|packages.txt|7\n' | bootstrap_executor_execute_resolved_actions"
+    run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|openssl|>=|3.0|packages.txt|7\n' | bootstrap_executor_execute_resolved_actions"
 
     [ "$status" -eq 70 ]
     [[ "$output" == *"failed|70|install-package|apt|openssl|apt-get exited with status 42"* ]]
+}
+
+@test "executor reports privilege failure before apt-get runs" {
+    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    apt_log="${BATS_TEST_TMPDIR}/apt-get.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/bin/sh
+printf '%s\n' "$*" >>"${APT_GET_LOG}"
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}" APT_GET_LOG="$apt_log" "$BASH" -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '1000\n'; }; printf 'install-package|apt|nano||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 71 ]
+    [[ "$output" == *"privilege escalation requires sudo or doas"* ]]
+    [[ "$output" == *"failed|71|install-package|apt|nano|privilege escalation unavailable"* ]]
+    [ ! -e "$apt_log" ]
 }
 
 @test "executor rejects unsupported package-manager backends" {

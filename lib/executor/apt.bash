@@ -79,7 +79,7 @@ bootstrap_executor_apt_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  if apt-get install -y "${package}" >/dev/null; then
+  if bootstrap_privilege_run apt-get install -y "${package}" >/dev/null; then
     bootstrap_execution_result_create \
       'success' \
       "${BOOTSTRAP_EXIT_SUCCESS}" \
@@ -90,6 +90,17 @@ bootstrap_executor_apt_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
+    if [[ "${status}" == "${BOOTSTRAP_EXIT_PRIVILEGE}" ]]; then
+      bootstrap_execution_result_create \
+        'failed' \
+        "${BOOTSTRAP_EXIT_PRIVILEGE}" \
+        'install-package' \
+        'apt' \
+        "${package}" \
+        'privilege escalation unavailable'
+      return "${BOOTSTRAP_EXIT_PRIVILEGE}"
+    fi
+
     bootstrap_execution_result_create \
       'failed' \
       "${BOOTSTRAP_EXIT_EXECUTION}" \

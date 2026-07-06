@@ -112,6 +112,12 @@ setup() {
     log_file="${BATS_TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
 
+    cat >"${fake_bin}/sudo" <<'STUB'
+#!/bin/sh
+"$@"
+STUB
+    chmod +x "${fake_bin}/sudo"
+
     printf 'git\n' >"$manifest"
 
     cat >"${fake_bin}/dpkg-query" <<'STUB'

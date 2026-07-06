@@ -27,6 +27,9 @@
 #
 # @var BOOTSTRAP_EXIT_EXECUTION
 # Exit status used when execution of a resolved action fails.
+#
+# @var BOOTSTRAP_EXIT_PRIVILEGE
+# Exit status used when required privilege escalation is unavailable.
 ###############################################################################
 
 # shellcheck disable=SC2034
@@ -35,3 +38,4 @@ BOOTSTRAP_EXIT_USAGE=64
 BOOTSTRAP_EXIT_MANIFEST=65
 BOOTSTRAP_EXIT_UNSUPPORTED=69
 BOOTSTRAP_EXIT_EXECUTION=70
+BOOTSTRAP_EXIT_PRIVILEGE=71
