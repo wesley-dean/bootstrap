@@ -47,6 +47,62 @@ bootstrap_backend_detect_package_manager() {
 }
 
 ###############################################################################
+# @fn bootstrap_backend_supports_capability(manager, capability)
+# @brief Reports whether a backend advertises a named package capability.
+#
+# @details
+# Capabilities describe backend behavior that higher layers may rely on without
+# knowing which native package manager implements that behavior.  The resolver
+# uses this function as the stable decision point before asking a backend to
+# inspect package availability or evaluate version constraints.
+#
+# The capability names are intentionally plain strings because this project uses
+# pipe-delimited shell records rather than richer data structures.  The current
+# stable capability names are:
+#
+# - `package-availability`: the backend can determine whether a package can be
+#   found in configured package sources.
+# - `version-constraints`: the backend can evaluate manifest version
+#   constraints against the native package candidate.
+# - `package-execution`: the backend has an execution implementation elsewhere
+#   in the bootstrap engine.
+#
+# Unsupported capabilities fail conservatively.  That gives future backends,
+# such as Alpine APK, a way to join the interface incrementally without forcing
+# every backend to pretend it supports every package-manager concept.
+#
+# @param manager Backend identifier, such as `apt`.
+# @param capability Capability name to query.
+# @retval 0 The backend advertises the requested capability.
+# @retval 69 The backend or capability is unsupported.
+###############################################################################
+bootstrap_backend_supports_capability() {
+  local capability
+  local manager
+
+  manager="$1"
+  capability="$2"
+
+  case "${manager}" in
+  apt)
+    case "${capability}" in
+    package-availability | version-constraints | package-execution)
+      return "${BOOTSTRAP_EXIT_SUCCESS}"
+      ;;
+    *)
+      bootstrap_backend_diagnostic_unsupported_capability \
+        "${manager}" \
+        "${capability}"
+      ;;
+    esac
+    ;;
+  *)
+    bootstrap_backend_diagnostic_unsupported_manager "${manager}"
+    ;;
+  esac
+}
+
+###############################################################################
 # @fn bootstrap_backend_package_exists(manager, package, operator, version)
 # @brief Checks whether the selected backend can find a requested package.
 #

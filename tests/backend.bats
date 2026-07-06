@@ -169,3 +169,31 @@ STUB
     [ "$status" -eq 0 ]
     [ "$output" = "" ]
 }
+
+@test "backend reports apt package availability capability" {
+    run bash -c "source '$SCRIPT'; bootstrap_backend_supports_capability apt package-availability"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "backend reports apt version constraint capability" {
+    run bash -c "source '$SCRIPT'; bootstrap_backend_supports_capability apt version-constraints"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "backend reports apt package execution capability" {
+    run bash -c "source '$SCRIPT'; bootstrap_backend_supports_capability apt package-execution"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "" ]
+}
+
+@test "backend rejects unknown capabilities explicitly" {
+    run bash -c "source '$SCRIPT'; bootstrap_backend_supports_capability apt imaginary-capability"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"backend capability not supported: apt imaginary-capability"* ]]
+}

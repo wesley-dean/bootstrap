@@ -79,25 +79,29 @@ bootstrap_resolver_resolve_action_record() {
 
   case "${action}" in
   install-package)
-    case "${manager}" in
-    apt)
-      bootstrap_backend_package_exists \
+    bootstrap_backend_supports_capability \
+      "${manager}" \
+      package-availability || return "$?"
+
+    if [[ -n "${operator}" ]]; then
+      bootstrap_backend_supports_capability \
         "${manager}" \
-        "${package}" \
-        "${operator}" \
-        "${version}" || return "$?"
-      bootstrap_resolved_action_create_install_package \
-        "${manager}" \
-        "${package}" \
-        "${operator}" \
-        "${version}" \
-        "${source}" \
-        "${line_number}"
-      ;;
-    *)
-      bootstrap_backend_diagnostic_unsupported_manager "${manager}"
-      ;;
-    esac
+        version-constraints || return "$?"
+    fi
+
+    bootstrap_backend_package_exists \
+      "${manager}" \
+      "${package}" \
+      "${operator}" \
+      "${version}" || return "$?"
+
+    bootstrap_resolved_action_create_install_package \
+      "${manager}" \
+      "${package}" \
+      "${operator}" \
+      "${version}" \
+      "${source}" \
+      "${line_number}"
     ;;
   *)
     printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2

@@ -79,6 +79,35 @@ bootstrap_backend_diagnostic_missing_package_name() {
 }
 
 ###############################################################################
+# @fn bootstrap_backend_diagnostic_unsupported_capability(manager, capability)
+# @brief Reports that a backend does not support a requested capability.
+#
+# @details
+# Capability diagnostics keep backend feature gaps explicit.  This matters when
+# new package managers are added incrementally because the resolver can fail
+# with a project-level explanation instead of falling through to native command
+# errors or silently ignoring unsupported behavior.
+#
+# @param manager Backend identifier that was asked to provide the capability.
+# @param capability Capability name that is not supported.
+# @returns Diagnostic text on standard error.
+# @retval 69 The backend capability is unsupported.
+###############################################################################
+bootstrap_backend_diagnostic_unsupported_capability() {
+  local capability
+  local manager
+
+  manager="$1"
+  capability="$2"
+
+  printf \
+    'bootstrap.bash: backend capability not supported: %s %s\n' \
+    "${manager}" \
+    "${capability}" >&2
+  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+}
+
+###############################################################################
 # @fn bootstrap_backend_diagnostic_package_unavailable(manager, package)
 # @brief Reports that a backend cannot find package metadata.
 #
