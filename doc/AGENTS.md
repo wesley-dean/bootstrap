@@ -35,6 +35,57 @@ particular:
 
 For documentation work, ADR-045 is mandatory guidance.
 
+## Clarify Before Acting
+
+When a request is ambiguous, incomplete, or could reasonably be
+interpreted in more than one way, prefer asking clarifying questions
+over making assumptions.
+
+Before answering or implementing a change:
+
+-   identify any information needed to produce a high-quality result;
+-   explicitly identify assumptions that would otherwise be made when
+    those assumptions materially affect the outcome;
+-   ask only the questions necessary to resolve meaningful ambiguity.
+
+Do **not** ask about conventions whose answers are overwhelmingly
+common, well-established, or have negligible impact on the requested
+work.
+
+Examples include:
+
+-   using the primary language of the repository or conversation;
+-   following the repository's existing formatting conventions;
+-   avoiding profanity or offensive language;
+-   preserving the existing coding style where no project standard
+    exists.
+
+Reserve clarifying questions for assumptions that could materially
+change:
+
+-   functionality;
+-   architecture;
+-   public interfaces;
+-   security;
+-   compatibility;
+-   requested scope; or
+-   the user's intended outcome.
+
+When uncertain, ask:
+
+> **Would two reasonable answers produce meaningfully different
+> software?**
+
+If the answer is **yes**, ask.
+
+If the answer is **no**, choose the conventional answer, briefly note
+any significant assumption if appropriate, and continue.
+
+A useful guiding principle is:
+
+> **Before you answer, tell me what you need to know to answer well, and
+> point out any assumptions you'd otherwise make.**
+
 ## Architectural Principles
 
 -   Bash 5+ is the universal bootstrap entry point.
@@ -91,7 +142,7 @@ If additional improvements are identified, report them separately rather
 than including them in the patch.
 
 When the request is documentation-only, executable behavior must remain
-unchanged. If behavior cannot be confidently preserved, stop and ask for
+unchanged. If behavior cannot confidently be preserved, stop and ask for
 guidance rather than broadening the scope of the edit.
 
 ## Documentation Standards
