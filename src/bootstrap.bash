@@ -151,7 +151,6 @@ bootstrap_run_placeholder() {
   bootstrap_log_info 'bootstrap.bash: not yet implemented'
 }
 
-
 ###############################################################################
 # @fn bootstrap_print_action_record(action, package, operator, version)
 # @brief Prints one human-readable dry-run line for an Action Record.
