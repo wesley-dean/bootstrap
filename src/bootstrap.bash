@@ -699,6 +699,8 @@ bootstrap_run_execution_plan() {
   resolved_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-resolved.XXXXXX")"
   result_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-results.XXXXXX")"
 
+  bootstrap_log_progress "planning manifest: ${manifest_path}"
+  bootstrap_log_verbose "action record file: ${action_file}"
   if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
     :
   else
@@ -707,6 +709,8 @@ bootstrap_run_execution_plan() {
     return "${status}"
   fi
 
+  bootstrap_log_progress 'resolving planned actions'
+  bootstrap_log_verbose "resolved action file: ${resolved_file}"
   if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
     :
   else
@@ -715,12 +719,15 @@ bootstrap_run_execution_plan() {
     return "${status}"
   fi
 
+  bootstrap_log_progress 'executing resolved actions'
+  bootstrap_log_verbose "execution result file: ${result_file}"
   if bootstrap_executor_execute_resolved_actions <"${resolved_file}" >"${result_file}"; then
     status="${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
   fi
 
+  bootstrap_log_progress 'rendering execution results'
   bootstrap_print_execution_results "${result_file}"
 
   rm -f "${action_file}" "${resolved_file}" "${result_file}"
