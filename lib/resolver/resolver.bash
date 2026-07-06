@@ -19,23 +19,16 @@
 # @brief Detects the supported package manager for the current environment.
 #
 # @details
-# Phase 3 keeps resolver support deliberately narrow.  Debian-family systems are
-# considered supported when both apt-get and dpkg are available.  The bootstrap
-# engine relies on both tools in later phases: apt-get for package operations and
-# dpkg for installed-package inspection.
+# The resolver delegates package-manager discovery to the backend interface.
+# This keeps operating-system-specific detection rules in the same layer that
+# owns native package manager inspection.
 #
 # @returns The detected package manager identifier on standard output.
 # @retval 0 A supported package manager was detected.
 # @retval 69 No supported package manager was detected.
 ###############################################################################
 bootstrap_resolver_detect_package_manager() {
-  if command -v apt-get >/dev/null 2>&1 && command -v dpkg >/dev/null 2>&1; then
-    printf 'apt\n'
-    return "${BOOTSTRAP_EXIT_SUCCESS}"
-  fi
-
-  printf 'bootstrap.bash: no supported package manager detected\n' >&2
-  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  bootstrap_backend_detect_package_manager
 }
 
 ###############################################################################
@@ -43,7 +36,8 @@ bootstrap_resolver_detect_package_manager() {
 # @brief Resolves one Action Record into one Resolved Action.
 #
 # @details
-# The planner emits platform-independent Action Records.  This function adds the
+# The planner emits platform-independent Action Records.  This function asks the
+# selected backend whether the requested package can be found, then adds the
 # package-manager binding needed by future executor phases while preserving the
 # original action intent and provenance fields.
 #
@@ -85,21 +79,29 @@ bootstrap_resolver_resolve_action_record() {
 
   case "${action}" in
   install-package)
-    case "${manager}" in
-    apt)
-      bootstrap_resolved_action_create_install_package \
+    bootstrap_backend_supports_capability \
+      "${manager}" \
+      package-availability || return "$?"
+
+    if [[ -n "${operator}" ]]; then
+      bootstrap_backend_supports_capability \
         "${manager}" \
-        "${package}" \
-        "${operator}" \
-        "${version}" \
-        "${source}" \
-        "${line_number}"
-      ;;
-    *)
-      printf 'bootstrap.bash: unsupported package manager: %s\n' "${manager}" >&2
-      return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
-      ;;
-    esac
+        version-constraints || return "$?"
+    fi
+
+    bootstrap_backend_package_exists \
+      "${manager}" \
+      "${package}" \
+      "${operator}" \
+      "${version}" || return "$?"
+
+    bootstrap_resolved_action_create_install_package \
+      "${manager}" \
+      "${package}" \
+      "${operator}" \
+      "${version}" \
+      "${source}" \
+      "${line_number}"
     ;;
   *)
     printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2

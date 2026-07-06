@@ -53,6 +53,13 @@ Typical backend responsibilities include:
 The planner shall operate only in terms of backend capabilities rather
 than backend implementation details.
 
+The backend interface shall expose capability checks as stable internal
+contracts.  Higher layers may ask whether a backend supports package
+availability checks, version-constraint evaluation, or package execution
+without knowing which native package manager provides those behaviors.
+This keeps future APK support additive rather than requiring resolver or
+planner branches for each package manager.
+
 ## Rationale
 
 Separating planning from backend execution reduces coupling.
