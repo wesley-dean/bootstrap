@@ -35,3 +35,28 @@ setup() {
     [ "$status" -eq 0 ]
     [ "$output" = "bootstrap.bash: not yet implemented" ]
 }
+
+@test "generated bootstrap.bash prints help" {
+    run "$SCRIPT" --help
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Usage:"* ]]
+    [[ "$output" == *"bootstrap.bash --help"* ]]
+    [[ "$output" == *"bootstrap.bash --version"* ]]
+}
+
+@test "generated bootstrap.bash prints version metadata" {
+    run "$SCRIPT" --version
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == bootstrap.bash\ * ]]
+    [[ "$output" == *"build_date="* ]]
+    [[ "$output" == *"commit="* ]]
+}
+
+@test "generated bootstrap.bash rejects unsupported options" {
+    run "$SCRIPT" --not-a-real-option
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"unsupported option: --not-a-real-option"* ]]
+}

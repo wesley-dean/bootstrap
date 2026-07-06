@@ -29,29 +29,28 @@ BOOTSTRAP_BUILD_COMMIT="${BOOTSTRAP_BUILD_COMMIT:-unknown}"
 
 
 ###############################################################################
-# @fn bootstrap_metadata_summary()
-# @brief Prints the build metadata associated with this artifact.
+# @fn bootstrap_print_version()
+# @brief Prints public version information for the generated artifact.
 #
 # @details
-# Phase 1 does not introduce a public --version option; that belongs to Phase 2
-# of the roadmap. This helper keeps the interpretation of embedded metadata
-# explicit without expanding the public CLI ahead of schedule.
+# The version output is intentionally short, stable, and easy to read from both
+# interactive terminals and automated logs.  It exposes build metadata without
+# requiring users to inspect the generated script manually.
 #
-# Future CLI work can call this function when implementing --version. Until
-# then, tests can still inspect the generated artifact directly to verify that
-# metadata was embedded during the build.
+# The build metadata is embedded by the Makefile when dist/bootstrap.bash is
+# generated.  Local source execution uses the safe defaults above, which makes
+# this function predictable even outside the generated artifact.
 #
-# @returns A single human-readable metadata line on standard output.
-# @retval 0 Metadata was printed successfully.
+# @returns Version metadata on standard output.
+# @retval 0 Version metadata was printed successfully.
 #
 # @par Examples
 # @code
-# bootstrap_metadata_summary
+# bootstrap_print_version
 # @endcode
 ###############################################################################
-bootstrap_metadata_summary() {
-  printf 'version=%s build_date=%s commit=%s\n' \
-    "${BOOTSTRAP_VERSION}" \
-    "${BOOTSTRAP_BUILD_DATE}" \
-    "${BOOTSTRAP_BUILD_COMMIT}"
+bootstrap_print_version() {
+  printf 'bootstrap.bash %s\n' "${BOOTSTRAP_VERSION}"
+  printf 'build_date=%s\n' "${BOOTSTRAP_BUILD_DATE}"
+  printf 'commit=%s\n' "${BOOTSTRAP_BUILD_COMMIT}"
 }
