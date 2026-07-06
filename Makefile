@@ -20,7 +20,7 @@ VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check clean format test test-report
+.PHONY: all check clean distclean format test test-report
 
 all: $(DIST_SCRIPT)
 
@@ -71,4 +71,14 @@ test-report: $(DIST_SCRIPT)
 	bats --formatter junit $(TEST_SCRIPTS) >"$(TEST_RESULTS_DIR)/bats.xml"
 
 clean:
-	rm -rf "$(DIST_DIR)" "$(TEST_RESULTS_DIR)"
+	rm -rf "$(DIST_DIR)"
+
+##
+# Remove all generated local build and test products.
+#
+# This target extends clean so a developer can return the repository to the
+# closest practical equivalent of a fresh checkout without touching source
+# files or downloaded dependencies.
+#
+distclean: clean
+	rm -rf "$(TEST_RESULTS_DIR)"
