@@ -19,6 +19,77 @@
 # functions instead of assembling records directly.
 ###############################################################################
 
+
+###############################################################################
+# @fn bootstrap_execution_result_validate_field(field_name, value)
+# @brief Validates one field before serializing an Execution Result.
+#
+# @details
+# Execution Results currently use a pipe-delimited text representation.  The
+# delimiter is an implementation detail, but it is still part of the trusted
+# internal data path between the executor, renderer, and exit-code evaluator.
+#
+# This helper rejects field values that would corrupt that record stream.  The
+# validation is intentionally placed in the constructor module so executor
+# backends do not each need to remember the serialization hazard.
+#
+# @param field_name Human-readable field name used in diagnostics.
+# @param value Field value to validate.
+# @retval 0 The field can be safely serialized.
+# @retval 69 The field contains the reserved record delimiter.
+###############################################################################
+bootstrap_execution_result_validate_field() {
+  local field_name
+  local value
+
+  field_name="$1"
+  value="${2:-}"
+
+  if [[ "${value}" == *"|"* ]]; then
+    printf 'bootstrap.bash: execution result %s contains reserved delimiter: |\n' \
+      "${field_name}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  fi
+
+  return "${BOOTSTRAP_EXIT_SUCCESS}"
+}
+
+###############################################################################
+# @fn bootstrap_execution_result_validate_exit_code(exit_code)
+# @brief Validates an Execution Result exit code before it can be returned.
+#
+# @details
+# Bash function return values are limited to unsigned 8-bit process statuses.
+# Returning a larger or non-numeric value can produce surprising shell behavior
+# or diagnostics that bypass the bootstrap engine's human-centered error model.
+#
+# This helper keeps the constructor strict and lets the exit-code evaluator fail
+# conservatively when it encounters malformed externally supplied records.
+#
+# @param exit_code Process-style status value to validate.
+# @retval 0 The exit code is numeric and can be returned safely by Bash.
+# @retval 69 The exit code is missing, non-numeric, or outside Bash's range.
+###############################################################################
+bootstrap_execution_result_validate_exit_code() {
+  local exit_code
+
+  exit_code="${1:-}"
+
+  if [[ ! "${exit_code}" =~ ^[0-9]+$ ]]; then
+    printf 'bootstrap.bash: execution result exit code is not numeric: %s\n' \
+      "${exit_code:-<empty>}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  fi
+
+  if ((exit_code > 255)); then
+    printf 'bootstrap.bash: execution result exit code is outside 0-255: %s\n' \
+      "${exit_code}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  fi
+
+  return "${BOOTSTRAP_EXIT_SUCCESS}"
+}
+
 ###############################################################################
 # @fn bootstrap_execution_result_create(status, exit_code, action, manager, package, message)
 # @brief Creates an Execution Result record.
@@ -63,6 +134,14 @@ bootstrap_execution_result_create() {
     printf 'bootstrap.bash: cannot create execution result without exit code\n' >&2
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
+
+  bootstrap_execution_result_validate_exit_code "${exit_code}" || return "$?"
+  bootstrap_execution_result_validate_field status "${status}" || return "$?"
+  bootstrap_execution_result_validate_field exit_code "${exit_code}" || return "$?"
+  bootstrap_execution_result_validate_field action "${action}" || return "$?"
+  bootstrap_execution_result_validate_field manager "${manager}" || return "$?"
+  bootstrap_execution_result_validate_field package "${package}" || return "$?"
+  bootstrap_execution_result_validate_field message "${message}" || return "$?"
 
   printf '%s|%s|%s|%s|%s|%s\n' \
     "${status}" \
@@ -118,7 +197,13 @@ bootstrap_execution_results_exit_code() {
     already-satisfied | success)
       ;;
     failed | not-executed)
-      if [[ -n "${exit_code:-}" && "${exit_code}" != "0" ]]; then
+      if ! bootstrap_execution_result_validate_exit_code "${exit_code:-}" >/dev/null 2>&1; then
+        if [[ "${status}" == "not-executed" ]]; then
+          final_exit_code="${BOOTSTRAP_EXIT_UNSUPPORTED}"
+        else
+          final_exit_code="${BOOTSTRAP_EXIT_EXECUTION}"
+        fi
+      elif [[ "${exit_code}" != "0" ]]; then
         final_exit_code="${exit_code}"
       elif [[ "${status}" == "not-executed" ]]; then
         final_exit_code="${BOOTSTRAP_EXIT_UNSUPPORTED}"

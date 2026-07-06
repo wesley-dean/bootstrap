@@ -145,3 +145,38 @@ STUB
     [ "$status" -eq 70 ]
     [ -z "$output" ]
 }
+
+@test "execution result constructor rejects reserved pipe delimiters" {
+    run bash -c "source '$SCRIPT'; bootstrap_execution_result_create success 0 install-package apt git 'message with | delimiter'"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"execution result message contains reserved delimiter"* ]]
+}
+
+@test "execution result constructor rejects non-numeric exit codes" {
+    run bash -c "source '$SCRIPT'; bootstrap_execution_result_create failed nope install-package apt git 'bad exit code'"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"execution result exit code is not numeric: nope"* ]]
+}
+
+@test "execution result constructor rejects exit codes outside shell range" {
+    run bash -c "source '$SCRIPT'; bootstrap_execution_result_create failed 300 install-package apt git 'bad exit code'"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"execution result exit code is outside 0-255: 300"* ]]
+}
+
+@test "execution result exit code fails conservatively for malformed failed records" {
+    run bash -c "source '$SCRIPT'; printf 'failed|not-a-number|install-package|apt|git|bad record\n' | bootstrap_execution_results_exit_code"
+
+    [ "$status" -eq 70 ]
+    [ -z "$output" ]
+}
+
+@test "execution result exit code fails conservatively for malformed not-executed records" {
+    run bash -c "source '$SCRIPT'; printf 'not-executed|not-a-number|install-package|apt|git|bad record\n' | bootstrap_execution_results_exit_code"
+
+    [ "$status" -eq 69 ]
+    [ -z "$output" ]
+}
