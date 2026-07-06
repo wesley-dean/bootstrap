@@ -124,3 +124,24 @@ STUB
     [[ "$output" == *"unsupported resolved action: configure-service"* ]]
     [[ "$output" == *"not-executed|69|configure-service|systemd|ssh|unsupported resolved action"* ]]
 }
+
+@test "execution result exit code treats satisfied records as success" {
+    run bash -c "source '$SCRIPT'; printf 'already-satisfied|0|install-package|apt|git|package already installed\nsuccess|0|install-package|apt|curl|package installation completed\n' | bootstrap_execution_results_exit_code"
+
+    [ "$status" -eq 0 ]
+    [ -z "$output" ]
+}
+
+@test "execution result exit code returns first failed record status" {
+    run bash -c "source '$SCRIPT'; printf 'success|0|install-package|apt|git|package installation completed\nfailed|71|install-package|apt|curl|privilege escalation unavailable\nfailed|70|install-package|apt|vim|apt-get failed\n' | bootstrap_execution_results_exit_code"
+
+    [ "$status" -eq 71 ]
+    [ -z "$output" ]
+}
+
+@test "execution result exit code fails conservatively for unknown statuses" {
+    run bash -c "source '$SCRIPT'; printf 'surprising|0|install-package|apt|git|unexpected result\n' | bootstrap_execution_results_exit_code"
+
+    [ "$status" -eq 70 ]
+    [ -z "$output" ]
+}

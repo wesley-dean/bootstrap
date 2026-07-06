@@ -730,6 +730,12 @@ bootstrap_run_execution_plan() {
   bootstrap_log_progress 'rendering execution results'
   bootstrap_print_execution_results "${result_file}"
 
+  if bootstrap_execution_results_exit_code <"${result_file}"; then
+    status="${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+  fi
+
   rm -f "${action_file}" "${resolved_file}" "${result_file}"
   return "${status}"
 }

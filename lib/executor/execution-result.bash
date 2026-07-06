@@ -72,3 +72,67 @@ bootstrap_execution_result_create() {
     "${package}" \
     "${message}"
 }
+
+###############################################################################
+# @fn bootstrap_execution_results_exit_code()
+# @brief Derives a stable process exit code from Execution Result records.
+#
+# @details
+# Execution Results are records, not merely display text.  The CLI should be
+# able to render those records for humans and also derive a stable process
+# status for automation without duplicating result interpretation in the command
+# entry point.
+#
+# This helper reads pipe-delimited Execution Result records from standard input
+# and returns the first non-successful exit code it encounters.  Successful and
+# already-satisfied records are treated as zero because both represent a
+# satisfied desired state.  Failed and not-executed records return their attached
+# exit code when one is present.  Unknown statuses fail conservatively with the
+# generic execution failure code because the engine cannot honestly report that
+# an unrecognized execution outcome was successful.
+#
+# The function intentionally produces no standard output.  It exists to make the
+# process status contract explicit while leaving user-facing rendering to
+# bootstrap_print_execution_results().
+#
+# @retval 0 All execution records represent satisfied desired state.
+# @retval 69 At least one record reports unsupported or not-executed work.
+# @retval 70 At least one record reports failed or unknown execution.
+# @retval 71 At least one record reports unavailable privilege escalation.
+###############################################################################
+bootstrap_execution_results_exit_code() {
+  local action
+  local exit_code
+  local final_exit_code
+  local manager
+  local message
+  local package
+  local status
+
+  final_exit_code="${BOOTSTRAP_EXIT_SUCCESS}"
+
+  while IFS='|' read -r status exit_code action manager package message || [[ -n "${status:-}" ]]; do
+    : "${action:-}" "${manager:-}" "${message:-}" "${package:-}"
+
+    case "${status}" in
+    already-satisfied | success)
+      ;;
+    failed | not-executed)
+      if [[ -n "${exit_code:-}" && "${exit_code}" != "0" ]]; then
+        final_exit_code="${exit_code}"
+      elif [[ "${status}" == "not-executed" ]]; then
+        final_exit_code="${BOOTSTRAP_EXIT_UNSUPPORTED}"
+      else
+        final_exit_code="${BOOTSTRAP_EXIT_EXECUTION}"
+      fi
+      break
+      ;;
+    *)
+      final_exit_code="${BOOTSTRAP_EXIT_EXECUTION}"
+      break
+      ;;
+    esac
+  done
+
+  return "${final_exit_code}"
+}
