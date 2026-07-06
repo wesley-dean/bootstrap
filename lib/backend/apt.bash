@@ -70,16 +70,15 @@ bootstrap_backend_apt_package_exists() {
   package="$1"
 
   if [[ -z "${package}" ]]; then
-    printf 'bootstrap.bash: cannot inspect apt package without package name\n' >&2
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    bootstrap_backend_diagnostic_missing_package_name apt
+    return "$?"
   fi
 
   if apt-cache show "${package}" >/dev/null 2>&1; then
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  printf 'bootstrap.bash: apt package not available: %s\n' "${package}" >&2
-  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  bootstrap_backend_diagnostic_package_unavailable apt "${package}"
 }
 
 ###############################################################################
@@ -111,9 +110,8 @@ bootstrap_backend_apt_candidate_version() {
     | awk '/^[[:space:]]*Candidate:/ { print $2; exit }')"
 
   if [[ -z "${candidate}" || "${candidate}" == "(none)" ]]; then
-    printf 'bootstrap.bash: apt package has no install candidate: %s\n' \
-      "${package}" >&2
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    bootstrap_backend_diagnostic_no_candidate apt "${package}"
+    return "$?"
   fi
 
   printf '%s\n' "${candidate}"
@@ -150,9 +148,7 @@ bootstrap_backend_apt_dpkg_operator() {
     printf 'ge\n'
     ;;
   *)
-    printf 'bootstrap.bash: unsupported apt version operator: %s\n' \
-      "${operator}" >&2
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    bootstrap_backend_diagnostic_unsupported_version_operator apt "${operator}"
     ;;
   esac
 }
@@ -195,10 +191,8 @@ bootstrap_backend_apt_package_satisfies_version() {
   fi
 
   if [[ -z "${version}" ]]; then
-    printf 'bootstrap.bash: cannot check apt version without version: %s %s\n' \
-      "${package}" \
-      "${operator}" >&2
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    bootstrap_backend_diagnostic_missing_version apt "${package}" "${operator}"
+    return "$?"
   fi
 
   candidate="$(bootstrap_backend_apt_candidate_version "${package}")" \
@@ -210,10 +204,10 @@ bootstrap_backend_apt_package_satisfies_version() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  printf 'bootstrap.bash: apt package candidate does not satisfy version constraint: %s candidate %s does not match %s %s\n' \
+  bootstrap_backend_diagnostic_unsatisfied_version_constraint \
+    apt \
     "${package}" \
     "${candidate}" \
     "${operator}" \
-    "${version}" >&2
-  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    "${version}"
 }

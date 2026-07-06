@@ -95,8 +95,7 @@ bootstrap_resolver_resolve_action_record() {
         "${line_number}"
       ;;
     *)
-      printf 'bootstrap.bash: unsupported package manager: %s\n' "${manager}" >&2
-      return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+      bootstrap_backend_diagnostic_unsupported_manager "${manager}"
       ;;
     esac
     ;;

@@ -43,8 +43,7 @@ bootstrap_backend_detect_package_manager() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  printf 'bootstrap.bash: no supported package manager detected\n' >&2
-  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  bootstrap_backend_diagnostic_no_supported_manager
 }
 
 ###############################################################################
@@ -91,8 +90,7 @@ bootstrap_backend_package_exists() {
       "${version}"
     ;;
   *)
-    printf 'bootstrap.bash: unsupported package manager: %s\n' "${manager}" >&2
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    bootstrap_backend_diagnostic_unsupported_manager "${manager}"
     ;;
   esac
 }
