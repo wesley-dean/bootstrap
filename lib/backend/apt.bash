@@ -9,10 +9,10 @@
 # manager queries only.  It does not install packages, remove packages, update
 # package indexes, or otherwise mutate the system.
 #
-# APT is treated as the source of truth for Debian-family package availability.
-# The resolver uses this module to decide whether a requested package can be
-# planned for the selected backend before any later execution phase attempts to
-# perform work.
+# APT is treated as the source of truth for Debian-family package availability
+# and version comparison.  The resolver uses this module to decide whether a
+# requested package can be planned for the selected backend before any later
+# execution phase attempts to perform work.
 #
 # Future package managers, such as Alpine APK, should provide equivalent
 # backend modules rather than teaching the resolver package-manager-specific
@@ -26,8 +26,8 @@
 # @details
 # The APT backend requires the native tools it delegates to.  `apt-cache` is
 # needed for repository availability checks, `apt-get` is needed by later
-# execution phases, and `dpkg` remains part of the Debian-family package-manager
-# surface already expected elsewhere in the project.
+# execution phases, and `dpkg` provides native Debian version comparison
+# semantics for constrained package requirements.
 #
 # This function performs command discovery only.  It does not infer user intent,
 # inspect manifests, or query package repositories.
@@ -55,9 +55,10 @@ bootstrap_backend_apt_is_available() {
 # through the configured package sources.  Output is suppressed so callers get a
 # simple status result that can be translated into project-level diagnostics.
 #
-# Version constraints are intentionally not interpreted here.  The manifest and
-# action records preserve those fields, but Phase 5 only establishes the backend
-# inspection boundary and package-name availability check.
+# This helper only checks whether package metadata exists.  Version constraints
+# are checked by `bootstrap_backend_apt_package_satisfies_version` so callers
+# can distinguish package-name availability from candidate-version suitability
+# while still using native APT and dpkg semantics.
 #
 # @param package Package name to look up through APT metadata.
 # @retval 0 APT metadata exists for the package.
@@ -78,5 +79,141 @@ bootstrap_backend_apt_package_exists() {
   fi
 
   printf 'bootstrap.bash: apt package not available: %s\n' "${package}" >&2
+  return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+}
+
+###############################################################################
+# @fn bootstrap_backend_apt_candidate_version(package)
+# @brief Prints the APT candidate version for a package.
+#
+# @details
+# A version constraint should be evaluated against the package candidate that
+# APT would normally install from configured repositories.  This helper keeps
+# candidate extraction in one place so the higher-level constraint function can
+# focus on translating manifest operators into native dpkg comparison operators.
+#
+# A missing or `(none)` candidate is treated as unsupported for planning.  The
+# package may still have historical metadata in some APT states, but bootstrap
+# cannot conservatively plan an install when APT has no installable candidate.
+#
+# @param package Package name to inspect through APT policy metadata.
+# @returns The candidate version on standard output.
+# @retval 0 APT reported an installable candidate version.
+# @retval 69 APT did not report an installable candidate version.
+###############################################################################
+bootstrap_backend_apt_candidate_version() {
+  local candidate
+  local package
+
+  package="$1"
+
+  candidate="$(apt-cache policy "${package}" \
+    | awk '/^[[:space:]]*Candidate:/ { print $2; exit }')"
+
+  if [[ -z "${candidate}" || "${candidate}" == "(none)" ]]; then
+    printf 'bootstrap.bash: apt package has no install candidate: %s\n' \
+      "${package}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  fi
+
+  printf '%s\n' "${candidate}"
+}
+
+###############################################################################
+# @fn bootstrap_backend_apt_dpkg_operator(operator)
+# @brief Translates a manifest version operator into a dpkg comparison operator.
+#
+# @details
+# The manifest grammar intentionally exposes a small human-readable set of
+# operators.  `dpkg --compare-versions` uses a related but different operator
+# vocabulary, so this function performs the translation at the APT backend
+# boundary instead of spreading that native detail through resolver code.
+#
+# @param operator Manifest operator such as `=`, `==`, `>`, or `>=`.
+# @returns The corresponding dpkg comparison operator on standard output.
+# @retval 0 The operator is supported by the APT backend.
+# @retval 69 The operator is not supported by the APT backend.
+###############################################################################
+bootstrap_backend_apt_dpkg_operator() {
+  local operator
+
+  operator="$1"
+
+  case "${operator}" in
+  '=' | '==')
+    printf 'eq\n'
+    ;;
+  '>')
+    printf 'gt\n'
+    ;;
+  '>=')
+    printf 'ge\n'
+    ;;
+  *)
+    printf 'bootstrap.bash: unsupported apt version operator: %s\n' \
+      "${operator}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    ;;
+  esac
+}
+
+###############################################################################
+# @fn bootstrap_backend_apt_package_satisfies_version(package, operator, version)
+# @brief Checks whether the APT candidate satisfies a version constraint.
+#
+# @details
+# Version comparison is delegated to `dpkg --compare-versions` rather than
+# implemented with shell string comparison.  This preserves Debian-family
+# version semantics, including epochs, revisions, and ordering rules that are
+# easy to mishandle in handwritten Bash.
+#
+# An empty operator means the manifest requested only a package name.  In that
+# case, package metadata availability is sufficient and no candidate comparison
+# is required.
+#
+# @param package Package name to inspect.
+# @param operator Optional manifest version operator.
+# @param version Optional manifest version value.
+# @retval 0 The package request is available and any constraint is satisfied.
+# @retval 69 The package is unavailable or the candidate violates the constraint.
+###############################################################################
+bootstrap_backend_apt_package_satisfies_version() {
+  local candidate
+  local dpkg_operator
+  local operator
+  local package
+  local version
+
+  package="$1"
+  operator="${2:-}"
+  version="${3:-}"
+
+  bootstrap_backend_apt_package_exists "${package}" || return "$?"
+
+  if [[ -z "${operator}" ]]; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  if [[ -z "${version}" ]]; then
+    printf 'bootstrap.bash: cannot check apt version without version: %s %s\n' \
+      "${package}" \
+      "${operator}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+  fi
+
+  candidate="$(bootstrap_backend_apt_candidate_version "${package}")" \
+    || return "$?"
+  dpkg_operator="$(bootstrap_backend_apt_dpkg_operator "${operator}")" \
+    || return "$?"
+
+  if dpkg --compare-versions "${candidate}" "${dpkg_operator}" "${version}"; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf 'bootstrap.bash: apt package candidate does not satisfy version constraint: %s candidate %s does not match %s %s\n' \
+    "${package}" \
+    "${candidate}" \
+    "${operator}" \
+    "${version}" >&2
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }

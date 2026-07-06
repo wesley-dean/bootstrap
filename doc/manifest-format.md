@@ -34,3 +34,9 @@ action.
 The parser validates manifest syntax only.  It does not check whether a
 package exists, compare versions, plan installations, or call a package
 manager.
+
+During resolution, backend-specific package checks decide whether a planned
+package can be satisfied by the selected package manager.  For APT, package
+existence means the package is known to configured APT metadata, and version
+constraints are compared against the APT candidate version using native Debian
+package comparison semantics.

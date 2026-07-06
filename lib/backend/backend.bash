@@ -57,10 +57,11 @@ bootstrap_backend_detect_package_manager() {
 # fields so callers can pass complete package intent records without knowing
 # whether the selected backend uses those fields in the current phase.
 #
-# The current APT implementation validates package-name availability only and
-# preserves version constraints for later backend-specific interpretation.  That
-# choice keeps Phase 5 focused on the backend boundary while avoiding premature
-# version semantics.
+# The current APT implementation validates package-name availability and, when
+# a version constraint is present, checks the APT candidate version using native
+# Debian package comparison semantics.  The interface remains backend-neutral so
+# future package managers can provide equivalent capability behind the same
+# resolver-facing contract.
 #
 # @param manager Backend identifier, such as `apt`.
 # @param package Package name to inspect.
@@ -84,7 +85,10 @@ bootstrap_backend_package_exists() {
 
   case "${manager}" in
   apt)
-    bootstrap_backend_apt_package_exists "${package}"
+    bootstrap_backend_apt_package_satisfies_version \
+      "${package}" \
+      "${operator}" \
+      "${version}"
     ;;
   *)
     printf 'bootstrap.bash: unsupported package manager: %s\n' "${manager}" >&2
