@@ -24,62 +24,31 @@ bootstrap surface.
 
 The ADR collection is the canonical source of architectural intent.
 
-Before making significant changes, review the relevant ADRs. In
-particular:
-
--   Treat documentation as part of the product.
--   Preserve stable public interfaces.
--   Favor deterministic, inspectable behavior.
--   Prefer composition over special cases.
--   Optimize for the next contributor.
-
-For documentation work, ADR-045 is mandatory guidance.
+Before making significant changes, review the relevant ADRs.
+Documentation work shall follow ADR-045.
 
 ## Clarify Before Acting
 
-When a request is ambiguous, incomplete, or could reasonably be
-interpreted in more than one way, prefer asking clarifying questions
-over making assumptions.
+When a request is ambiguous or incomplete, prefer asking clarifying
+questions over making assumptions.
 
-Before answering or implementing a change:
+Identify the information needed to produce a high-quality result,
+explicitly identify assumptions that would materially affect the
+outcome, and ask only the questions necessary to resolve meaningful
+ambiguity.
 
--   identify any information needed to produce a high-quality result;
--   explicitly identify assumptions that would otherwise be made when
-    those assumptions materially affect the outcome;
--   ask only the questions necessary to resolve meaningful ambiguity.
+Do **not** ask about conventions whose answers are overwhelmingly common
+or whose impact is negligible (for example, using the repository's
+primary language, following existing formatting conventions, or avoiding
+profanity).
 
-Do **not** ask about conventions whose answers are overwhelmingly
-common, well-established, or have negligible impact on the requested
-work.
-
-Examples include:
-
--   using the primary language of the repository or conversation;
--   following the repository's existing formatting conventions;
--   avoiding profanity or offensive language;
--   preserving the existing coding style where no project standard
-    exists.
-
-Reserve clarifying questions for assumptions that could materially
-change:
-
--   functionality;
--   architecture;
--   public interfaces;
--   security;
--   compatibility;
--   requested scope; or
--   the user's intended outcome.
-
-When uncertain, ask:
+Ask yourself:
 
 > **Would two reasonable answers produce meaningfully different
 > software?**
 
-If the answer is **yes**, ask.
-
-If the answer is **no**, choose the conventional answer, briefly note
-any significant assumption if appropriate, and continue.
+If yes, ask. If no, choose the conventional answer, note any significant
+assumption if appropriate, and continue.
 
 A useful guiding principle is:
 
@@ -91,11 +60,8 @@ A useful guiding principle is:
 -   Bash 5+ is the universal bootstrap entry point.
 -   Configuration describes desired state.
 -   Native package managers remain authoritative.
--   Separate the bootstrap engine from user intent.
--   Support progressive adoption.
--   Preserve a stable public interface.
--   Prefer inspectable execution paths.
--   Prefer explicit behavior over implicit behavior.
+-   Preserve stable public interfaces.
+-   Prefer explicit, deterministic, inspectable behavior.
 -   Keep the core engine intentionally small.
 
 ## Technology Stack
@@ -111,106 +77,94 @@ A useful guiding principle is:
 
 Prefer small, readable Bash functions.
 
-Do not reimplement package-management behavior already provided by the
-operating system.
-
 Avoid `eval`.
 
-Use defensive shell practices.
+Do not reimplement functionality already provided by the operating
+system.
 
 Favor simple, explicit implementations over clever ones.
 
 ## Scope Discipline
 
-Unless the user explicitly requests otherwise, produce the smallest
-correct patch that satisfies the request.
+Unless explicitly requested otherwise, produce the smallest correct
+patch that satisfies the request.
 
-Limit changes to the minimum necessary to implement the requested
-behavior.
+Do not expand the scope by performing unrelated refactoring, formatting,
+renaming, documentation updates, or architectural improvements.
 
-Do not:
+If additional opportunities for improvement are discovered, report them
+separately rather than including them in the patch.
 
--   reformat unrelated code;
--   rewrite unrelated comments or documentation;
--   reorder functions, declarations, or imports for style alone;
--   rename identifiers without a functional reason;
--   modernize syntax unrelated to the request;
--   fix unrelated defects opportunistically;
--   make architectural improvements outside the requested scope.
-
-If additional improvements are identified, report them separately rather
-than including them in the patch.
-
-When the request is documentation-only, executable behavior must remain
-unchanged. If behavior cannot confidently be preserved, stop and ask for
-guidance rather than broadening the scope of the edit.
+Documentation-only requests must preserve executable behavior exactly.
 
 ## Documentation Standards
 
 Follow the documentation-first philosophy established by the ADRs.
 
-When documenting code:
+Documentation should explain intent, assumptions, constraints, safety
+considerations, and examples where appropriate.
 
--   explain intent rather than syntax;
--   explain why a construct exists;
--   document assumptions, invariants, failure modes, and safety
-    considerations where appropriate;
--   include realistic examples when they improve comprehension.
+## Testing
 
-Documentation should reduce cognitive load for someone reading the code
-months or years later.
+This project follows **documentation-driven development** and
+**test-second development**.
 
-## Documentation-Only Requests
+Documentation establishes intent first. Immediately after functionality
+is added, changed, removed, or corrected, the corresponding automated
+tests should be added or updated before considering the work complete.
 
-When asked only to add or improve documentation:
+Do not defer test work to a later milestone.
 
--   do not modify executable behavior;
--   do not refactor implementation;
--   do not reorder logic unless explicitly requested;
--   preserve edge-case handling exactly;
--   verify that only comments or documentation changed.
+Every functional change should prompt the question:
 
-If behavior cannot confidently be preserved, stop and ask for guidance.
+-   What observable behavior changed?
+-   How can that behavior be verified automatically?
+
+Prefer tests that validate externally observable behavior rather than
+implementation details.
+
+When a bug is fixed, add or update a regression test that would have
+failed before the fix.
+
+When introducing new functionality:
+
+-   add or update Bats tests as part of the same change;
+-   ensure existing tests continue to pass;
+-   expand coverage for new public behavior;
+-   update examples or documentation when behavior changes.
+
+A change is normally incomplete if the implementation changes but the
+corresponding tests do not.
 
 ## Handling Ambiguity
 
 Do not invent architectural rationale or implementation intent.
 
-When intent cannot be established with reasonable confidence:
-
--   preserve the existing code;
--   add a specific `@TODO` identifying what is unclear when appropriate;
--   make uncertainty explicit rather than speculative.
-
-Honest uncertainty is preferred over plausible but incorrect
-documentation.
+When intent cannot be determined with reasonable confidence, preserve
+the existing code and make the uncertainty explicit.
 
 ## Validation
 
 When practical:
 
--   review diffs to ensure requested changes were performed;
--   run the project's linters and tests after code changes;
--   confirm documentation-only requests did not alter executable
-    behavior.
+-   review the resulting diff;
+-   run formatting, linting, and tests;
+-   verify documentation-only requests changed only documentation.
 
-## Common Failure Modes for AI Agents
+## Common Failure Modes
 
 Avoid:
 
 -   rewriting files when only documentation was requested;
 -   replacing implementation with stubs;
--   removing edge-case handling;
+-   silently expanding scope;
 -   inventing design rationale;
--   silently expanding the scope of a requested change;
--   silently changing public behavior;
--   introducing unnecessary dependencies;
--   violating established ADRs for convenience.
+-   changing public behavior unintentionally.
 
 ## Final Principle
 
 Every change should leave the repository easier for the next contributor
 to understand.
 
-Keep the bootstrap engine small, inspectable, reusable, well-documented,
-and focused on helping users describe and realize workstation intent.
+Keep the bootstrap engine small, inspectable, well-documented,
+well-tested, reusable, and faithful to the project's ADRs.
