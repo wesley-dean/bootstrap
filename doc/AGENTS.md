@@ -69,6 +69,31 @@ Use defensive shell practices.
 
 Favor simple, explicit implementations over clever ones.
 
+## Scope Discipline
+
+Unless the user explicitly requests otherwise, produce the smallest
+correct patch that satisfies the request.
+
+Limit changes to the minimum necessary to implement the requested
+behavior.
+
+Do not:
+
+-   reformat unrelated code;
+-   rewrite unrelated comments or documentation;
+-   reorder functions, declarations, or imports for style alone;
+-   rename identifiers without a functional reason;
+-   modernize syntax unrelated to the request;
+-   fix unrelated defects opportunistically;
+-   make architectural improvements outside the requested scope.
+
+If additional improvements are identified, report them separately rather
+than including them in the patch.
+
+When the request is documentation-only, executable behavior must remain
+unchanged. If behavior cannot be confidently preserved, stop and ask for
+guidance rather than broadening the scope of the edit.
+
 ## Documentation Standards
 
 Follow the documentation-first philosophy established by the ADRs.
@@ -126,6 +151,7 @@ Avoid:
 -   replacing implementation with stubs;
 -   removing edge-case handling;
 -   inventing design rationale;
+-   silently expanding the scope of a requested change;
 -   silently changing public behavior;
 -   introducing unnecessary dependencies;
 -   violating established ADRs for convenience.
