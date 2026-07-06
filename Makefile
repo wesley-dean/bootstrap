@@ -36,7 +36,8 @@ $(DIST_SCRIPT): $(SOURCE_FILES)
 		printf 'BOOTSTRAP_BUILD_DATE=%q\n' "$(BUILD_DATE)"; \
 		printf 'BOOTSTRAP_BUILD_COMMIT=%q\n' "$(BUILD_COMMIT)"; \
 		printf '\n'; \
-		cat $(SOURCE_FILES); \
+		cat $(SOURCE_FILES) \
+    | sed '/^#/d'; \
 	} >"$@.tmp"
 	chmod 0755 "$@.tmp"
 	mv "$@.tmp" "$@"
