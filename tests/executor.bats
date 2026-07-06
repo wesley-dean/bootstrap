@@ -12,18 +12,44 @@ setup() {
     [ "$output" = "success|0|install-package|apt|git|completed without changes" ]
 }
 
-@test "executor consumes resolved actions but does not execute unsupported framework work yet" {
-    run bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+@test "executor invokes apt-get for apt install-package resolved actions" {
+    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${APT_GET_LOG}"
+exit 0
+STUB
+    chmod +x "${fake_bin}/apt-get"
 
-    [ "$status" -eq 69 ]
-    [[ "$output" == *"not-executed|69|install-package|apt|git|executor backend is not implemented"* ]]
+    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$log_file" bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"success|0|install-package|apt|git|package installation completed"* ]]
+    [ "$(cat "$log_file")" = "install -y git" ]
 }
 
-@test "executor preserves package identity in not-implemented results" {
-    run bash -c "source '$SCRIPT'; printf 'install-package|apt|openssl|>=|3.0|packages.txt|7\n' | bootstrap_executor_execute_resolved_actions"
+@test "executor preserves package identity in apt failure results" {
+    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+exit 42
+STUB
+    chmod +x "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; printf 'install-package|apt|openssl|>=|3.0|packages.txt|7\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 70 ]
+    [[ "$output" == *"failed|70|install-package|apt|openssl|apt-get exited with status 42"* ]]
+}
+
+@test "executor rejects unsupported package-manager backends" {
+    run bash -c "source '$SCRIPT'; printf 'install-package|dnf|git||||\n' | bootstrap_executor_execute_resolved_actions"
 
     [ "$status" -eq 69 ]
-    [[ "$output" == *"not-executed|69|install-package|apt|openssl|executor backend is not implemented"* ]]
+    [[ "$output" == *"not-executed|69|install-package|dnf|git|unsupported executor backend"* ]]
 }
 
 @test "executor rejects malformed resolved actions" {

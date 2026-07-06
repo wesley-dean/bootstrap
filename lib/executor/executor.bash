@@ -8,25 +8,77 @@
 # Resolved Actions and produces Execution Results.  ADR-048 deliberately keeps
 # execution separate from manifest parsing, planning, and platform resolution.
 #
-# This first executor module establishes the interface only.  It does not install
-# packages, configure repositories, modify files, or change services.  Supported
-# execution backends will be added in later patches after the executor contract
-# is present and tested.
+# The first concrete backend is intentionally narrow.  It supports resolved
+# package-installation actions for APT only.  It still does not parse manifests,
+# plan actions, resolve platforms, configure repositories, or decide whether a
+# package should exist.  Those responsibilities belong to earlier pipeline
+# stages.
 ###############################################################################
+
+###############################################################################
+# @fn bootstrap_executor_execute_apt_install_package(package, operator, version)
+# @brief Executes one APT package installation request.
+#
+# @details
+# This helper is the first concrete executor backend.  It receives a package
+# name from an already-resolved action and delegates package installation to
+# apt-get.
+#
+# Version constraints remain attached to records for future backend-specific
+# interpretation, but they are not enforced in this first APT executor slice.
+# That keeps the patch focused on establishing execution of a resolved package
+# action without introducing package-version semantics prematurely.
+#
+# @param package Package name selected by the manifest, planner, and resolver pipeline.
+# @param operator Optional version constraint operator, currently preserved but not enforced.
+# @param version Optional version constraint value, currently preserved but not enforced.
+# @returns An Execution Result record on standard output.
+# @retval 0 The APT command completed successfully.
+# @retval 70 The APT command failed.
+###############################################################################
+bootstrap_executor_execute_apt_install_package() {
+  local package
+  local operator
+  local status
+  local version
+
+  package="$1"
+  operator="${2:-}"
+  version="${3:-}"
+
+  : "${operator}" "${version}"
+
+  if apt-get install -y "${package}" >/dev/null; then
+    bootstrap_execution_result_create \
+      'success' \
+      "${BOOTSTRAP_EXIT_SUCCESS}" \
+      'install-package' \
+      'apt' \
+      "${package}" \
+      'package installation completed'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+    bootstrap_execution_result_create \
+      'failed' \
+      "${BOOTSTRAP_EXIT_EXECUTION}" \
+      'install-package' \
+      'apt' \
+      "${package}" \
+      "apt-get exited with status ${status}"
+    return "${BOOTSTRAP_EXIT_EXECUTION}"
+  fi
+}
 
 ###############################################################################
 # @fn bootstrap_executor_execute_resolved_action(action, manager, package, operator, version, source, line_number)
 # @brief Attempts to execute one Resolved Action.
 #
 # @details
-# This initial executor framework intentionally rejects every Resolved Action as
-# not implemented.  That behavior may look small, but it establishes an important
-# architectural boundary: execution receives already-resolved records and returns
+# The executor dispatches by Resolved Action type and resolved backend.  It does
+# not inspect manifests, make planning decisions, or select package managers.
+# Unsupported action/backend combinations fail conservatively with structured
 # Execution Results.
-#
-# Later patches can replace the not-implemented response for specific
-# action/backend combinations without allowing executors to parse manifests,
-# perform planning, or select package managers.
 #
 # @param action Resolved Action type.
 # @param manager Package manager or backend selected by the resolver.
@@ -71,14 +123,24 @@ bootstrap_executor_execute_resolved_action() {
 
   case "${action}" in
   install-package)
-    bootstrap_execution_result_create \
-      'not-executed' \
-      "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
-      "${action}" \
-      "${manager}" \
-      "${package}" \
-      'executor backend is not implemented'
-    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    case "${manager}" in
+    apt)
+      bootstrap_executor_execute_apt_install_package \
+        "${package}" \
+        "${operator:-}" \
+        "${version:-}"
+      ;;
+    *)
+      bootstrap_execution_result_create \
+        'not-executed' \
+        "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
+        "${action}" \
+        "${manager}" \
+        "${package}" \
+        'unsupported executor backend'
+      return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+      ;;
+    esac
     ;;
   *)
     printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
@@ -92,6 +154,61 @@ bootstrap_executor_execute_resolved_action() {
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac
+}
+
+###############################################################################
+# @fn bootstrap_executor_execute_apt_install_package(package, operator, version)
+# @brief Executes one APT package installation request.
+#
+# @details
+# This helper is the first concrete executor backend.  It receives a package
+# name from an already-resolved action and delegates package installation to
+# apt-get.
+#
+# Version constraints remain attached to records for future backend-specific
+# interpretation, but they are not enforced in this first APT executor slice.
+# That keeps the patch focused on establishing execution of a resolved package
+# action without introducing package-version semantics prematurely.
+#
+# @param package Package name selected by the manifest, planner, and resolver pipeline.
+# @param operator Optional version constraint operator, currently preserved but not enforced.
+# @param version Optional version constraint value, currently preserved but not enforced.
+# @returns An Execution Result record on standard output.
+# @retval 0 The APT command completed successfully.
+# @retval 70 The APT command failed.
+###############################################################################
+bootstrap_executor_execute_apt_install_package() {
+  local package
+  local operator
+  local status
+  local version
+
+  package="$1"
+  operator="${2:-}"
+  version="${3:-}"
+
+  : "${operator}" "${version}"
+
+  if apt-get install -y "${package}" >/dev/null; then
+    bootstrap_execution_result_create \
+      'success' \
+      "${BOOTSTRAP_EXIT_SUCCESS}" \
+      'install-package' \
+      'apt' \
+      "${package}" \
+      'package installation completed'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+    bootstrap_execution_result_create \
+      'failed' \
+      "${BOOTSTRAP_EXIT_EXECUTION}" \
+      'install-package' \
+      'apt' \
+      "${package}" \
+      "apt-get exited with status ${status}"
+    return "${BOOTSTRAP_EXIT_EXECUTION}"
+  fi
 }
 
 ###############################################################################

@@ -24,6 +24,9 @@
 #
 # @var BOOTSTRAP_EXIT_UNSUPPORTED
 # Exit status used when the current system cannot resolve a requested action.
+#
+# @var BOOTSTRAP_EXIT_EXECUTION
+# Exit status used when execution of a resolved action fails.
 ###############################################################################
 
 # shellcheck disable=SC2034
@@ -31,3 +34,4 @@ BOOTSTRAP_EXIT_SUCCESS=0
 BOOTSTRAP_EXIT_USAGE=64
 BOOTSTRAP_EXIT_MANIFEST=65
 BOOTSTRAP_EXIT_UNSUPPORTED=69
+BOOTSTRAP_EXIT_EXECUTION=70
