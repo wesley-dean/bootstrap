@@ -31,8 +31,8 @@ bootstrap_executor_apt_package_is_installed() {
 
   package="$1"
 
-  dpkg-query -W -f='${Status}' "${package}" 2>/dev/null \
-    | grep -qx 'install ok installed'
+  dpkg-query -W -f='${Status}' "${package}" 2>/dev/null |
+    grep -qx 'install ok installed'
 }
 
 ###############################################################################

@@ -36,9 +36,9 @@
 # @retval 1 One or more required APT tools are unavailable.
 ###############################################################################
 bootstrap_backend_apt_is_available() {
-  command -v apt-cache >/dev/null 2>&1 \
-    && command -v apt-get >/dev/null 2>&1 \
-    && command -v dpkg >/dev/null 2>&1
+  command -v apt-cache >/dev/null 2>&1 &&
+    command -v apt-get >/dev/null 2>&1 &&
+    command -v dpkg >/dev/null 2>&1
 }
 
 ###############################################################################
@@ -106,8 +106,8 @@ bootstrap_backend_apt_candidate_version() {
 
   package="$1"
 
-  candidate="$(apt-cache policy "${package}" \
-    | awk '/^[[:space:]]*Candidate:/ { print $2; exit }')"
+  candidate="$(apt-cache policy "${package}" |
+    awk '/^[[:space:]]*Candidate:/ { print $2; exit }')"
 
   if [[ -z "${candidate}" || "${candidate}" == "(none)" ]]; then
     bootstrap_backend_diagnostic_no_candidate apt "${package}"
@@ -195,10 +195,10 @@ bootstrap_backend_apt_package_satisfies_version() {
     return "$?"
   fi
 
-  candidate="$(bootstrap_backend_apt_candidate_version "${package}")" \
-    || return "$?"
-  dpkg_operator="$(bootstrap_backend_apt_dpkg_operator "${operator}")" \
-    || return "$?"
+  candidate="$(bootstrap_backend_apt_candidate_version "${package}")" ||
+    return "$?"
+  dpkg_operator="$(bootstrap_backend_apt_dpkg_operator "${operator}")" ||
+    return "$?"
 
   if dpkg --compare-versions "${candidate}" "${dpkg_operator}" "${version}"; then
     return "${BOOTSTRAP_EXIT_SUCCESS}"
