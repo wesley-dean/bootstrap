@@ -1,4 +1,4 @@
-# ADR-009: Distribute the Bootstrap Engine as a Single Executable Script
+# ADR-009: Distribute the Bootstrap Engine as a Single Executable Artifact
 
 Date: 2026-07-04
 
@@ -8,132 +8,125 @@ Proposed
 
 ## Intent and Scope
 
-This Architecture Decision Record establishes that the bootstrap engine
-shall be distributed as a single executable Bash script.
+This Architecture Decision Record establishes how the bootstrap engine
+is distributed to users.
 
-The goal is to optimize for inspectability, portability, and ease of use
-during the earliest stages of system bootstrap.
+The project shall publish the bootstrap engine as a single executable
+Bash script, regardless of how the source code is organized within the
+repository.
 
-This ADR governs how the bootstrap engine is packaged and distributed.
-It does not prohibit the use of external operating-system tools such as
-`apt-get`, `apt-cache`, `dpkg`, or other native utilities.
+This ADR governs the published artifact rather than the internal source
+layout.
 
 ## Context
 
-The project's primary use case is bringing a freshly installed system to
-a useful state with as little friction as possible.
+Earlier architectural decisions established that the bootstrap engine
+should be easy to obtain, inspect, and execute. Initially, this led to
+the idea that the repository itself should contain a single Bash file.
 
-A typical user should be able to execute a single command such as:
+As the project evolved, another requirement emerged.
 
-``` bash
-vet https://example.org/bootstrap.bash -- ./packages.txt
-```
+Maintaining a single growing Bash file would eventually become more
+difficult than maintaining a collection of focused source files.
+Splitting the source into logical modules improves readability, testing,
+and maintainability without changing the user's experience.
 
-or, when necessary, download the same script, inspect it, and execute it
-locally.
-
-Many bootstrap systems consist of multiple shell libraries, helper
-scripts, or directories of supporting code. While modular, those designs
-require users to clone repositories, download archives, or otherwise
-acquire multiple files before the bootstrap process can begin.
-
-This project deliberately values a smaller distribution surface over
-internal modularity.
+The project's primary concern is therefore not how the source is
+organized, but how the bootstrap engine is delivered.
 
 ## Decision
 
-The bootstrap engine shall be distributed as a single executable Bash
-script named `bootstrap.bash`.
+The repository may organize its source code into multiple Bash source
+files.
 
-That script is the public entry point and the complete bootstrap engine.
+Typical layouts may include:
 
-Internal organization shall be achieved through functions rather than
-separate source files.
+``` text
+src/
+lib/
+tests/
+```
 
-The script may invoke operating-system tools and other installed
-executables, but it shall not require project-specific shell libraries
-or auxiliary Bash source files.
+The published bootstrap engine shall be produced as a build artifact
+named:
+
+``` text
+dist/bootstrap.bash
+```
+
+Release automation shall build the project (for example, by running
+`make all`) and publish `dist/bootstrap.bash` as the canonical release
+asset.
+
+Users should obtain and execute the published artifact rather than
+individual source files.
 
 ## Rationale
 
-A single-file distribution offers several advantages.
+Separating source organization from distribution provides the advantages
+of both approaches.
 
-It is easy to inspect before execution.
+Internally, the project benefits from modular source files with clear
+responsibilities.
 
-It is easy to distribute from a single URL.
+Externally, users continue to receive a single, inspectable bootstrap
+script that can be reviewed, downloaded, and executed from one location.
 
-It is straightforward to vendor into another project.
-
-It minimizes ambiguity about the project's entry point.
-
-It aligns with the project's preference for reviewable remote execution
-and small bootstrap surfaces.
-
-Although a multi-file implementation may improve code organization, it
-also introduces additional distribution complexity. Since the bootstrap
-engine is expected to remain modest in size, that tradeoff is not
-justified at this time.
+This preserves the project's goals of simplicity and inspectability
+while allowing the implementation to evolve.
 
 ## Alternatives Considered
 
-### Multiple Shell Libraries
+### Maintain a Single Source File
 
-The project could separate functionality into `lib/`, `src/`, or similar
-directories.
+Keeping all implementation in one file minimizes build complexity.
 
-This approach was rejected because it complicates distribution and
-inspection, particularly for first-time users executing the bootstrap
-engine from a single URL.
+This alternative was rejected because it unnecessarily couples
+maintainability to the distribution format.
 
-### Self-Extracting Archive
+### Publish a Multi-file Repository
 
-The project could distribute a single wrapper that downloads or extracts
-additional components.
+Users could clone the repository and execute the source directly.
 
-This was rejected because it obscures what code will ultimately execute
-and works against the project's emphasis on inspectability.
+This was rejected as the primary distribution mechanism because it
+increases bootstrap complexity and weakens the project's "single
+artifact" philosophy.
 
 ## Consequences
 
-The repository may contain documentation, examples, tests, and build
-tooling, but the executable bootstrap engine remains a single file.
+The repository may contain:
 
-Internal refactoring should prefer well-named functions and clear
-organization within that file rather than introducing project-specific
-Bash modules.
+-   source modules;
+-   documentation;
+-   tests;
+-   build tooling;
+-   examples.
 
-As the script grows, maintainability should be addressed through
-documentation, testing, and disciplined structure before introducing
-additional source files.
+The `dist/` directory should contain generated artifacts and should not
+normally be committed to source control.
 
 ## Non-Goals
 
-This ADR does not prohibit invoking external programs supplied by the
-operating system.
+This ADR does not prescribe how source files are combined into the final
+artifact.
 
-It does not prohibit generating release artifacts from other sources in
-the future, provided the published bootstrap engine remains a single
-executable script.
-
-It does not establish a maximum script size.
+It does not require a particular build system.
 
 ## Future Considerations
 
-If the bootstrap engine eventually grows beyond what can be reasonably
-maintained as a single file, the project should revisit this decision
-through a new ADR rather than allowing the architecture to drift
-incrementally.
+Future versions may embed version metadata, generated documentation, or
+other derived content into the release artifact as part of the build
+process.
 
-Such a reconsideration should weigh the benefits of modularity against
-the project's goals of simplicity, inspectability, and ease of
-distribution.
+Regardless of those changes, the externally visible distribution should
+remain a single executable Bash script unless superseded by a future
+ADR.
 
 ## Summary
 
-The bootstrap engine is intentionally packaged as one executable Bash
-script.
+The project values a simple distribution experience and a maintainable
+source tree.
 
-This decision favors a simple and transparent user experience over
-internal modularity, ensuring that the project's public interface
-remains easy to obtain, inspect, understand, and execute from a single
-location.
+To achieve both goals, the bootstrap engine is developed as modular
+source code but published as a single executable Bash script produced
+during the release process.
