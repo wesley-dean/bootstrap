@@ -12,7 +12,7 @@ SHELL := /bin/bash
 
 DIST_DIR := dist
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
-SOURCE_FILES := lib/build-metadata.bash src/bootstrap.bash
+SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/logging.bash src/bootstrap.bash
 TEST_SCRIPTS := tests/*.bats
 TEST_RESULTS_DIR := test-results
 

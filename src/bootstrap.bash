@@ -21,35 +21,6 @@
 
 set -euo pipefail
 
-BOOTSTRAP_EXIT_SUCCESS=0
-BOOTSTRAP_EXIT_USAGE=64
-
-BOOTSTRAP_FLAG_DRY_RUN=false
-BOOTSTRAP_FLAG_EXPLAIN=false
-BOOTSTRAP_FLAG_VERBOSE=false
-BOOTSTRAP_FLAG_QUIET=false
-
-
-###############################################################################
-# @fn bootstrap_reset_options()
-# @brief Restores command-line option state to documented defaults.
-#
-# @details
-# The generated artifact normally runs once per process, but tests and future
-# callers may invoke main more than once after sourcing the file. Resetting
-# parser state at the start of each invocation prevents state from leaking across
-# calls and keeps behavior deterministic.
-#
-# @retval 0 Option state was reset successfully.
-###############################################################################
-bootstrap_reset_options() {
-  BOOTSTRAP_FLAG_DRY_RUN=false
-  BOOTSTRAP_FLAG_EXPLAIN=false
-  BOOTSTRAP_FLAG_VERBOSE=false
-  BOOTSTRAP_FLAG_QUIET=false
-}
-
-
 ###############################################################################
 # @fn bootstrap_print_help()
 # @brief Prints the currently supported command-line usage summary.
@@ -78,7 +49,6 @@ Options:
 HELP_TEXT
 }
 
-
 ###############################################################################
 # @fn bootstrap_print_usage_error(message)
 # @brief Prints a human-readable command-line usage error.
@@ -101,7 +71,6 @@ bootstrap_print_usage_error() {
   printf 'Try `bootstrap.bash --help` for usage.\n' >&2
 }
 
-
 ###############################################################################
 # @fn bootstrap_parse_arguments(...)
 # @brief Parses supported long-form command-line options.
@@ -123,43 +92,42 @@ bootstrap_print_usage_error() {
 bootstrap_parse_arguments() {
   while (($# > 0)); do
     case "$1" in
-      --dry-run)
-        BOOTSTRAP_FLAG_DRY_RUN=true
-        ;;
-      --explain)
-        BOOTSTRAP_FLAG_EXPLAIN=true
-        ;;
-      --verbose)
-        BOOTSTRAP_FLAG_VERBOSE=true
-        ;;
-      --quiet)
-        BOOTSTRAP_FLAG_QUIET=true
-        ;;
-      --help | --version)
-        bootstrap_print_usage_error "$1 must be used by itself"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-        ;;
-      --*)
-        bootstrap_print_usage_error "unsupported option: $1"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-        ;;
-      *)
-        bootstrap_print_usage_error "unexpected argument: $1"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-        ;;
+    --dry-run)
+      bootstrap_context_enable_dry_run
+      ;;
+    --explain)
+      bootstrap_context_enable_explain
+      ;;
+    --verbose)
+      bootstrap_context_enable_verbose
+      ;;
+    --quiet)
+      bootstrap_context_enable_quiet
+      ;;
+    --help | --version)
+      bootstrap_print_usage_error "$1 must be used by itself"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+      ;;
+    --*)
+      bootstrap_print_usage_error "unsupported option: $1"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+      ;;
+    *)
+      bootstrap_print_usage_error "unexpected argument: $1"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+      ;;
     esac
 
     shift
   done
 
-  if [[ "${BOOTSTRAP_FLAG_VERBOSE}" == true && "${BOOTSTRAP_FLAG_QUIET}" == true ]]; then
+  if bootstrap_context_is_verbose && bootstrap_context_is_quiet; then
     bootstrap_print_usage_error "--verbose and --quiet cannot be used together"
     return "${BOOTSTRAP_EXIT_USAGE}"
   fi
 
   return "${BOOTSTRAP_EXIT_SUCCESS}"
 }
-
 
 ###############################################################################
 # @fn bootstrap_run_placeholder()
@@ -174,14 +142,8 @@ bootstrap_parse_arguments() {
 # @retval 0 The placeholder operation completed successfully.
 ###############################################################################
 bootstrap_run_placeholder() {
-  if [[ "${BOOTSTRAP_FLAG_QUIET}" == true ]]; then
-    return "${BOOTSTRAP_EXIT_SUCCESS}"
-  fi
-
-  printf 'bootstrap.bash: not yet implemented\n'
-  return "${BOOTSTRAP_EXIT_SUCCESS}"
+  bootstrap_log_info 'bootstrap.bash: not yet implemented'
 }
-
 
 ###############################################################################
 # @fn main(...)
@@ -204,25 +166,25 @@ bootstrap_run_placeholder() {
 # @retval 64 The user supplied unsupported or invalid command-line arguments.
 ###############################################################################
 main() {
-  bootstrap_reset_options
+  bootstrap_context_reset
 
   case "${1:-}" in
-    --help)
-      if (($# > 1)); then
-        bootstrap_print_usage_error "--help does not accept additional arguments"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-      fi
-      bootstrap_print_help
-      return "${BOOTSTRAP_EXIT_SUCCESS}"
-      ;;
-    --version)
-      if (($# > 1)); then
-        bootstrap_print_usage_error "--version does not accept additional arguments"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-      fi
-      bootstrap_print_version
-      return "${BOOTSTRAP_EXIT_SUCCESS}"
-      ;;
+  --help)
+    if (($# > 1)); then
+      bootstrap_print_usage_error "--help does not accept additional arguments"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+    fi
+    bootstrap_print_help
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+    ;;
+  --version)
+    if (($# > 1)); then
+      bootstrap_print_usage_error "--version does not accept additional arguments"
+      return "${BOOTSTRAP_EXIT_USAGE}"
+    fi
+    bootstrap_print_version
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+    ;;
   esac
 
   bootstrap_parse_arguments "$@" || return "$?"

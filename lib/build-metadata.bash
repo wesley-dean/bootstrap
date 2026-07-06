@@ -27,7 +27,6 @@ BOOTSTRAP_VERSION="${BOOTSTRAP_VERSION:-0.0.0-dev}"
 BOOTSTRAP_BUILD_DATE="${BOOTSTRAP_BUILD_DATE:-unknown}"
 BOOTSTRAP_BUILD_COMMIT="${BOOTSTRAP_BUILD_COMMIT:-unknown}"
 
-
 ###############################################################################
 # @fn bootstrap_print_version()
 # @brief Prints public version information for the generated artifact.
