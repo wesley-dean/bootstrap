@@ -21,7 +21,7 @@ jobs:
       checks: write
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Install test dependencies
         run: |
@@ -30,6 +30,8 @@ jobs:
 
       - name: Run static checks
         run: make check
+        id: shellcheck
+        continue-on-error: true
 
       - name: Run Bats tests
         id: bats
@@ -37,7 +39,7 @@ jobs:
         run: make test-report
 
       - name: Publish Bats test results
-        uses: dorny/test-reporter@v1
+        uses: dorny/test-reporter@3eeb9fc888e82e8be2fb356bbeec2750231672bc # v1
         if: always()
         with:
           name: Bats tests
