@@ -50,3 +50,17 @@ setup() {
     [ "$status" -eq 69 ]
     [[ "$output" == *"missing action type"* ]]
 }
+
+@test "resolved action constructor rejects reserved pipe delimiters" {
+    run bash -c "source '$SCRIPT'; bootstrap_resolved_action_create_install_package apt 'bad|package' '' '' packages.txt 4"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"malformed resolved action: package contains reserved delimiter"* ]]
+}
+
+@test "resolved action constructor rejects malformed provenance line numbers" {
+    run bash -c "source '$SCRIPT'; bootstrap_resolved_action_create_install_package apt git '' '' packages.txt nope"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"malformed resolved action: line number is not numeric: nope"* ]]
+}

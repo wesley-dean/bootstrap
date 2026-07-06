@@ -14,6 +14,51 @@
 # resolving platforms.
 ###############################################################################
 
+
+###############################################################################
+# @fn bootstrap_executor_malformed_resolved_action_message(action, manager, package)
+# @brief Chooses a stable Execution Result message for malformed input records.
+#
+# @details
+# The structural validator prints the precise diagnostic for a malformed
+# Resolved Action.  The executor also needs to emit an Execution Result record
+# so stream consumers receive structured failure data.  This helper keeps those
+# result messages stable without duplicating every validation rule in the
+# executor itself.
+#
+# @param action Resolved Action type, when present.
+# @param manager Backend selected by the resolver, when present.
+# @param package Package name associated with the action, when present.
+# @returns A short Execution Result message on standard output.
+# @retval 0 The message was printed successfully.
+###############################################################################
+bootstrap_executor_malformed_resolved_action_message() {
+  local action
+  local manager
+  local package
+
+  action="${1:-}"
+  manager="${2:-}"
+  package="${3:-}"
+
+  if [[ -z "${action}" ]]; then
+    printf 'missing resolved action type\n'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  if [[ "${action}" == 'install-package' && -z "${manager}" ]]; then
+    printf 'missing resolved package manager\n'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  if [[ "${action}" == 'install-package' && -z "${package}" ]]; then
+    printf 'missing resolved package name\n'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf 'malformed resolved action\n'
+}
+
 ###############################################################################
 # @fn bootstrap_executor_execute_resolved_action(action, manager, package, operator, version, source, line_number)
 # @brief Attempts to execute one Resolved Action.
@@ -53,15 +98,24 @@ bootstrap_executor_execute_resolved_action() {
 
   : "${operator}" "${version}" "${source}" "${line_number}"
 
-  if [[ -z "${action}" ]]; then
-    printf 'bootstrap.bash: malformed resolved action: missing action type\n' >&2
+  if ! bootstrap_resolved_action_validate_record \
+    "${action}" \
+    "${manager}" \
+    "${package}" \
+    "${operator}" \
+    "${version}" \
+    "${source}" \
+    "${line_number}"; then
     bootstrap_execution_result_create \
       'not-executed' \
       "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
-      '' \
+      "${action}" \
       "${manager}" \
       "${package}" \
-      'missing resolved action type'
+      "$(bootstrap_executor_malformed_resolved_action_message \
+        "${action}" \
+        "${manager}" \
+        "${package}")"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
 
@@ -128,18 +182,6 @@ bootstrap_executor_execute_resolved_actions() {
   local version
 
   while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
-    if [[ -z "${action}" ]]; then
-      printf 'bootstrap.bash: malformed resolved action: missing action type\n' >&2
-      bootstrap_execution_result_create \
-        'not-executed' \
-        "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
-        '' \
-        "${manager:-}" \
-        "${package:-}" \
-        'missing resolved action type'
-      return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
-    fi
-
     bootstrap_executor_execute_resolved_action \
       "${action}" \
       "${manager:-}" \

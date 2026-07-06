@@ -180,3 +180,27 @@ STUB
     [ "$status" -eq 69 ]
     [ -z "$output" ]
 }
+
+@test "executor rejects resolved package actions without package managers" {
+    run bash -c "source '$SCRIPT'; printf 'install-package||git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"malformed resolved action: missing package manager"* ]]
+    [[ "$output" == *"not-executed|69|install-package||git|missing resolved package manager"* ]]
+}
+
+@test "executor rejects resolved package actions without package names" {
+    run bash -c "source '$SCRIPT'; printf 'install-package|apt|||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"malformed resolved action: missing package name"* ]]
+    [[ "$output" == *"not-executed|69|install-package|apt||missing resolved package name"* ]]
+}
+
+@test "executor rejects resolved actions with malformed provenance" {
+    run bash -c "source '$SCRIPT'; printf 'install-package|apt|git|||packages.txt|7|extra\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"malformed resolved action: line_number contains reserved delimiter"* ]]
+    [[ "$output" == *"not-executed|69|install-package|apt|git|malformed resolved action"* ]]
+}
