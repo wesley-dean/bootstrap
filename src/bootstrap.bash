@@ -205,9 +205,9 @@ bootstrap_print_action_record() {
 #
 # @details
 # Explain output should make the plan easier to inspect without pretending that
-# resolver or executor work has already happened.  This helper therefore reports
-# the manifest line that produced the action and restates that the action remains
-# abstract and platform independent.
+# executor work has already happened. This helper reports the manifest line that
+# produced the action and restates that the planner output remains the immutable,
+# platform-independent source of intent.
 #
 # @param action Action Record type.
 # @param package Package name associated with the action.
@@ -248,7 +248,7 @@ bootstrap_print_action_explanation() {
         "${line_number:-unknown}" \
         "${package}"
     fi
-    printf '    Planner action: install-package; resolver and executor have not run.\n'
+    printf '    Planner action: install-package; resolver adds platform binding separately.\n'
     ;;
   *)
     printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
@@ -258,42 +258,153 @@ bootstrap_print_action_explanation() {
 }
 
 ###############################################################################
-# @fn bootstrap_print_dry_run_plan(manifest_path, action_file)
-# @brief Renders a planned dry-run action list for a manifest.
+# @fn bootstrap_print_resolved_action(action, manager, package, operator, version)
+# @brief Prints one human-readable dry-run line for a Resolved Action.
 #
 # @details
-# Dry-run output is deliberately generated from Action Records rather than from
-# parser records.  This keeps the user-facing output aligned with the same
-# abstract plan that later resolver and executor phases will consume.
+# Resolved Actions bind abstract planner output to the current platform without
+# executing anything. This renderer intentionally names the selected package
+# manager while avoiding command-line syntax that could be mistaken for work that
+# has already been performed.
 #
-# Explain mode reports the manifest source line behind each planned action while
-# preserving the abstract planning boundary.  It does not add package-manager
-# detail because resolver and executor phases have not yet bound abstract
-# actions to a platform-specific implementation.
+# @param action Resolved Action type.
+# @param manager Package manager selected by the resolver.
+# @param package Package name associated with the action.
+# @param operator Optional version constraint operator.
+# @param version Optional version constraint value.
+# @retval 0 The Resolved Action was rendered successfully.
+# @retval 69 The Resolved Action type was unsupported by this renderer.
+###############################################################################
+bootstrap_print_resolved_action() {
+  local action
+  local manager
+  local operator
+  local package
+  local version
+
+  action="$1"
+  manager="$2"
+  package="$3"
+  operator="${4:-}"
+  version="${5:-}"
+
+  case "${action}" in
+  install-package)
+    if [[ -n "${operator}" || -n "${version}" ]]; then
+      printf '  - %s would install package: %s (%s %s)\n' \
+        "${manager}" \
+        "${package}" \
+        "${operator}" \
+        "${version}"
+    else
+      printf '  - %s would install package: %s\n' "${manager}" "${package}"
+    fi
+    ;;
+  *)
+    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    ;;
+  esac
+}
+
+###############################################################################
+# @fn bootstrap_print_resolved_action_explanation(action, manager, package, operator, version, source, line_number)
+# @brief Prints explanatory context for one Resolved Action.
+#
+# @details
+# This helper describes how the current environment resolved a planned action.
+# It is deliberately phrased as future intent rather than completed work because
+# dry-run mode must never mutate the system.
+#
+# @param action Resolved Action type.
+# @param manager Package manager selected by the resolver.
+# @param package Package name associated with the resolved action.
+# @param operator Optional version constraint operator.
+# @param version Optional version constraint value.
+# @param source Manifest source path preserved for provenance.
+# @param line_number Manifest line number preserved for provenance.
+# @retval 0 The explanation was printed successfully.
+# @retval 69 The Resolved Action type was unsupported by this renderer.
+###############################################################################
+bootstrap_print_resolved_action_explanation() {
+  local action
+  local line_number
+  local manager
+  local operator
+  local package
+  local source
+  local version
+
+  action="$1"
+  manager="$2"
+  package="$3"
+  operator="${4:-}"
+  version="${5:-}"
+  source="${6:-}"
+  line_number="${7:-}"
+
+  case "${action}" in
+  install-package)
+    printf '  - %s:%s would be handled by package manager: %s.\n' \
+      "${source:-unknown}" \
+      "${line_number:-unknown}" \
+      "${manager}"
+    if [[ -n "${operator}" || -n "${version}" ]]; then
+      printf '    The version constraint remains attached for backend-specific interpretation.\n'
+    fi
+    printf '    Executor has not run; no system changes were made.\n'
+    ;;
+  *)
+    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
+    ;;
+  esac
+}
+
+###############################################################################
+# @fn bootstrap_print_dry_run_plan(manifest_path, action_file, resolved_file)
+# @brief Renders a planned and resolved dry-run action list for a manifest.
+#
+# @details
+# Dry-run output is deliberately generated from Action Records and Resolved
+# Actions rather than from parser records. This keeps the user-facing output
+# aligned with the same pipeline that later executor phases will consume while
+# still guaranteeing that dry-run mode performs no system changes.
+#
+# Explain mode reports both the manifest source line behind each planned action
+# and the resolver binding selected for the current environment.
 #
 # @param manifest_path Manifest path used to produce the plan.
 # @param action_file File containing pipe-delimited Action Records.
+# @param resolved_file File containing pipe-delimited Resolved Actions.
 # @returns Human-readable dry-run output on standard output.
 # @retval 0 The dry-run plan was printed successfully.
 # @retval 65 An Action Record could not be rendered.
+# @retval 69 A Resolved Action could not be rendered.
 ###############################################################################
 bootstrap_print_dry_run_plan() {
   local action
   local action_file
   local line_number
+  local manager
   local operator
   local package
   local planned_count
   local manifest_path
+  local resolved_file
+  local resolved_count
   local source
   local version
 
   manifest_path="$1"
   action_file="$2"
+  resolved_file="$3"
   planned_count=0
+  resolved_count=0
 
   printf 'Dry run plan for manifest: %s\n' "${manifest_path}"
 
+  printf '\nPlanned actions:\n'
   while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
     planned_count=$((planned_count + 1))
     bootstrap_print_action_record \
@@ -307,12 +418,30 @@ bootstrap_print_dry_run_plan() {
     printf '  - no package actions planned\n'
   fi
 
-  printf 'Summary: %s action(s) planned.\n' "${planned_count}"
+  printf '\nResolved actions:\n'
+  while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
+    resolved_count=$((resolved_count + 1))
+    bootstrap_print_resolved_action \
+      "${action}" \
+      "${manager}" \
+      "${package}" \
+      "${operator:-}" \
+      "${version:-}" || return "$?"
+  done <"${resolved_file}"
+
+  if ((resolved_count == 0)); then
+    printf '  - no package actions resolved\n'
+  fi
+
+  printf 'Summary: %s action(s) planned; %s action(s) resolved.\n' \
+    "${planned_count}" \
+    "${resolved_count}"
 
   if bootstrap_context_should_explain; then
     printf '\nExplanation:\n'
-    printf '  The planner emitted abstract Action Records only.\n'
-    printf '  No package manager was selected and no system changes were made.\n'
+    printf '  The planner emitted immutable abstract Action Records.\n'
+    printf '  The resolver selected platform-specific Resolved Actions for this system.\n'
+    printf '  Executor has not run and no system changes were made.\n'
 
     if ((planned_count > 0)); then
       printf '\nAction provenance:\n'
@@ -326,43 +455,70 @@ bootstrap_print_dry_run_plan() {
           "${line_number:-}" || return "$?"
       done <"${action_file}"
     fi
+
+    if ((resolved_count > 0)); then
+      printf '\nResolver decisions:\n'
+      while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
+        bootstrap_print_resolved_action_explanation \
+          "${action}" \
+          "${manager}" \
+          "${package}" \
+          "${operator:-}" \
+          "${version:-}" \
+          "${source:-}" \
+          "${line_number:-}" || return "$?"
+      done <"${resolved_file}"
+    fi
   fi
 }
 
 ###############################################################################
 # @fn bootstrap_run_dry_run_plan()
-# @brief Parses the requested manifest and prints its abstract execution plan.
+# @brief Parses, plans, resolves, and prints a read-only dry-run plan.
 #
 # @details
-# This is the first end-to-end read-only path through the engine.  It composes
-# the manifest parser and planner, captures the resulting Action Records, and
-# renders those records for the user without resolving or executing them.
+# This path composes the manifest parser, planner, and resolver, captures their
+# intermediate records, and renders the results for the user without executing
+# the resolved actions. It is the first end-to-end path through the engine that
+# can report both what the project intends to do and how the current system
+# would satisfy that intent.
 #
-# @retval 0 The manifest was parsed, planned, and displayed successfully.
+# @retval 0 The manifest was parsed, planned, resolved, and displayed successfully.
 # @retval 65 The manifest could not be parsed or planned.
+# @retval 69 The planned actions could not be resolved on this system.
 ###############################################################################
 bootstrap_run_dry_run_plan() {
   local action_file
   local manifest_path
+  local resolved_file
   local status
 
   manifest_path="$(bootstrap_context_get_manifest_path)"
   action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-plan.XXXXXX")"
+  resolved_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-resolved.XXXXXX")"
 
   if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
     :
   else
     status="$?"
-    rm -f "${action_file}"
+    rm -f "${action_file}" "${resolved_file}"
     return "${status}"
   fi
 
-  if bootstrap_print_dry_run_plan "${manifest_path}" "${action_file}"; then
+  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+    :
+  else
+    status="$?"
+    rm -f "${action_file}" "${resolved_file}"
+    return "${status}"
+  fi
+
+  if bootstrap_print_dry_run_plan "${manifest_path}" "${action_file}" "${resolved_file}"; then
     status="${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
   fi
-  rm -f "${action_file}"
+  rm -f "${action_file}" "${resolved_file}"
 
   return "${status}"
 }

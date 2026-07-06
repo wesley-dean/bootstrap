@@ -18,9 +18,13 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Dry run plan for manifest: $manifest"* ]]
+    [[ "$output" == *"Planned actions:"* ]]
     [[ "$output" == *"install package: git"* ]]
     [[ "$output" == *"install package: curl"* ]]
-    [[ "$output" == *"Summary: 2 action(s) planned."* ]]
+    [[ "$output" == *"Resolved actions:"* ]]
+    [[ "$output" == *"apt would install package: git"* ]]
+    [[ "$output" == *"apt would install package: curl"* ]]
+    [[ "$output" == *"Summary: 2 action(s) planned; 2 action(s) resolved."* ]]
 }
 
 @test "dry-run manifest output preserves version constraints" {
@@ -33,6 +37,7 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"install package: openssl (>= 3.0)"* ]]
+    [[ "$output" == *"apt would install package: openssl (>= 3.0)"* ]]
 }
 
 @test "dry-run explain output describes abstract planning boundary" {
@@ -45,11 +50,14 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Explanation:"* ]]
-    [[ "$output" == *"abstract Action Records only"* ]]
-    [[ "$output" == *"No package manager was selected"* ]]
+    [[ "$output" == *"immutable abstract Action Records"* ]]
+    [[ "$output" == *"resolver selected platform-specific Resolved Actions"* ]]
     [[ "$output" == *"Action provenance:"* ]]
     [[ "$output" == *"$manifest:1 requested package jq"* ]]
     [[ "$output" == *"Planner action: install-package"* ]]
+    [[ "$output" == *"Resolver decisions:"* ]]
+    [[ "$output" == *"$manifest:1 would be handled by package manager: apt"* ]]
+    [[ "$output" == *"Executor has not run"* ]]
 }
 
 @test "dry-run empty manifest reports no planned package actions" {
@@ -63,7 +71,8 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"no package actions planned"* ]]
-    [[ "$output" == *"Summary: 0 action(s) planned."* ]]
+    [[ "$output" == *"no package actions resolved"* ]]
+    [[ "$output" == *"Summary: 0 action(s) planned; 0 action(s) resolved."* ]]
 }
 
 @test "dry-run manifest propagates parser failures" {
