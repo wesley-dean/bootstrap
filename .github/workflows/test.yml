@@ -31,6 +31,9 @@ jobs:
       - name: Run static checks
         run: make check
 
+      - name: Build distribution artifact
+        run: make all
+
       - name: Run Bats tests
         id: bats
         continue-on-error: true

@@ -361,5 +361,5 @@ $RECYCLE.BIN/
 # SonarScanner
 .scannerwork
 
-
+dist/
 test-results/
