@@ -12,16 +12,43 @@ setup() {
     [ "$output" = "success|0|install-package|apt|git|completed without changes" ]
 }
 
-@test "executor invokes apt-get for apt install-package resolved actions" {
+@test "executor skips apt-get when apt package is already installed" {
     fake_bin="${BATS_TEST_TMPDIR}/bin"
-    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    apt_log="${BATS_TEST_TMPDIR}/apt-get.log"
     mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+printf 'install ok installed\n'
+exit 0
+STUB
     cat >"${fake_bin}/apt-get" <<'STUB'
 #!/usr/bin/env bash
 printf '%s\n' "$*" >>"${APT_GET_LOG}"
 exit 0
 STUB
-    chmod +x "${fake_bin}/apt-get"
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$apt_log" bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"already-satisfied|0|install-package|apt|git|package already installed"* ]]
+    [ ! -e "$apt_log" ]
+}
+
+@test "executor invokes apt-get for missing apt packages" {
+    fake_bin="${BATS_TEST_TMPDIR}/bin"
+    log_file="${BATS_TEST_TMPDIR}/apt-get.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >>"${APT_GET_LOG}"
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
 
     run env PATH="${fake_bin}:$PATH" APT_GET_LOG="$log_file" bash -c "source '$SCRIPT'; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
 
@@ -33,11 +60,15 @@ STUB
 @test "executor preserves package identity in apt failure results" {
     fake_bin="${BATS_TEST_TMPDIR}/bin"
     mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
     cat >"${fake_bin}/apt-get" <<'STUB'
 #!/usr/bin/env bash
 exit 42
 STUB
-    chmod +x "${fake_bin}/apt-get"
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
 
     run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; printf 'install-package|apt|openssl|>=|3.0|packages.txt|7\n' | bootstrap_executor_execute_resolved_actions"
 
