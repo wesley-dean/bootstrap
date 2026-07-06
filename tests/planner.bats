@@ -18,9 +18,9 @@ MANIFEST
     run bash -c "source '$SCRIPT'; bootstrap_planner_plan_manifest_file '$manifest'"
 
     [ "$status" -eq 0 ]
-    [ "${lines[0]}" = $'install-package\tgit\t\t' ]
-    [ "${lines[1]}" = $'install-package\tcurl\t\t' ]
-    [ "${lines[2]}" = $'install-package\tjq\t\t' ]
+    [ "${lines[0]}" = "install-package|git|||$manifest|1" ]
+    [ "${lines[1]}" = "install-package|curl|||$manifest|2" ]
+    [ "${lines[2]}" = "install-package|jq|||$manifest|3" ]
 }
 
 @test "planner preserves version constraints without resolving them" {
@@ -33,8 +33,8 @@ MANIFEST
     run bash -c "source '$SCRIPT'; bootstrap_planner_plan_manifest_file '$manifest'"
 
     [ "$status" -eq 0 ]
-    [ "${lines[0]}" = $'install-package\topenssl\t>=\t3.0' ]
-    [ "${lines[1]}" = $'install-package\tfoo\t==\t1.2.3' ]
+    [ "${lines[0]}" = "install-package|openssl|>=|3.0|$manifest|1" ]
+    [ "${lines[1]}" = "install-package|foo|==|1.2.3|$manifest|2" ]
 }
 
 @test "planner ignores comments and blank lines through the parser boundary" {
@@ -64,7 +64,7 @@ MANIFEST
 }
 
 @test "planner rejects incomplete manifest records" {
-    run bash -c "source '$SCRIPT'; printf '\t\t\n' | bootstrap_planner_plan_manifest_records"
+    run bash -c "source '$SCRIPT'; printf '||||\n' | bootstrap_planner_plan_manifest_records"
 
     [ "$status" -eq 65 ]
     [[ "$output" == *"missing package name"* ]]

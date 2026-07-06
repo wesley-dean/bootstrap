@@ -159,8 +159,9 @@ bootstrap_run_placeholder() {
 # @details
 # The planner emits abstract Action Records.  This function renders the small
 # install-package action model that exists today without resolving package
-# managers or command lines.  Unknown action types are reported as usage errors
-# because the CLI should not silently hide planner output it cannot explain.
+# managers or command lines.  Unknown action types are reported as manifest
+# errors because the CLI should not silently hide planner output it cannot
+# explain.
 #
 # @param action Action Record type.
 # @param package Package name associated with the action.
@@ -199,6 +200,64 @@ bootstrap_print_action_record() {
 }
 
 ###############################################################################
+# @fn bootstrap_print_action_explanation(action, package, operator, version, source, line_number)
+# @brief Prints provenance and architectural context for one Action Record.
+#
+# @details
+# Explain output should make the plan easier to inspect without pretending that
+# resolver or executor work has already happened.  This helper therefore reports
+# the manifest line that produced the action and restates that the action remains
+# abstract and platform independent.
+#
+# @param action Action Record type.
+# @param package Package name associated with the action.
+# @param operator Optional version constraint operator.
+# @param version Optional version constraint value.
+# @param source Manifest source path preserved by the parser and planner.
+# @param line_number Manifest line number preserved by the parser and planner.
+# @retval 0 The explanation was printed successfully.
+# @retval 65 The Action Record type was unsupported by this renderer.
+###############################################################################
+bootstrap_print_action_explanation() {
+  local action
+  local line_number
+  local operator
+  local package
+  local source
+  local version
+
+  action="$1"
+  package="$2"
+  operator="${3:-}"
+  version="${4:-}"
+  source="${5:-}"
+  line_number="${6:-}"
+
+  case "${action}" in
+  install-package)
+    if [[ -n "${operator}" || -n "${version}" ]]; then
+      printf '  - %s:%s requested package %s with constraint %s %s.\n' \
+        "${source:-unknown}" \
+        "${line_number:-unknown}" \
+        "${package}" \
+        "${operator}" \
+        "${version}"
+    else
+      printf '  - %s:%s requested package %s.\n' \
+        "${source:-unknown}" \
+        "${line_number:-unknown}" \
+        "${package}"
+    fi
+    printf '    Planner action: install-package; resolver and executor have not run.\n'
+    ;;
+  *)
+    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    return "${BOOTSTRAP_EXIT_MANIFEST}"
+    ;;
+  esac
+}
+
+###############################################################################
 # @fn bootstrap_print_dry_run_plan(manifest_path, action_file)
 # @brief Renders a planned dry-run action list for a manifest.
 #
@@ -207,12 +266,13 @@ bootstrap_print_action_record() {
 # parser records.  This keeps the user-facing output aligned with the same
 # abstract plan that later resolver and executor phases will consume.
 #
-# Explain mode currently adds architectural context only.  It does not add
-# package-manager detail because resolver and executor phases have not yet bound
-# abstract actions to a platform-specific implementation.
+# Explain mode reports the manifest source line behind each planned action while
+# preserving the abstract planning boundary.  It does not add package-manager
+# detail because resolver and executor phases have not yet bound abstract
+# actions to a platform-specific implementation.
 #
 # @param manifest_path Manifest path used to produce the plan.
-# @param action_file File containing tab-separated Action Records.
+# @param action_file File containing pipe-delimited Action Records.
 # @returns Human-readable dry-run output on standard output.
 # @retval 0 The dry-run plan was printed successfully.
 # @retval 65 An Action Record could not be rendered.
@@ -220,10 +280,12 @@ bootstrap_print_action_record() {
 bootstrap_print_dry_run_plan() {
   local action
   local action_file
+  local line_number
   local operator
   local package
   local planned_count
   local manifest_path
+  local source
   local version
 
   manifest_path="$1"
@@ -232,7 +294,7 @@ bootstrap_print_dry_run_plan() {
 
   printf 'Dry run plan for manifest: %s\n' "${manifest_path}"
 
-  while IFS=$'\t' read -r action package operator version || [[ -n "${action:-}" ]]; do
+  while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
     planned_count=$((planned_count + 1))
     bootstrap_print_action_record \
       "${action}" \
@@ -251,6 +313,19 @@ bootstrap_print_dry_run_plan() {
     printf '\nExplanation:\n'
     printf '  The planner emitted abstract Action Records only.\n'
     printf '  No package manager was selected and no system changes were made.\n'
+
+    if ((planned_count > 0)); then
+      printf '\nAction provenance:\n'
+      while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
+        bootstrap_print_action_explanation \
+          "${action}" \
+          "${package}" \
+          "${operator:-}" \
+          "${version:-}" \
+          "${source:-}" \
+          "${line_number:-}" || return "$?"
+      done <"${action_file}"
+    fi
   fi
 }
 

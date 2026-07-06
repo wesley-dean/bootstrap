@@ -20,24 +20,27 @@
 # @brief Converts normalized manifest records from stdin into Action Records.
 #
 # @details
-# Each input record is expected to use the parser's tab-separated Manifest Entry
-# representation: package, operator, and version.  For every package requirement,
-# the planner emits one abstract install-package Action Record.
+# Each input record is expected to use the parser's pipe-delimited Manifest Entry
+# representation: package, operator, version, source, and line number.  For every
+# package requirement, the planner emits one abstract install-package Action
+# Record.
 #
 # The action stream deliberately preserves manifest order.  Later phases may add
 # deterministic sorting or dependency-aware ordering where appropriate, but this
 # planner slice keeps the user's stated order visible and testable.
 #
-# @returns Tab-separated Action Records on standard output.
+# @returns Pipe-delimited Action Records on standard output.
 # @retval 0 All manifest records were planned successfully.
 # @retval 65 A malformed or incomplete manifest record could not be planned.
 ###############################################################################
 bootstrap_planner_plan_manifest_records() {
+  local line_number
   local operator
   local package
+  local source
   local version
 
-  while IFS=$'\t' read -r package operator version || [[ -n "${package:-}" ]]; do
+  while IFS='|' read -r package operator version source line_number || [[ -n "${package:-}" ]]; do
     if [[ -z "${package}" ]]; then
       printf 'bootstrap.bash: malformed manifest record: missing package name\n' >&2
       return "${BOOTSTRAP_EXIT_MANIFEST}"
@@ -46,7 +49,9 @@ bootstrap_planner_plan_manifest_records() {
     bootstrap_action_record_create_install_package \
       "${package}" \
       "${operator:-}" \
-      "${version:-}" || return "$?"
+      "${version:-}" \
+      "${source:-}" \
+      "${line_number:-}" || return "$?"
   done
 
   return "${BOOTSTRAP_EXIT_SUCCESS}"
@@ -65,7 +70,7 @@ bootstrap_planner_plan_manifest_records() {
 # platform independent and immutable.
 #
 # @param path Path to the manifest file to parse and plan.
-# @returns Tab-separated Action Records on standard output.
+# @returns Pipe-delimited Action Records on standard output.
 # @retval 0 The manifest was parsed and planned successfully.
 # @retval 65 The manifest could not be parsed or planned.
 ###############################################################################

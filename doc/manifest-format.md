@@ -20,13 +20,17 @@ baz > 1.0
 ```
 
 Whitespace around package names and operators is ignored.  The parser
-normalizes requirements into three fields:
+normalizes requirements into Manifest Entry records containing:
 
 ```text
-package<TAB>operator<TAB>version
+package|operator|version|source|line_number
 ```
 
 For package-only requirements, the operator and version fields are empty.
+The source and line-number fields preserve provenance so later dry-run and
+explain output can identify the manifest line that produced each planned
+action.
+
 The parser validates manifest syntax only.  It does not check whether a
 package exists, compare versions, plan installations, or call a package
 manager.

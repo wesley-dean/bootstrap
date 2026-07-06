@@ -47,6 +47,9 @@ MANIFEST
     [[ "$output" == *"Explanation:"* ]]
     [[ "$output" == *"abstract Action Records only"* ]]
     [[ "$output" == *"No package manager was selected"* ]]
+    [[ "$output" == *"Action provenance:"* ]]
+    [[ "$output" == *"$manifest:1 requested package jq"* ]]
+    [[ "$output" == *"Planner action: install-package"* ]]
 }
 
 @test "dry-run empty manifest reports no planned package actions" {

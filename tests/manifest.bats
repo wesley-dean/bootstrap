@@ -32,9 +32,9 @@ MANIFEST
     run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"
 
     [ "$status" -eq 0 ]
-    [ "${lines[0]}" = $'git\t\t' ]
-    [ "${lines[1]}" = $'vim-gtk3\t\t' ]
-    [ "${lines[2]}" = $'python3-venv\t\t' ]
+    [ "${lines[0]}" = "git|||$manifest|1" ]
+    [ "${lines[1]}" = "vim-gtk3|||$manifest|2" ]
+    [ "${lines[2]}" = "python3-venv|||$manifest|3" ]
 }
 
 @test "manifest parser removes inline comments" {
@@ -47,8 +47,8 @@ MANIFEST
     run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"
 
     [ "$status" -eq 0 ]
-    [ "${lines[0]}" = $'dnsutils\t\t' ]
-    [ "${lines[1]}" = $'whois\t\t' ]
+    [ "${lines[0]}" = "dnsutils|||$manifest|1" ]
+    [ "${lines[1]}" = "whois|||$manifest|2" ]
 }
 
 @test "manifest parser parses supported version constraints" {
@@ -63,10 +63,10 @@ MANIFEST
     run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"
 
     [ "$status" -eq 0 ]
-    [ "${lines[0]}" = $'openssl\t>=\t3.0' ]
-    [ "${lines[1]}" = $'foo\t==\t1.2.3' ]
-    [ "${lines[2]}" = $'bar\t=\t2.0' ]
-    [ "${lines[3]}" = $'baz\t>\t1.0' ]
+    [ "${lines[0]}" = "openssl|>=|3.0|$manifest|1" ]
+    [ "${lines[1]}" = "foo|==|1.2.3|$manifest|2" ]
+    [ "${lines[2]}" = "bar|=|2.0|$manifest|3" ]
+    [ "${lines[3]}" = "baz|>|1.0|$manifest|4" ]
 }
 
 @test "manifest parser rejects unsupported operators" {
@@ -85,6 +85,18 @@ MANIFEST
     manifest="${WORK_DIR}/extra-tokens.txt"
     cat >"$manifest" <<'MANIFEST'
 git curl
+MANIFEST
+
+    run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"
+
+    [ "$status" -eq 65 ]
+    [[ "$output" == *"malformed manifest line"* ]]
+}
+
+@test "manifest parser rejects reserved pipe delimiter" {
+    manifest="${WORK_DIR}/pipe.txt"
+    cat >"$manifest" <<'MANIFEST'
+git|curl
 MANIFEST
 
     run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"

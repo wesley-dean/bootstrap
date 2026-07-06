@@ -13,11 +13,12 @@
 # responsibility is to convert human-authored manifest text into validated
 # package requirement records.
 #
-# The normalized representation is a tab-separated line containing package,
-# operator, and version fields.  Package-only requirements leave the operator and
-# version fields empty.  Later phases may replace this representation if the
-# planner needs richer data structures, but the current text form keeps Phase 3
-# behavior easy to inspect and test.
+# The normalized representation is a pipe-delimited Manifest Entry record
+# containing package, operator, version, source, and line-number fields.
+# Package-only requirements leave the operator and version fields empty.  The
+# source and line-number fields give later planning and explanation phases a
+# stable way to trace planned actions back to the manifest line that produced
+# them.
 ###############################################################################
 
 ###############################################################################
@@ -45,7 +46,7 @@ bootstrap_manifest_trim() {
 
 ###############################################################################
 # @fn bootstrap_manifest_parse_line(line, source, line_number)
-# @brief Parses one manifest line and emits a normalized package record.
+# @brief Parses one manifest line and emits a normalized Manifest Entry record.
 #
 # @details
 # Comments and blank lines are accepted and produce no output.  Package
@@ -60,7 +61,7 @@ bootstrap_manifest_trim() {
 # @param line The raw manifest line to parse.
 # @param source Human-readable source name used in diagnostics.
 # @param line_number One-based line number used in diagnostics.
-# @returns A tab-separated package/operator/version record for requirements.
+# @returns A pipe-delimited package/operator/version/source/line-number record.
 # @retval 0 The line was blank, a comment, or a valid package requirement.
 # @retval 65 The line was malformed manifest input.
 ###############################################################################
@@ -85,7 +86,7 @@ bootstrap_manifest_parse_line() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  regex='^([^[:space:]<>=!#]+)[[:space:]]*((==|=|>=|>)[[:space:]]*([^[:space:]#]+))?$'
+  regex='^([^[:space:]<>=!#|]+)[[:space:]]*((==|=|>=|>)[[:space:]]*([^[:space:]#|]+))?$'
 
   if [[ ! "${trimmed}" =~ ${regex} ]]; then
     printf 'bootstrap.bash: malformed manifest line: %s:%s\n' \
@@ -99,12 +100,17 @@ bootstrap_manifest_parse_line() {
   operator="${BASH_REMATCH[3]:-}"
   version="${BASH_REMATCH[4]:-}"
 
-  printf '%s\t%s\t%s\n' "${package}" "${operator}" "${version}"
+  printf '%s|%s|%s|%s|%s\n' \
+    "${package}" \
+    "${operator}" \
+    "${version}" \
+    "${source}" \
+    "${line_number}"
 }
 
 ###############################################################################
 # @fn bootstrap_manifest_parse_file(path)
-# @brief Parses a package manifest file into normalized package records.
+# @brief Parses a package manifest file into normalized Manifest Entry records.
 #
 # @details
 # The parser reads the entire manifest before later roadmap phases perform any
@@ -117,7 +123,7 @@ bootstrap_manifest_parse_line() {
 # temporary file and use the exit status to decide whether to keep it.
 #
 # @param path Path to the manifest file to parse.
-# @returns Tab-separated package/operator/version records on standard output.
+# @returns Pipe-delimited Manifest Entry records on standard output.
 # @retval 0 The manifest was read and parsed successfully.
 # @retval 65 The manifest path was unreadable or contained malformed input.
 ###############################################################################
