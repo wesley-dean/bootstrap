@@ -246,19 +246,20 @@ These should be evaluated against the ADRs before implementation.
 
 ------------------------------------------------------------------------
 
-# Working Practices for Future ChatGPT Sessions
+# Working Practices for Future Agentic Development Sessions
 
-A future ChatGPT session should follow this workflow:
+A future development session should follow this workflow:
 
 1.  Read `AGENTS.md`.
 2.  Read this roadmap.
 3.  Review the relevant ADRs before designing a feature.
 4.  Work on exactly one roadmap task at a time.
-5.  Produce the smallest correct patch.
-6.  Update documentation as part of the implementation.
-7.  Add or update behavior-oriented tests.
-8.  Run formatting, linting, and tests.
-9.  Stop after the requested milestone rather than beginning the next
+5.  Produce unit tests for any new, changed, updated, deleted code
+6.  Produce the smallest correct patch.
+7.  Update documentation as part of the implementation.
+8.  Add or update behavior-oriented tests.
+9.  Run formatting, linting, and tests.
+10. Stop after the requested milestone rather than beginning the next
     one.
 
 If uncertainty exists, identify the assumptions, ask only the questions
