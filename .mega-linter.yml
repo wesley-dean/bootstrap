@@ -1,6 +1,6 @@
 ---
 # don't use Mega-Linter to test the reports Mega-Linter created
-ADDITIONAL_EXCLUDED_DIRECTORIES: [report, megalinter-reports, .git, site, tests]
+ADDITIONAL_EXCLUDED_DIRECTORIES: [report, megalinter-reports, .git, site, tests, dist, test-results]
 
 # don't scan files listed in .gitignore (e.g., node_modules)
 IGNORE_GITIGNORED_FILES: true
@@ -25,7 +25,7 @@ DISABLE_LINTERS:
   ]
 
 # scan only new / updated files, not everything
-VALIDATE_ALL_CODEBASE: false
+VALIDATE_ALL_CODEBASE: true
 
 # don't print the alpaca -- it's cute, but we don't need it in the logs
 PRINT_ALPACA: false
