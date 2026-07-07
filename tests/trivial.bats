@@ -36,7 +36,7 @@ setup() {
     run "$SCRIPT"
 
     [ "$status" -eq 0 ]
-    [ "$output" = "bootstrap.bash: not yet implemented" ]
+    [ "$output" = "bootstrap.bash: info: not yet implemented" ]
 }
 
 @test "generated bootstrap.bash prints help" {
@@ -64,28 +64,28 @@ setup() {
     run "$SCRIPT" --dry-run
 
     [ "$status" -eq 0 ]
-    [ "$output" = "bootstrap.bash: not yet implemented" ]
+    [ "$output" = "bootstrap.bash: info: not yet implemented" ]
 }
 
 @test "generated bootstrap.bash accepts explain option" {
     run "$SCRIPT" --explain
 
     [ "$status" -eq 0 ]
-    [ "$output" = "bootstrap.bash: not yet implemented" ]
+    [ "$output" = "bootstrap.bash: info: not yet implemented" ]
 }
 
 @test "generated bootstrap.bash accepts verbose option" {
     run "$SCRIPT" --verbose
 
     [ "$status" -eq 0 ]
-    [ "$output" = "bootstrap.bash: not yet implemented" ]
+    [ "$output" = "bootstrap.bash: info: not yet implemented" ]
 }
 
 @test "generated bootstrap.bash accepts combined operational options" {
     run "$SCRIPT" --dry-run --explain --verbose
 
     [ "$status" -eq 0 ]
-    [ "$output" = "bootstrap.bash: not yet implemented" ]
+    [ "$output" = "bootstrap.bash: info: not yet implemented" ]
 }
 
 @test "generated bootstrap.bash quiet option suppresses placeholder output" {

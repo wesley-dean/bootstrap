@@ -104,7 +104,7 @@ bootstrap_resolver_resolve_action_record() {
       "${line_number}"
     ;;
   *)
-    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported action record: ${action}"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac
@@ -137,7 +137,7 @@ bootstrap_resolver_resolve_action_records() {
 
   while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
     if [[ -z "${action}" ]]; then
-      printf 'bootstrap.bash: malformed action record: missing action type\n' >&2
+      bootstrap_log_error 'malformed action record: missing action type'
       return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     fi
 

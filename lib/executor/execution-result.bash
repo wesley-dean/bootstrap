@@ -55,12 +55,12 @@ bootstrap_execution_result_create() {
   message="${6:-}"
 
   if [[ -z "${status}" ]]; then
-    printf 'bootstrap.bash: cannot create execution result without status\n' >&2
+    bootstrap_log_error 'cannot create execution result without status'
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
 
   if [[ -z "${exit_code}" ]]; then
-    printf 'bootstrap.bash: cannot create execution result without exit code\n' >&2
+    bootstrap_log_error 'cannot create execution result without exit code'
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
 

@@ -60,7 +60,8 @@ bootstrap_privilege_command_prefix() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  printf 'bootstrap.bash: privilege escalation requires sudo or doas\n' >&2
+  bootstrap_log_error 'privilege escalation requires sudo or doas'
+  bootstrap_recovery_privilege_unavailable
   return "${BOOTSTRAP_EXIT_PRIVILEGE}"
 }
 

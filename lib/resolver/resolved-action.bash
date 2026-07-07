@@ -49,12 +49,12 @@ bootstrap_resolved_action_create_install_package() {
   line_number="${6:-}"
 
   if [[ -z "${manager}" ]]; then
-    printf 'bootstrap.bash: cannot resolve package action without package manager\n' >&2
+    bootstrap_log_error 'cannot resolve package action without package manager'
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
 
   if [[ -z "${package}" ]]; then
-    printf 'bootstrap.bash: cannot resolve package action without package name\n' >&2
+    bootstrap_log_error 'cannot resolve package action without package name'
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
   fi
 

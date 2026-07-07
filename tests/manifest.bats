@@ -82,6 +82,10 @@ MANIFEST
 
     [ "$status" -eq 65 ]
     [[ "$output" == *"malformed manifest line"* ]]
+    [[ "$output" == *"location: $manifest:1"* ]]
+    [[ "$output" == *"input: git <= 3.0"* ]]
+    [[ "$output" == *"supported operators: =, ==, >, >="* ]]
+    [[ "$output" == *"next step:"* ]]
 }
 
 @test "manifest parser rejects extra tokens" {
@@ -115,4 +119,18 @@ MANIFEST
 
     [ "$status" -eq 65 ]
     [[ "$output" == *"cannot read manifest"* ]]
+    [[ "$output" == *"manifest: $manifest"* ]]
+    [[ "$output" == *"next step:"* ]]
+}
+
+@test "manifest parser rejects directory paths as unreadable manifests" {
+    manifest="${WORK_DIR}/as-directory"
+    mkdir -p "$manifest"
+
+    run bash -c "source '$SCRIPT'; bootstrap_manifest_parse_file '$manifest'"
+
+    [ "$status" -eq 65 ]
+    [[ "$output" == *"cannot read manifest"* ]]
+    [[ "$output" == *"manifest: $manifest"* ]]
+    [[ "$output" == *"next step:"* ]]
 }

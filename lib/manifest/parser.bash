@@ -93,11 +93,11 @@ bootstrap_manifest_parse_line() {
   regex='^([^[:space:]<>=!#|]+)[[:space:]]*((==|=|>=|>)[[:space:]]*([^[:space:]#|]+))?$'
 
   if [[ ! "${trimmed}" =~ ${regex} ]]; then
-    printf 'bootstrap.bash: malformed manifest line: %s:%s\n' \
+    bootstrap_diagnostic_manifest_malformed_line \
       "${source}" \
-      "${line_number}" >&2
-    printf 'bootstrap.bash: %s\n' "${trimmed}" >&2
-    return "${BOOTSTRAP_EXIT_MANIFEST}"
+      "${line_number}" \
+      "${trimmed}"
+    return "$?"
   fi
 
   package="${BASH_REMATCH[1]}"
@@ -139,9 +139,9 @@ bootstrap_manifest_parse_file() {
   path="$1"
   line_number=0
 
-  if [[ ! -r "${path}" ]]; then
-    printf 'bootstrap.bash: cannot read manifest: %s\n' "${path}" >&2
-    return "${BOOTSTRAP_EXIT_MANIFEST}"
+  if [[ ! -r "${path}" || ! -f "${path}" ]]; then
+    bootstrap_diagnostic_manifest_unreadable "${path}"
+    return "$?"
   fi
 
   while IFS= read -r line || [[ -n "${line}" ]]; do

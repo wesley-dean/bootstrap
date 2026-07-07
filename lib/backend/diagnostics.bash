@@ -29,7 +29,8 @@
 # @retval 69 No supported package manager was detected.
 ###############################################################################
 bootstrap_backend_diagnostic_no_supported_manager() {
-  printf 'bootstrap.bash: no supported package manager detected\n' >&2
+  bootstrap_log_error 'no supported package manager detected'
+  bootstrap_recovery_no_supported_package_manager
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -52,7 +53,8 @@ bootstrap_backend_diagnostic_unsupported_manager() {
 
   manager="$1"
 
-  printf 'bootstrap.bash: unsupported package manager: %s\n' "${manager}" >&2
+  bootstrap_log_error "unsupported package manager: ${manager}"
+  bootstrap_recovery_unsupported_package_manager "${manager}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -73,8 +75,8 @@ bootstrap_backend_diagnostic_missing_package_name() {
 
   manager="$1"
 
-  printf 'bootstrap.bash: cannot inspect %s package without package name\n' \
-    "${manager}" >&2
+  bootstrap_log_error \
+    "cannot inspect ${manager} package without package name"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -100,10 +102,8 @@ bootstrap_backend_diagnostic_unsupported_capability() {
   manager="$1"
   capability="$2"
 
-  printf \
-    'bootstrap.bash: backend capability not supported: %s %s\n' \
-    "${manager}" \
-    "${capability}" >&2
+  bootstrap_log_error \
+    "backend capability not supported: ${manager} ${capability}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -128,9 +128,9 @@ bootstrap_backend_diagnostic_package_unavailable() {
   manager="$1"
   package="$2"
 
-  printf 'bootstrap.bash: %s package not available: %s\n' \
-    "${manager}" \
-    "${package}" >&2
+  bootstrap_log_error \
+    "${manager} package not available: ${package}"
+  bootstrap_recovery_package_unavailable "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -156,9 +156,9 @@ bootstrap_backend_diagnostic_no_candidate() {
   manager="$1"
   package="$2"
 
-  printf 'bootstrap.bash: %s package has no install candidate: %s\n' \
-    "${manager}" \
-    "${package}" >&2
+  bootstrap_log_error \
+    "${manager} package has no install candidate: ${package}"
+  bootstrap_recovery_package_unavailable "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -183,9 +183,8 @@ bootstrap_backend_diagnostic_unsupported_version_operator() {
   manager="$1"
   operator="$2"
 
-  printf 'bootstrap.bash: unsupported %s version operator: %s\n' \
-    "${manager}" \
-    "${operator}" >&2
+  bootstrap_log_error \
+    "unsupported ${manager} version operator: ${operator}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -213,10 +212,8 @@ bootstrap_backend_diagnostic_missing_version() {
   package="$2"
   operator="$3"
 
-  printf 'bootstrap.bash: cannot check %s version without version: %s %s\n' \
-    "${manager}" \
-    "${package}" \
-    "${operator}" >&2
+  bootstrap_log_error \
+    "cannot check ${manager} version without version: ${package} ${operator}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -251,11 +248,8 @@ bootstrap_backend_diagnostic_unsatisfied_version_constraint() {
   operator="$4"
   version="$5"
 
-  printf 'bootstrap.bash: %s package candidate does not satisfy version constraint: %s candidate %s does not match %s %s\n' \
-    "${manager}" \
-    "${package}" \
-    "${candidate}" \
-    "${operator}" \
-    "${version}" >&2
+  bootstrap_log_error \
+    "${manager} package candidate does not satisfy version constraint: ${package} candidate ${candidate} does not match ${operator} ${version}"
+  bootstrap_recovery_version_constraint "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }

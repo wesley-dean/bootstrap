@@ -43,6 +43,8 @@ Options:
   --help     Show this help text and exit.
   --version  Show version and build metadata, then exit.
   --dry-run  Parse options without making system changes.
+  --package-manager NAME
+             Select package manager: auto or apt.
   --explain  Request explanation output for planned behavior.
   --verbose  Request more detailed diagnostic output.
   --quiet    Suppress non-essential output.
@@ -70,7 +72,7 @@ bootstrap_print_usage_error() {
 
   message="$1"
 
-  printf 'bootstrap.bash: %s\n' "${message}" >&2
+  bootstrap_log_error "${message}"
   printf "Try 'bootstrap.bash --help' for usage.\n" >&2
 }
 
@@ -100,6 +102,17 @@ bootstrap_parse_arguments() {
       ;;
     --explain)
       bootstrap_context_enable_explain
+      ;;
+    --package-manager)
+      if (($# < 2)); then
+        bootstrap_print_usage_error "--package-manager requires a value"
+        return "${BOOTSTRAP_EXIT_USAGE}"
+      fi
+      bootstrap_context_set_package_manager "$2"
+      shift
+      ;;
+    --package-manager=*)
+      bootstrap_context_set_package_manager "${1#--package-manager=}"
       ;;
     --verbose)
       bootstrap_context_enable_verbose
@@ -148,7 +161,7 @@ bootstrap_parse_arguments() {
 # @retval 0 The placeholder operation completed successfully.
 ###############################################################################
 bootstrap_run_placeholder() {
-  bootstrap_log_info 'bootstrap.bash: not yet implemented'
+  bootstrap_log_info 'not yet implemented'
 }
 
 ###############################################################################
@@ -192,7 +205,7 @@ bootstrap_print_action_record() {
     fi
     ;;
   *)
-    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported action record: ${action}"
     return "${BOOTSTRAP_EXIT_MANIFEST}"
     ;;
   esac
@@ -250,7 +263,7 @@ bootstrap_print_action_explanation() {
     printf '    Planner action: install-package; resolver adds platform binding separately.\n'
     ;;
   *)
-    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported action record: ${action}"
     return "${BOOTSTRAP_EXIT_MANIFEST}"
     ;;
   esac
@@ -300,7 +313,7 @@ bootstrap_print_resolved_action() {
     fi
     ;;
   *)
-    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported resolved action: ${action}"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac
@@ -354,7 +367,7 @@ bootstrap_print_resolved_action_explanation() {
     printf '    Executor has not run; no system changes were made.\n'
     ;;
   *)
-    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported resolved action: ${action}"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac
@@ -370,8 +383,9 @@ bootstrap_print_resolved_action_explanation() {
 # aligned with the same pipeline that later executor phases will consume while
 # still guaranteeing that dry-run mode performs no system changes.
 #
-# Explain mode reports both the manifest source line behind each planned action
-# and the resolver binding selected for the current environment.
+# Explain mode reports the user-facing reasoning behind the plan: what was
+# inspected, how manifest requests became actions, how the resolver bound those
+# actions to package managers, and why dry-run mode stops before execution.
 #
 # @param manifest_path Manifest path used to produce the plan.
 # @param action_file File containing pipe-delimited Action Records.
@@ -390,6 +404,7 @@ bootstrap_print_dry_run_plan() {
   local package
   local planned_count
   local manifest_path
+  local package_manager_selector
   local resolved_file
   local resolved_count
   local source
@@ -398,6 +413,7 @@ bootstrap_print_dry_run_plan() {
   manifest_path="$1"
   action_file="$2"
   resolved_file="$3"
+  package_manager_selector="$(bootstrap_context_get_package_manager)"
   planned_count=0
   resolved_count=0
 
@@ -438,12 +454,21 @@ bootstrap_print_dry_run_plan() {
 
   if bootstrap_context_should_explain; then
     printf '\nExplanation:\n'
-    printf '  The planner emitted immutable abstract Action Records.\n'
-    printf '  The resolver selected platform-specific Resolved Actions for this system.\n'
-    printf '  Executor has not run and no system changes were made.\n'
+    printf '  What happened: bootstrap inspected the manifest, planned package work,\n'
+    printf '  and resolved that plan for the selected package manager.\n'
+    printf '  Safety boundary: --dry-run is active, so execution stops here and no\n'
+    printf '  system changes were made.\n'
+    printf '  Manifest: %s\n' "${manifest_path}"
+    printf '  Package manager selector: %s\n' "${package_manager_selector}"
+    printf '  Planned actions: %s\n' "${planned_count}"
+    printf '  Resolved actions: %s\n' "${resolved_count}"
+    printf '\nHow to read this output:\n'
+    printf '  Planned actions describe user intent from the manifest.\n'
+    printf '  Resolved actions describe how this system would satisfy that intent.\n'
+    printf '  A later execution run consumes the same resolved action stream.\n'
 
     if ((planned_count > 0)); then
-      printf '\nAction provenance:\n'
+      printf '\nWhy these actions are planned:\n'
       while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
         bootstrap_print_action_explanation \
           "${action}" \
@@ -456,7 +481,7 @@ bootstrap_print_dry_run_plan() {
     fi
 
     if ((resolved_count > 0)); then
-      printf '\nResolver decisions:\n'
+      printf '\nWhy these package-manager decisions were made:\n'
       while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
         bootstrap_print_resolved_action_explanation \
           "${action}" \
@@ -504,7 +529,7 @@ bootstrap_run_dry_run_plan() {
     return "${status}"
   fi
 
-  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
     :
   else
     status="$?"
@@ -707,7 +732,7 @@ bootstrap_run_execution_plan() {
     return "${status}"
   fi
 
-  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
     :
   else
     status="$?"
@@ -769,7 +794,11 @@ main() {
     ;;
   esac
 
+  bootstrap_config_load_default_file || return "$?"
+  bootstrap_config_apply_environment
+
   bootstrap_parse_arguments "$@" || return "$?"
+  bootstrap_config_validate_effective_runtime || return "$?"
 
   if bootstrap_context_has_manifest_path; then
     if bootstrap_context_is_dry_run; then

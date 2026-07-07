@@ -53,7 +53,7 @@ bootstrap_executor_execute_resolved_action() {
   : "${operator}" "${version}" "${source}" "${line_number}"
 
   if [[ -z "${action}" ]]; then
-    printf 'bootstrap.bash: malformed resolved action: missing action type\n' >&2
+    bootstrap_log_error 'malformed resolved action: missing action type'
     bootstrap_execution_result_create \
       'not-executed' \
       "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
@@ -86,7 +86,7 @@ bootstrap_executor_execute_resolved_action() {
     esac
     ;;
   *)
-    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported resolved action: ${action}"
     bootstrap_execution_result_create \
       'not-executed' \
       "${BOOTSTRAP_EXIT_UNSUPPORTED}" \
@@ -128,7 +128,7 @@ bootstrap_executor_execute_resolved_actions() {
 
   while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
     if [[ -z "${action}" ]]; then
-      printf 'bootstrap.bash: malformed resolved action: missing action type\n' >&2
+      bootstrap_log_error 'malformed resolved action: missing action type'
       bootstrap_execution_result_create \
         'not-executed' \
         "${BOOTSTRAP_EXIT_UNSUPPORTED}" \

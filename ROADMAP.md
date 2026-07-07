@@ -159,13 +159,17 @@ First usable installer.
 
 ------------------------------------------------------------------------
 
-# Phase 7 -- Configuration
+# Phase 7 -- Configuration (complete)
 
 Goal: support user customization.
 
 Tasks:
 
 -   Configuration precedence.
+    - CLI paramters top priority
+    - environment variables second priority
+    - .env file third priority
+-   Variables namespaced to BOOTSTRAP_
 -   Default configuration.
 -   Explicit overrides.
 -   Validation.
@@ -177,7 +181,7 @@ Stable configuration behavior.
 
 ------------------------------------------------------------------------
 
-# Phase 8 -- User Experience
+# Phase 8 -- User Experience (complete)
 
 Tasks:
 
@@ -234,7 +238,7 @@ Version 1.0 candidate.
 
 Potential future work includes:
 
--   additional package backends
+-   additional package backends (APK, DNF)
 -   manifest composition
 -   workstation profiles
 -   experimental features

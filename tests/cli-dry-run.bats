@@ -53,12 +53,14 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Explanation:"* ]]
-    [[ "$output" == *"immutable abstract Action Records"* ]]
-    [[ "$output" == *"resolver selected platform-specific Resolved Actions"* ]]
-    [[ "$output" == *"Action provenance:"* ]]
+    [[ "$output" == *"What happened: bootstrap inspected the manifest"* ]]
+    [[ "$output" == *"Safety boundary: --dry-run is active"* ]]
+    [[ "$output" == *"Package manager selector: auto"* ]]
+    [[ "$output" == *"How to read this output:"* ]]
+    [[ "$output" == *"Why these actions are planned:"* ]]
     [[ "$output" == *"$manifest:1 requested package jq"* ]]
     [[ "$output" == *"Planner action: install-package"* ]]
-    [[ "$output" == *"Resolver decisions:"* ]]
+    [[ "$output" == *"Why these package-manager decisions were made:"* ]]
     [[ "$output" == *"$manifest:1 would be handled by package manager: apt"* ]]
     [[ "$output" == *"Executor has not run"* ]]
 }
@@ -88,6 +90,9 @@ MANIFEST
 
     [ "$status" -eq 65 ]
     [[ "$output" == *"malformed manifest line"* ]]
+    [[ "$output" == *"location: $manifest:1"* ]]
+    [[ "$output" == *"expected: PACKAGE or PACKAGE OPERATOR VERSION"* ]]
+    [[ "$output" == *"next step:"* ]]
 }
 
 @test "dry-run accepts the manifest argument before operational flags" {

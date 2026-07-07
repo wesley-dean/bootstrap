@@ -40,3 +40,22 @@ package can be satisfied by the selected package manager.  For APT, package
 existence means the package is known to configured APT metadata, and version
 constraints are compared against the APT candidate version using native Debian
 package comparison semantics.
+
+## Diagnostics and recovery
+
+When a manifest cannot be read, the command reports the manifest path and asks
+the user to check the path and permissions before trying again.
+
+When a line is malformed, the command reports the source location, the offending
+input after comments were removed, the accepted requirement forms, and the
+supported operators.  The diagnostic is intentionally written as recovery
+guidance rather than as a parser-internal failure.
+
+For example, this invalid manifest line:
+
+```text
+git curl
+```
+
+produces a diagnostic that names the manifest line and reminds the user that each
+logical line may contain only one package requirement.
