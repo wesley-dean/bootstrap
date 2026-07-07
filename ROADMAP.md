@@ -197,7 +197,7 @@ Pleasant day-to-day user experience.
 
 ------------------------------------------------------------------------
 
-# Phase 9 -- Testing
+# Phase 9 -- Testing (complete)
 
 Expand automated testing.
 
@@ -214,7 +214,7 @@ Prefer observable behavior over implementation details.
 
 ------------------------------------------------------------------------
 
-# Phase 10 -- Release Readiness
+# Phase 10 -- Release Readiness (complete)
 
 Tasks:
 
