@@ -12,6 +12,8 @@ RUN apt-get update \
 ENTRYPOINT ["/usr/bin/env", "bash", "/tmp/test.bash"]
 WORKDIR /workspace
 
+HEALTHCHECK NONE
+
 COPY bootstrap.bash /tmp/
 COPY e2e.manifest /tmp/
 COPY test.bash /tmp/
