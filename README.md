@@ -182,6 +182,7 @@ curl https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap
 The README is intentionally brief. More detailed project documentation is kept
 in focused files:
 
+- [`doc/motivation.md`](doc/motivation.md) discusses why this project exists
 - [`doc/cli.md`](doc/cli.md) describes the supported command-line interface.
 - [`doc/manifest-format.md`](doc/manifest-format.md) describes the manifest
   grammar and parser behavior.
