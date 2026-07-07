@@ -3,11 +3,9 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      bash \
-      ca-certificates \
-      curl \
- && rm -rf /var/lib/apt/lists/*
+ && apt-get install -y --no-install-recommends bash ca-certificates curl software-properties-common \
+ && add-apt-repository universe \
+ && apt-get update
 
 ENTRYPOINT ["/usr/bin/env", "bash", "/tmp/test.bash"]
 WORKDIR /workspace
