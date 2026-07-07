@@ -36,12 +36,6 @@ curl -fsSL \
 chmod +x bootstrap.bash
 ```
 
-Bootstrap can also be invoked with [`vet`](https://github.com/vet-run/vet):
-
-```bash
-vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash
-```
-
 ## Quick start
 
 Create a manifest file. This example uses `packages.manifest`:
@@ -126,6 +120,62 @@ To select the package-manager backend explicitly:
 ```bash
 ./bootstrap.bash --package-manager apt packages.manifest
 ```
+
+## Running without installing
+
+The Bootstrap tool is distributed as a single Bash shell script with no
+external library dependencies.  While the source for the tool is spread across
+multiple files, the distributed tool is a single file.  Therefore,
+"installation" in a traditional sense isn't a hard requirement.
+
+### Running with Vet
+
+[`vet`](https://github.com/vet-run/vet) can be used as a safer replacement for
+the common `curl | bash` pattern. It downloads the release artifact, displays
+the script for review, and then runs it with the arguments you provide.
+
+To run Bootstrap with `packages.manifest` through `vet`:
+
+```bash
+vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
+  packages.manifest
+```
+
+The same Bootstrap arguments can be passed after the release URL:
+
+```bash
+vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
+  --dry-run --explain packages.manifest
+```
+
+### Running with Curl
+
+It is not recommended, but it's also possible to run Bootstrap by fetching it
+first using `curl` (or `wget`).  This is not a recommended approach; it's
+included here for completeness.  From a security perspective, it's an
+anti-pattern to download and run a shell script -- especially one that makes
+changes to the underlying system like installing packages -- without inspecting
+the script first.  The source for Bootstrap is openly available and can be
+inspected along with the process that the bootstrap.bash script is generated.
+The source is heavily commented so that it ought to be clear what every single
+function in the script does, how they work, how they're invoked, and any
+assumptions made when running them.  The code should be as direct, obvious, and
+boring as possible.
+
+If you understand the risks and still prefer this approach, you can invoke
+Bootstrap directly.
+
+> [!WARNING]
+> Running a script directly from the Internet (for example, `curl ... | bash`)
+> executes code before you have an opportunity to inspect it. Download the
+> script first, or use `vet`, if you want to review the script before
+> execution.
+
+```bash
+curl https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
+| bash -s -- --dry-run --explain packages.manifest
+```
+
 
 ## Documentation
 
