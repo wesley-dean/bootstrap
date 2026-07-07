@@ -43,6 +43,8 @@ Options:
   --help     Show this help text and exit.
   --version  Show version and build metadata, then exit.
   --dry-run  Parse options without making system changes.
+  --package-manager NAME
+             Select package manager: auto or apt.
   --explain  Request explanation output for planned behavior.
   --verbose  Request more detailed diagnostic output.
   --quiet    Suppress non-essential output.
@@ -100,6 +102,17 @@ bootstrap_parse_arguments() {
       ;;
     --explain)
       bootstrap_context_enable_explain
+      ;;
+    --package-manager)
+      if (($# < 2)); then
+        bootstrap_print_usage_error "--package-manager requires a value"
+        return "${BOOTSTRAP_EXIT_USAGE}"
+      fi
+      bootstrap_context_set_package_manager "$2"
+      shift
+      ;;
+    --package-manager=*)
+      bootstrap_context_set_package_manager "${1#--package-manager=}"
       ;;
     --verbose)
       bootstrap_context_enable_verbose
@@ -504,7 +517,7 @@ bootstrap_run_dry_run_plan() {
     return "${status}"
   fi
 
-  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
     :
   else
     status="$?"
@@ -707,7 +720,7 @@ bootstrap_run_execution_plan() {
     return "${status}"
   fi
 
-  if bootstrap_resolver_resolve_action_records auto <"${action_file}" >"${resolved_file}"; then
+  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
     :
   else
     status="$?"
@@ -769,7 +782,11 @@ main() {
     ;;
   esac
 
+  bootstrap_config_load_default_file || return "$?"
+  bootstrap_config_apply_environment
+
   bootstrap_parse_arguments "$@" || return "$?"
+  bootstrap_config_validate_effective_runtime || return "$?"
 
   if bootstrap_context_has_manifest_path; then
     if bootstrap_context_is_dry_run; then

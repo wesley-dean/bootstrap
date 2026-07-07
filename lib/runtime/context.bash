@@ -29,6 +29,14 @@
 #
 # @var BOOTSTRAP_MANIFEST_PATH
 # Optional package manifest path supplied as the single positional argument.
+#
+# @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
+# Effective package-manager selector after defaults and configuration are applied.
+#
+# This internal state deliberately avoids the public `BOOTSTRAP_` configuration
+# variable names accepted from `.env` files and the process environment.  Keeping
+# the names separate lets the loader distinguish an exported environment
+# override from runtime state that was populated by a lower-priority source.
 ###############################################################################
 
 BOOTSTRAP_FLAG_DRY_RUN=false
@@ -36,6 +44,7 @@ BOOTSTRAP_FLAG_EXPLAIN=false
 BOOTSTRAP_FLAG_VERBOSE=false
 BOOTSTRAP_FLAG_QUIET=false
 BOOTSTRAP_MANIFEST_PATH=""
+BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 
 ###############################################################################
 # @fn bootstrap_context_reset()
@@ -55,6 +64,7 @@ bootstrap_context_reset() {
   BOOTSTRAP_FLAG_VERBOSE=false
   BOOTSTRAP_FLAG_QUIET=false
   BOOTSTRAP_MANIFEST_PATH=""
+  BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 }
 
 ###############################################################################
@@ -107,6 +117,34 @@ bootstrap_context_enable_quiet() {
 ###############################################################################
 bootstrap_context_set_manifest_path() {
   BOOTSTRAP_MANIFEST_PATH="$1"
+}
+
+
+###############################################################################
+# @fn bootstrap_context_set_package_manager(manager)
+# @brief Records the package-manager selector for this invocation.
+#
+# @details
+# Configuration loading and command-line parsing apply precedence before the
+# resolver runs.  The context stores the effective selector so dry-run and
+# execution paths use the same package-manager decision instead of each path
+# hard-coding its own default.
+#
+# @param manager Package-manager selector such as `auto` or `apt`.
+# @retval 0 Package-manager selector was recorded successfully.
+###############################################################################
+bootstrap_context_set_package_manager() {
+  BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="$1"
+}
+
+###############################################################################
+# @fn bootstrap_context_get_package_manager()
+# @brief Prints the effective package-manager selector.
+# @returns The package-manager selector on standard output.
+# @retval 0 The selector was printed successfully.
+###############################################################################
+bootstrap_context_get_package_manager() {
+  printf '%s\n' "${BOOTSTRAP_CONTEXT_PACKAGE_MANAGER}"
 }
 
 ###############################################################################

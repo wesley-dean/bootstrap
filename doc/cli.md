@@ -27,6 +27,7 @@ bootstrap.bash
 bootstrap.bash --help
 bootstrap.bash --version
 bootstrap.bash --dry-run
+bootstrap.bash --package-manager apt
 bootstrap.bash --explain
 bootstrap.bash --verbose
 bootstrap.bash --quiet
@@ -37,6 +38,34 @@ Operational options may be combined when they are not contradictory:
 ```bash
 bootstrap.bash --dry-run --explain --verbose
 ```
+
+## Configuration precedence
+
+The command reads configuration from several sources.  Later sources override
+earlier sources:
+
+1. built-in defaults;
+2. a `.env` file in the current working directory, when one exists;
+3. exported process environment variables; and
+4. explicit command-line options.
+
+The default `.env` file is optional.  The command does not search parent
+directories and does not read user-level or system-level configuration files.
+
+Bootstrap-specific configuration entries use the `BOOTSTRAP_` prefix so a local
+`.env` file can also contain settings for other tools.  Non-bootstrap keys are
+ignored.  Unknown keys that begin with `BOOTSTRAP_` are rejected because they are
+likely misspelled bootstrap directives.
+
+The `.env` reader accepts simple data assignments such as:
+
+```dotenv
+BOOTSTRAP_PACKAGE_MANAGER=apt
+```
+
+The file is parsed as data rather than sourced as shell code.  Shell expansion,
+command substitution, and arbitrary Bash statements are not supported.
+
 
 Running `bootstrap.bash` without arguments currently preserves the placeholder
 behavior:
@@ -79,6 +108,24 @@ origin of a generated artifact, but it does not affect runtime behavior.
 At this phase of the roadmap, no package operations exist yet, so `--dry-run`
 does not change the placeholder behavior. Later planning and execution phases
 will use this flag to prevent package-manager changes.
+
+## `--package-manager`
+
+`--package-manager` selects the package-manager backend used by resolver and
+execution planning.
+
+Supported values are:
+
+- `auto`, which asks the resolver to detect a supported package manager; and
+- `apt`, which explicitly selects the APT backend.
+
+The same setting may be provided by the environment or by `.env` as
+`BOOTSTRAP_PACKAGE_MANAGER`.  The command-line option has the highest
+precedence:
+
+```bash
+BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apt --dry-run packages.txt
+```
 
 ## `--explain`
 
