@@ -30,6 +30,7 @@
 ###############################################################################
 bootstrap_backend_diagnostic_no_supported_manager() {
   bootstrap_log_error 'no supported package manager detected'
+  bootstrap_recovery_no_supported_package_manager
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -53,6 +54,7 @@ bootstrap_backend_diagnostic_unsupported_manager() {
   manager="$1"
 
   bootstrap_log_error "unsupported package manager: ${manager}"
+  bootstrap_recovery_unsupported_package_manager "${manager}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -128,6 +130,7 @@ bootstrap_backend_diagnostic_package_unavailable() {
 
   bootstrap_log_error \
     "${manager} package not available: ${package}"
+  bootstrap_recovery_package_unavailable "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -155,6 +158,7 @@ bootstrap_backend_diagnostic_no_candidate() {
 
   bootstrap_log_error \
     "${manager} package has no install candidate: ${package}"
+  bootstrap_recovery_package_unavailable "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }
 
@@ -246,5 +250,6 @@ bootstrap_backend_diagnostic_unsatisfied_version_constraint() {
 
   bootstrap_log_error \
     "${manager} package candidate does not satisfy version constraint: ${package} candidate ${candidate} does not match ${operator} ${version}"
+  bootstrap_recovery_version_constraint "${manager}" "${package}"
   return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
 }

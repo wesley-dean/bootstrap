@@ -41,6 +41,7 @@ STUB
 
     [ "$status" -eq 69 ]
     [[ "$output" == *"no supported package manager detected"* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Supported package managers in this release: apt."* ]]
 }
 
 @test "backend apt package existence succeeds when apt-cache has metadata" {
@@ -73,6 +74,8 @@ STUB
 
     [ "$status" -eq 69 ]
     [[ "$output" == *"apt package not available: missing-package"* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Verify that the package name in the manifest is spelled correctly."* ]]
+    [[ "$output" == *"apt search missing-package"* ]]
 }
 
 @test "resolver refuses unavailable apt packages before creating resolved actions" {
@@ -88,6 +91,7 @@ STUB
 
     [ "$status" -eq 69 ]
     [[ "$output" == *"apt package not available: missing-package"* ]]
+    [[ "$output" == *"apt search missing-package"* ]]
     [[ "$output" != *"install-package|apt|missing-package"* ]]
 }
 
@@ -142,6 +146,7 @@ STUB
     [ "$status" -eq 69 ]
     [[ "$output" == *"apt package candidate does not satisfy version constraint"* ]]
     [[ "$output" == *"git candidate 2.43.0-1ubuntu7 does not match >= 99.0"* ]]
+    [[ "$output" == *"apt-cache policy git"* ]]
 }
 
 @test "backend apt package exact version accepts single equals operator" {

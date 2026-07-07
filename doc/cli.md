@@ -175,3 +175,17 @@ implying that future roadmap options already work.
 
 Unexpected positional arguments also fail conservatively until later roadmap
 phases define manifest input behavior.
+
+## Recovery guidance
+
+Bootstrap diagnostics are designed to explain both what failed and what can be
+tried next.  Error messages describe the conservative stop.  Recovery messages
+then provide concrete follow-up steps using the normalized `recovery` log level.
+
+For example, if APT cannot find a package, bootstrap may report that the package
+is unavailable and then suggest checking the manifest spelling, refreshing APT
+metadata with `sudo apt update`, or searching for the package with `apt search`.
+
+Recovery guidance is considered essential output.  The `--quiet` option
+suppresses non-essential informational output, but it does not suppress warnings,
+errors, or recovery guidance.

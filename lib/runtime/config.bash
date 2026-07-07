@@ -255,6 +255,7 @@ bootstrap_config_validate_package_manager() {
   *)
     bootstrap_print_usage_error \
       "unsupported package manager: ${value}"
+    bootstrap_recovery_unsupported_package_manager "${value}"
     return "${BOOTSTRAP_EXIT_USAGE}"
     ;;
   esac

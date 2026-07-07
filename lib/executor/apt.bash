@@ -108,6 +108,7 @@ bootstrap_executor_apt_install_package() {
       'apt' \
       "${package}" \
       "apt-get exited with status ${status}"
+    bootstrap_recovery_execution_failed 'apt' "${package}"
     return "${BOOTSTRAP_EXIT_EXECUTION}"
   fi
 }

@@ -12,7 +12,7 @@ SHELL := /bin/bash
 
 DIST_DIR := dist
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
-SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/executor.bash src/bootstrap.bash
+SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/executor.bash src/bootstrap.bash
 TEST_SCRIPTS := tests/*.bats
 TEST_RESULTS_DIR := test-results
 

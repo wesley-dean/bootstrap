@@ -51,6 +51,7 @@ setup() {
 
     [ "$status" -eq 64 ]
     [[ "$output" == *"unsupported package manager: bogus"* ]]
+    [[ "$output" == *"Supported package managers in this release: auto, apt."* ]]
 }
 
 @test "unknown BOOTSTRAP-prefixed .env keys fail conservatively" {

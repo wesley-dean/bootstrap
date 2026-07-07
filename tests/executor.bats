@@ -124,3 +124,40 @@ STUB
     [[ "$output" == *"unsupported resolved action: configure-service"* ]]
     [[ "$output" == *"not-executed|69|configure-service|systemd|ssh|unsupported resolved action"* ]]
 }
+
+
+@test "executor provides recovery guidance when privilege escalation is unavailable" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+    chmod +x "${fake_bin}/dpkg-query"
+
+    run env PATH="${fake_bin}" "$BASH" -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '1000\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 71 ]
+    [[ "$output" == *"privilege escalation requires sudo or doas"* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Run bootstrap as root"* ]]
+}
+
+@test "executor provides recovery guidance when apt-get fails" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/bin/sh
+exit 100
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}" "$BASH" -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 70 ]
+    [[ "$output" == *"apt-get exited with status 100"* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Run the native command directly for full details: sudo apt-get install -y git"* ]]
+}

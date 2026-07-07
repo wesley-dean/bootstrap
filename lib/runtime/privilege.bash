@@ -61,6 +61,7 @@ bootstrap_privilege_command_prefix() {
   fi
 
   bootstrap_log_error 'privilege escalation requires sudo or doas'
+  bootstrap_recovery_privilege_unavailable
   return "${BOOTSTRAP_EXIT_PRIVILEGE}"
 }
 
