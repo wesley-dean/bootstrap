@@ -6,7 +6,7 @@ setup() {
     REPO_ROOT="${BATS_TEST_DIRNAME}/.."
     SCRIPT="${REPO_ROOT}/dist/bootstrap.bash"
     TEST_TMPDIR="$(bootstrap_test_tmpdir)"
-    WORK_DIR="${TEST_TMPDIR}/phase9-cli-regression"
+    WORK_DIR="${TEST_TMPDIR}/cli-regression"
     mkdir -p "$WORK_DIR"
 }
 

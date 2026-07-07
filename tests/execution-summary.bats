@@ -6,7 +6,7 @@ setup() {
     REPO_ROOT="${BATS_TEST_DIRNAME}/.."
     SCRIPT="${REPO_ROOT}/dist/bootstrap.bash"
     TEST_TMPDIR="$(bootstrap_test_tmpdir)"
-    WORK_DIR="${TEST_TMPDIR}/phase9-execution-summary"
+    WORK_DIR="${TEST_TMPDIR}/execution-summary"
     FAKE_BIN="${WORK_DIR}/bin"
     mkdir -p "$FAKE_BIN"
 }
