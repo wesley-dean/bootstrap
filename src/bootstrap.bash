@@ -383,8 +383,9 @@ bootstrap_print_resolved_action_explanation() {
 # aligned with the same pipeline that later executor phases will consume while
 # still guaranteeing that dry-run mode performs no system changes.
 #
-# Explain mode reports both the manifest source line behind each planned action
-# and the resolver binding selected for the current environment.
+# Explain mode reports the user-facing reasoning behind the plan: what was
+# inspected, how manifest requests became actions, how the resolver bound those
+# actions to package managers, and why dry-run mode stops before execution.
 #
 # @param manifest_path Manifest path used to produce the plan.
 # @param action_file File containing pipe-delimited Action Records.
@@ -403,6 +404,7 @@ bootstrap_print_dry_run_plan() {
   local package
   local planned_count
   local manifest_path
+  local package_manager_selector
   local resolved_file
   local resolved_count
   local source
@@ -411,6 +413,7 @@ bootstrap_print_dry_run_plan() {
   manifest_path="$1"
   action_file="$2"
   resolved_file="$3"
+  package_manager_selector="$(bootstrap_context_get_package_manager)"
   planned_count=0
   resolved_count=0
 
@@ -451,12 +454,21 @@ bootstrap_print_dry_run_plan() {
 
   if bootstrap_context_should_explain; then
     printf '\nExplanation:\n'
-    printf '  The planner emitted immutable abstract Action Records.\n'
-    printf '  The resolver selected platform-specific Resolved Actions for this system.\n'
-    printf '  Executor has not run and no system changes were made.\n'
+    printf '  What happened: bootstrap inspected the manifest, planned package work,\n'
+    printf '  and resolved that plan for the selected package manager.\n'
+    printf '  Safety boundary: --dry-run is active, so execution stops here and no\n'
+    printf '  system changes were made.\n'
+    printf '  Manifest: %s\n' "${manifest_path}"
+    printf '  Package manager selector: %s\n' "${package_manager_selector}"
+    printf '  Planned actions: %s\n' "${planned_count}"
+    printf '  Resolved actions: %s\n' "${resolved_count}"
+    printf '\nHow to read this output:\n'
+    printf '  Planned actions describe user intent from the manifest.\n'
+    printf '  Resolved actions describe how this system would satisfy that intent.\n'
+    printf '  A later execution run consumes the same resolved action stream.\n'
 
     if ((planned_count > 0)); then
-      printf '\nAction provenance:\n'
+      printf '\nWhy these actions are planned:\n'
       while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
         bootstrap_print_action_explanation \
           "${action}" \
@@ -469,7 +481,7 @@ bootstrap_print_dry_run_plan() {
     fi
 
     if ((resolved_count > 0)); then
-      printf '\nResolver decisions:\n'
+      printf '\nWhy these package-manager decisions were made:\n'
       while IFS='|' read -r action manager package operator version source line_number || [[ -n "${action:-}" ]]; do
         bootstrap_print_resolved_action_explanation \
           "${action}" \

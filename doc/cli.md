@@ -129,11 +129,22 @@ BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apt --dry-run pa
 
 ## `--explain`
 
-`--explain` records the user's intent to receive explanation-oriented output.
+`--explain` asks the tool to explain the reasoning behind planned behavior.
 
-At this phase of the roadmap, no execution plan exists yet, so `--explain` does
-not change the placeholder behavior. Later planning phases will use this flag to
-produce human-readable explanations of planned work.
+When used with `--dry-run` and a manifest, the output includes a plain-language
+explanation of what was inspected, how manifest lines became planned actions,
+how those actions were resolved for the selected package manager, and why the
+command stopped before making system changes.
+
+For example:
+
+```bash
+bootstrap.bash --dry-run --explain packages.txt
+```
+
+The explanation is intentionally tied to the same Action Records and Resolved
+Actions used by execution.  That keeps explain mode inspectable without
+introducing a separate interpretation path.
 
 ## `--verbose`
 
