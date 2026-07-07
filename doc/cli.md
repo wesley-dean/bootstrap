@@ -71,7 +71,7 @@ Running `bootstrap.bash` without arguments currently preserves the placeholder
 behavior:
 
 ```text
-bootstrap.bash: not yet implemented
+bootstrap.bash: info: not yet implemented
 ```
 
 This placeholder exists only until later roadmap phases introduce manifest

@@ -72,7 +72,7 @@ bootstrap_print_usage_error() {
 
   message="$1"
 
-  printf 'bootstrap.bash: %s\n' "${message}" >&2
+  bootstrap_log_error "${message}"
   printf "Try 'bootstrap.bash --help' for usage.\n" >&2
 }
 
@@ -161,7 +161,7 @@ bootstrap_parse_arguments() {
 # @retval 0 The placeholder operation completed successfully.
 ###############################################################################
 bootstrap_run_placeholder() {
-  bootstrap_log_info 'bootstrap.bash: not yet implemented'
+  bootstrap_log_info 'not yet implemented'
 }
 
 ###############################################################################
@@ -205,7 +205,7 @@ bootstrap_print_action_record() {
     fi
     ;;
   *)
-    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported action record: ${action}"
     return "${BOOTSTRAP_EXIT_MANIFEST}"
     ;;
   esac
@@ -263,7 +263,7 @@ bootstrap_print_action_explanation() {
     printf '    Planner action: install-package; resolver adds platform binding separately.\n'
     ;;
   *)
-    printf 'bootstrap.bash: unsupported action record: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported action record: ${action}"
     return "${BOOTSTRAP_EXIT_MANIFEST}"
     ;;
   esac
@@ -313,7 +313,7 @@ bootstrap_print_resolved_action() {
     fi
     ;;
   *)
-    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported resolved action: ${action}"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac
@@ -367,7 +367,7 @@ bootstrap_print_resolved_action_explanation() {
     printf '    Executor has not run; no system changes were made.\n'
     ;;
   *)
-    printf 'bootstrap.bash: unsupported resolved action: %s\n' "${action}" >&2
+    bootstrap_log_error "unsupported resolved action: ${action}"
     return "${BOOTSTRAP_EXIT_UNSUPPORTED}"
     ;;
   esac

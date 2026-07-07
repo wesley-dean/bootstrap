@@ -56,7 +56,7 @@ bootstrap_action_record_create_install_package() {
   line_number="${5:-}"
 
   if [[ -z "${package}" ]]; then
-    printf 'bootstrap.bash: cannot plan package action without package name\n' >&2
+    bootstrap_log_error 'cannot plan package action without package name'
     return "${BOOTSTRAP_EXIT_MANIFEST}"
   fi
 

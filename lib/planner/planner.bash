@@ -42,7 +42,7 @@ bootstrap_planner_plan_manifest_records() {
 
   while IFS='|' read -r package operator version source line_number || [[ -n "${package:-}" ]]; do
     if [[ -z "${package}" ]]; then
-      printf 'bootstrap.bash: malformed manifest record: missing package name\n' >&2
+      bootstrap_log_error 'malformed manifest record: missing package name'
       return "${BOOTSTRAP_EXIT_MANIFEST}"
     fi
 
