@@ -88,6 +88,9 @@ MANIFEST
 
     [ "$status" -eq 65 ]
     [[ "$output" == *"malformed manifest line"* ]]
+    [[ "$output" == *"location: $manifest:1"* ]]
+    [[ "$output" == *"expected: PACKAGE or PACKAGE OPERATOR VERSION"* ]]
+    [[ "$output" == *"next step:"* ]]
 }
 
 @test "dry-run accepts the manifest argument before operational flags" {
