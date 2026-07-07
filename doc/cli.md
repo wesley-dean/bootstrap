@@ -27,6 +27,8 @@ bootstrap.bash
 bootstrap.bash --help
 bootstrap.bash --version
 bootstrap.bash --dry-run
+bootstrap.bash --dry-run packages.txt
+bootstrap.bash --dry-run -
 bootstrap.bash --package-manager apt
 bootstrap.bash --explain
 bootstrap.bash --verbose
@@ -76,6 +78,23 @@ bootstrap.bash: info: not yet implemented
 
 This placeholder exists only until later roadmap phases introduce manifest
 parsing, planning, and package execution.
+
+
+## Manifest argument
+
+When a manifest path is provided, Bootstrap parses package requirements from
+that manifest and uses the same parser, planner, resolver, and executor pipeline
+for dry-run and execution modes.
+
+A manifest path of `-` follows the common Unix convention of reading manifest
+content from standard input:
+
+```bash
+printf '%s\n' git curl shellcheck | bootstrap.bash --dry-run -
+```
+
+This is useful for generated manifests, shell pipelines, and temporary package
+lists that do not need to be written to a separate file.
 
 ## `--help`
 

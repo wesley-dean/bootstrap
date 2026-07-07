@@ -114,7 +114,7 @@ bootstrap_manifest_parse_line() {
 
 ###############################################################################
 # @fn bootstrap_manifest_parse_file(path)
-# @brief Parses a package manifest file into normalized Manifest Entry records.
+# @brief Parses package manifest input into normalized Manifest Entry records.
 #
 # @details
 # The parser reads the entire manifest before later roadmap phases perform any
@@ -126,7 +126,12 @@ bootstrap_manifest_parse_line() {
 # fails; callers that need all-or-nothing capture can redirect output into a
 # temporary file and use the exit status to decide whether to keep it.
 #
-# @param path Path to the manifest file to parse.
+# A path value of `-` follows the common Unix convention of reading manifest
+# content from standard input.  The source field remains `-` so dry-run,
+# explain, and diagnostic output can still identify stdin-originated records
+# without inventing a temporary filename.
+#
+# @param path Path to the manifest file to parse, or `-` for standard input.
 # @returns Pipe-delimited Manifest Entry records on standard output.
 # @retval 0 The manifest was read and parsed successfully.
 # @retval 65 The manifest path was unreadable or contained malformed input.
@@ -138,6 +143,15 @@ bootstrap_manifest_parse_file() {
 
   path="$1"
   line_number=0
+
+  if [[ "${path}" == "-" ]]; then
+    while IFS= read -r line || [[ -n "${line}" ]]; do
+      line_number=$((line_number + 1))
+      bootstrap_manifest_parse_line "${line}" "${path}" "${line_number}" || return "$?"
+    done
+
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
 
   if [[ ! -r "${path}" || ! -f "${path}" ]]; then
     bootstrap_diagnostic_manifest_unreadable "${path}"
