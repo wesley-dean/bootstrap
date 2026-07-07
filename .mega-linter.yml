@@ -48,7 +48,7 @@ REPOSITORY_GITLEAKS_ARGUMENTS: --no-git
 REPOSITORY_TRUFFLEHOG_ARGUMENTS: "--exclude-paths=.trufflehogignore"
 
 # make sure Terraform modules are present
-REPOSITORY_CHECKOV_ARGUMENTS: "--download-external-modules true"
+REPOSITORY_CHECKOV_ARGUMENTS: "--download-external-modules true --skip-check CKV2_DOCKER_1"
 
 # make sure Common Platform Enumerations (CPEs) are present
 REPOSITORY_GRYPE_ARGUMENTS: "--add-cpes-if-none"

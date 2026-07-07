@@ -1,0 +1,31 @@
+---
+name: End-to-End Tests
+
+# yamllint disable-line rule:truthy
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  e2e:
+    name: Containerized end-to-end tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Build project artifact
+        run: make all
+
+      - name: Run containerized end-to-end tests
+        run: make test-e2e
