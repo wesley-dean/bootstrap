@@ -64,7 +64,6 @@ bootstrap_log_emit() {
   esac
 }
 
-
 ###############################################################################
 # @fn bootstrap_log_info(message)
 # @brief Prints an informational message unless quiet mode is active.
@@ -90,7 +89,6 @@ bootstrap_log_info() {
   bootstrap_log_emit 'info' "${message}" 'stdout'
 }
 
-
 ###############################################################################
 # @fn bootstrap_log_warning(message)
 # @brief Prints a warning message on standard error.
@@ -111,7 +109,6 @@ bootstrap_log_warning() {
 
   bootstrap_log_emit 'warning' "${message}" 'stderr'
 }
-
 
 ###############################################################################
 # @fn bootstrap_log_error(message)
