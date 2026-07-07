@@ -21,6 +21,7 @@ TEST_RESULTS_DIR := test-results
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
 E2E_TEST_IMAGE := bootstrap_e2e_tmp_image
 E2E_TEST_BOOTSTRAP := ${E2E_TEST_DIR}/bootstrap.bash
+E2E_TEST_DOCKERFILE := ${E2E_TEST_DIR}/Dockerfile.ubuntu
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
@@ -80,7 +81,7 @@ test-report: $(DIST_SCRIPT)
 test-e2e: all
 	mkdir -p "${E2E_TEST_DIR}"
 	cp "${DIST_SCRIPT}" "${E2E_TEST_BOOTSTRAP}"
-	docker build -t "${E2E_TEST_IMAGE}" -f "${E2E_TEST_DIR}/Dockerfile.ubuntu" "${E2E_TEST_DIR}"
+	docker build -t "${E2E_TEST_IMAGE}" -f "${E2E_TEST_DOCKERFILE}" "${E2E_TEST_DIR}"
 	docker run --rm "${E2E_TEST_IMAGE}" || { rm -f "${E2E_TEST_BOOTSTRAP}"; docker image rm "${E2E_TEST_IMAGE}" ; false; }
 	docker image rm "${E2E_TEST_IMAGE}"
 	rm -f "${E2E_TEST_BOOTSTRAP}"
