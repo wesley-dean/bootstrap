@@ -14,14 +14,19 @@ DIST_DIR := dist
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
 DIST_CHECKSUM := $(DIST_SCRIPT).sha256
 SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/executor.bash src/bootstrap.bash
-TEST_SCRIPTS := tests/*.bats
+TESTS_DIR := tests/
+TEST_SCRIPTS := ${TESTS_DIR}/*.bats
 TEST_RESULTS_DIR := test-results
+
+E2E_TEST_DIR := ${TESTS_DIR}/e2e
+E2E_TEST_IMAGE := bootstrap_e2e_tmp_image
+E2E_TEST_BOOTSTRAP := ${E2E_TEST_DIR}/bootstrap.bash
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean format test test-report
+.PHONY: all check checksums clean distclean format test test-report test-e2e
 
 all: $(DIST_SCRIPT)
 
@@ -71,6 +76,14 @@ test: $(DIST_SCRIPT)
 test-report: $(DIST_SCRIPT)
 	mkdir -p "$(TEST_RESULTS_DIR)"
 	bats --formatter junit $(TEST_SCRIPTS) >"$(TEST_RESULTS_DIR)/bats.xml"
+
+test-e2e: all
+	mkdir -p "${E2E_TEST_DIR}"
+	cp "${DIST_SCRIPT}" "${E2E_TEST_BOOTSTRAP}"
+	docker build -t "${E2E_TEST_IMAGE}" "${E2E_TEST_DIR}"
+	docker run --rm "${E2E_TEST_IMAGE}" || { rm -f "${E2E_TEST_BOOTSTRAP}"; docker image rm "${E2E_TEST_IMAGE}" ; false; }
+	docker image rm "${E2E_TEST_IMAGE}"
+	rm -f "${E2E_TEST_BOOTSTRAP}"
 
 ##
 # Generate SHA-256 checksums for release artifacts.
