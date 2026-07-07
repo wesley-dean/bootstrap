@@ -114,22 +114,22 @@ bootstrap_config_apply_assignment() {
   line_number="${4:-}"
 
   case "${key}" in
-    BOOTSTRAP_PACKAGE_MANAGER)
-      bootstrap_context_set_package_manager "${value}"
-      ;;
-    BOOTSTRAP_*)
-      if [[ -n "${line_number}" ]]; then
-        bootstrap_print_usage_error \
-          "unknown configuration key in ${source}:${line_number}: ${key}"
-      else
-        bootstrap_print_usage_error \
-          "unknown configuration key in ${source}: ${key}"
-      fi
-      return "${BOOTSTRAP_EXIT_USAGE}"
-      ;;
-    *)
-      :
-      ;;
+  BOOTSTRAP_PACKAGE_MANAGER)
+    bootstrap_context_set_package_manager "${value}"
+    ;;
+  BOOTSTRAP_*)
+    if [[ -n "${line_number}" ]]; then
+      bootstrap_print_usage_error \
+        "unknown configuration key in ${source}:${line_number}: ${key}"
+    else
+      bootstrap_print_usage_error \
+        "unknown configuration key in ${source}: ${key}"
+    fi
+    return "${BOOTSTRAP_EXIT_USAGE}"
+    ;;
+  *)
+    :
+    ;;
   esac
 }
 
@@ -191,7 +191,7 @@ bootstrap_config_load_file() {
       "${value}" \
       "${path}" \
       "${line_number}" || return "$?"
-  done < "${path}"
+  done <"${path}"
 }
 
 ###############################################################################
@@ -252,15 +252,15 @@ bootstrap_config_validate_package_manager() {
   value="$1"
 
   case "${value}" in
-    auto | apt)
-      return "${BOOTSTRAP_EXIT_SUCCESS}"
-      ;;
-    *)
-      bootstrap_print_usage_error \
-        "unsupported package manager: ${value}"
-      bootstrap_recovery_unsupported_package_manager "${value}"
-      return "${BOOTSTRAP_EXIT_USAGE}"
-      ;;
+  auto | apt)
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+    ;;
+  *)
+    bootstrap_print_usage_error \
+      "unsupported package manager: ${value}"
+    bootstrap_recovery_unsupported_package_manager "${value}"
+    return "${BOOTSTRAP_EXIT_USAGE}"
+    ;;
   esac
 }
 

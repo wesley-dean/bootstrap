@@ -50,7 +50,7 @@ jobs:
         run: make check test
 
       - name: Build release artifact
-        run: make all VERSION="${{ steps.calculate-version.outputs.version-string }}"
+        run: make checksums VERSION="${{ steps.calculate-version.outputs.version-string }}"
 
       - name: Create release
         id: create-release
@@ -62,4 +62,6 @@ jobs:
           tag_name: "v${{ steps.calculate-version.outputs.version-string }}"
           draft: false
           prerelease: false
-          files: dist/bootstrap.bash
+          files: |
+            dist/bootstrap.bash
+            dist/bootstrap.bash.sha256

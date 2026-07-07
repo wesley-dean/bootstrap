@@ -36,7 +36,6 @@ bootstrap_recovery_emit() {
   bootstrap_log_emit 'recovery' "${message}" 'stderr'
 }
 
-
 ###############################################################################
 # @fn bootstrap_recovery_no_supported_package_manager()
 # @brief Explains next steps when no supported package manager was detected.
@@ -54,7 +53,6 @@ bootstrap_recovery_no_supported_package_manager() {
   bootstrap_recovery_emit 'Install a supported package manager, or run on a system where one is available.'
   bootstrap_recovery_emit 'If you expected APT, check that apt-cache, apt-get, and dpkg are on PATH.'
 }
-
 
 ###############################################################################
 # @fn bootstrap_recovery_unsupported_package_manager(manager)
@@ -80,7 +78,6 @@ bootstrap_recovery_unsupported_package_manager() {
   bootstrap_recovery_emit 'Use --package-manager apt for APT, or --package-manager auto to let bootstrap detect one.'
   bootstrap_recovery_emit 'If this came from configuration, check BOOTSTRAP_PACKAGE_MANAGER in the environment or .env.'
 }
-
 
 ###############################################################################
 # @fn bootstrap_recovery_package_unavailable(manager, package)
@@ -116,7 +113,6 @@ bootstrap_recovery_package_unavailable() {
     ;;
   esac
 }
-
 
 ###############################################################################
 # @fn bootstrap_recovery_version_constraint(manager, package)
@@ -154,7 +150,6 @@ bootstrap_recovery_version_constraint() {
   bootstrap_recovery_emit 'If the available candidate is acceptable, update the manifest constraint.'
 }
 
-
 ###############################################################################
 # @fn bootstrap_recovery_privilege_unavailable()
 # @brief Explains next steps when elevated privileges are required but unavailable.
@@ -171,7 +166,6 @@ bootstrap_recovery_privilege_unavailable() {
   bootstrap_recovery_emit 'Run bootstrap as root, or install/configure sudo or doas for privilege escalation.'
   bootstrap_recovery_emit 'Use --dry-run first if you want to inspect the plan before retrying execution.'
 }
-
 
 ###############################################################################
 # @fn bootstrap_recovery_execution_failed(manager, package)

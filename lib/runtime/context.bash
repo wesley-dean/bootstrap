@@ -119,7 +119,6 @@ bootstrap_context_set_manifest_path() {
   BOOTSTRAP_MANIFEST_PATH="$1"
 }
 
-
 ###############################################################################
 # @fn bootstrap_context_set_package_manager(manager)
 # @brief Records the package-manager selector for this invocation.

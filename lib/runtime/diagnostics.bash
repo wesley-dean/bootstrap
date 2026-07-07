@@ -42,7 +42,6 @@ bootstrap_diagnostic_manifest_unreadable() {
   return "${BOOTSTRAP_EXIT_MANIFEST}"
 }
 
-
 ###############################################################################
 # @fn bootstrap_diagnostic_manifest_malformed_line(source, line_number, input)
 # @brief Reports one malformed manifest line with recovery guidance.
