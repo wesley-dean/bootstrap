@@ -132,3 +132,11 @@ a documentation-first, test second development process.  I wanted to see how
 much code was garbage, how much needed to be refactored continually, how much
 rework was involved.  I wanted to see how often development steps would clobber
 earlier work.
+
+# Now What
+
+Well, I want to use this as a basis for a study the becomes a book or a series
+of blog posts about development principles as they related to pipelines,
+repository management, and sound, reliable engineering.  I want to write about
+making engineering processes that are so reliable as to become boring.  I want
+to talk about engineering processes that result in fewer incidents.
