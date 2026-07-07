@@ -1,8 +1,8 @@
+#checkov:skip=CKV2_DOCKER_1: sudo is intentionally installed in this e2e image so Bootstrap can exercise privilege escalation from a non-root user.
 FROM ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-#checkov:skip=CKV2_DOCKER_1: sudo is intentionally installed in this e2e image so Bootstrap can exercise privilege escalation from a non-root user.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends bash ca-certificates curl software-properties-common sudo \
  && add-apt-repository universe \
