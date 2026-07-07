@@ -140,6 +140,7 @@ in focused files:
   work.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) describes contribution expectations.
 - [`SECURITY.md`](SECURITY.md) explains how to report security concerns.
+- [`testing.md`](testing.md) describes how to test the tool during development
 
 ## Project status
 
