@@ -80,7 +80,7 @@ test-report: $(DIST_SCRIPT)
 test-e2e: all
 	mkdir -p "${E2E_TEST_DIR}"
 	cp "${DIST_SCRIPT}" "${E2E_TEST_BOOTSTRAP}"
-	docker build -t "${E2E_TEST_IMAGE}" "${E2E_TEST_DIR}"
+	docker build -t "${E2E_TEST_IMAGE}" -f "${E2E_TEST_DIR}/Dockerfile.ubuntu" "${E2E_TEST_DIR}"
 	docker run --rm "${E2E_TEST_IMAGE}" || { rm -f "${E2E_TEST_BOOTSTRAP}"; docker image rm "${E2E_TEST_IMAGE}" ; false; }
 	docker image rm "${E2E_TEST_IMAGE}"
 	rm -f "${E2E_TEST_BOOTSTRAP}"
