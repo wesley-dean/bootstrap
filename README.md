@@ -63,19 +63,22 @@ and pipes that generated manifest into Bootstrap.
 
 ```bash
 bootstrap() {
-  local bootstrap_path="${HOME}/.local/bin/bootstrap.bash"
+
+  local bootstrap_path="${bootstrap_path:-${HOME}/.local/bin/bootstrap.bash}"
+  local bootstrap_url="${bootstrap_url:-https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash}"
+  local -a bootstrap_args=("${bootstrap_args[@]:-}")
 
   if [[ ! -x "${bootstrap_path}" ]]; then
-    mkdir -p "${bootstrap_path%/*}" && \
-      curl -fsSL \
-        https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
-        -o "${bootstrap_path}" && \
-      chmod +x "${bootstrap_path}"
+    mkdir -p "${bootstrap_path%/*}" \
+                                    && curl -fsSL \
+        "$bootstrap_url" \
+        -o "${bootstrap_path}" \
+                               && chmod +x "${bootstrap_path}"
   fi
 
   for package in "$@"; do
     printf '%s\n' "${package}"
-  done | "${bootstrap_path}" -- -
+  done | "${bootstrap_path}" "${bootstrap_args[@]}" -
 }
 ```
 
