@@ -36,6 +36,49 @@ curl -fsSL \
 chmod +x bootstrap.bash
 ```
 
+### Optional shell function
+
+If you use Bootstrap frequently, you may prefer a shell function that keeps the
+latest release artifact in `~/.local/bin/bootstrap.bash` and lets you provide a
+small package manifest directly as command-line arguments.
+
+For example, after defining the function below, this command:
+
+```bash
+bootstrap git curl jq
+```
+
+is equivalent to passing this manifest to Bootstrap through standard input:
+
+```text
+git
+curl
+jq
+```
+
+The function intentionally keeps the wrapper small. If the local copy of the
+release artifact is missing, it downloads the latest published `bootstrap.bash`
+artifact and marks it executable. It then writes each argument on its own line
+and pipes that generated manifest into Bootstrap.
+
+```bash
+bootstrap() {
+  local bootstrap_path="${HOME}/.local/bin/bootstrap.bash"
+
+  if [[ ! -x "${bootstrap_path}" ]]; then
+    mkdir -p "${bootstrap_path%/*}" && \
+      curl -fsSL \
+        https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
+        -o "${bootstrap_path}" && \
+      chmod +x "${bootstrap_path}"
+  fi
+
+  for package in "$@"; do
+    printf '%s\n' "${package}"
+  done | "${bootstrap_path}" -- -
+}
+```
+
 ## Quick start
 
 Create a manifest file. This example uses `packages.manifest`:
