@@ -41,7 +41,7 @@ STUB
 
     [ "$status" -eq 69 ]
     [[ "$output" == *"no supported package manager detected"* ]]
-    [[ "$output" == *"bootstrap.bash: recovery: Supported package managers in this release: apt, apk."* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Supported package managers in this release: apt, apk, dnf."* ]]
 }
 
 @test "backend apt package existence succeeds when apt-cache has metadata" {

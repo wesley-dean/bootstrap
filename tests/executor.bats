@@ -103,10 +103,10 @@ STUB
 }
 
 @test "executor rejects unsupported package-manager backends" {
-    run bash -c "source '$SCRIPT'; printf 'install-package|dnf|git||||\n' | bootstrap_executor_execute_resolved_actions"
+    run bash -c "source '$SCRIPT'; printf 'install-package|zypper|git||||\n' | bootstrap_executor_execute_resolved_actions"
 
     [ "$status" -eq 69 ]
-    [[ "$output" == *"not-executed|69|install-package|dnf|git|unsupported executor backend"* ]]
+    [[ "$output" == *"not-executed|69|install-package|zypper|git|unsupported executor backend"* ]]
 }
 
 @test "executor rejects malformed resolved actions" {

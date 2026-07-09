@@ -66,11 +66,12 @@ This target builds each enabled platform container image, copies the generated
 Bootstrap script into that platform's container context, and uses Bootstrap
 inside the container to install the tools used by the project test environment.
 
-At present, the Ubuntu/APT and Alpine/APK environments are enabled:
+At present, the Ubuntu/APT, Alpine/APK, and RedHat-family/DNF environments are enabled:
 
 ``` bash
 make test-et2e-apt
 make test-ete-apk
+make test-e2e-dnf
 ```
 
 The older platform-named targets remain available as compatibility aliases:
@@ -78,11 +79,8 @@ The older platform-named targets remain available as compatibility aliases:
 ``` bash
 make test-e2e-ubuntu
 make test-e2e-alpine
+make test-e2e-redhat
 ```
-
-The RedHat-family/DNF directory is present as a reserved test context. It is
-intentionally not enabled until the corresponding package-manager backend is
-implemented.
 
 The end-to-end tests are intended to verify that Bootstrap can provision fresh
 supported operating-system images using real package managers.

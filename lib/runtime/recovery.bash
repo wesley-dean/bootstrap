@@ -49,10 +49,11 @@ bootstrap_recovery_emit() {
 # @retval 0 The guidance was emitted successfully.
 ###############################################################################
 bootstrap_recovery_no_supported_package_manager() {
-  bootstrap_recovery_emit 'Supported package managers in this release: apt, apk.'
+  bootstrap_recovery_emit 'Supported package managers in this release: apt, apk, dnf.'
   bootstrap_recovery_emit 'Install a supported package manager, or run on a system where one is available.'
   bootstrap_recovery_emit 'If you expected APT, check that apt-cache, apt-get, and dpkg are on PATH.'
   bootstrap_recovery_emit 'If you expected APK, check that apk is on PATH.'
+  bootstrap_recovery_emit 'If you expected DNF, check that dnf and rpm are on PATH.'
 }
 
 ###############################################################################
@@ -75,8 +76,8 @@ bootstrap_recovery_unsupported_package_manager() {
 
   : "${manager}"
 
-  bootstrap_recovery_emit 'Supported package managers in this release: auto, apt, apk.'
-  bootstrap_recovery_emit 'Use --package-manager apt for APT, --package-manager apk for APK, or --package-manager auto to let bootstrap detect one.'
+  bootstrap_recovery_emit 'Supported package managers in this release: auto, apt, apk, dnf.'
+  bootstrap_recovery_emit 'Use --package-manager apt for APT, --package-manager apk for APK, --package-manager dnf for DNF, or --package-manager auto to let bootstrap detect one.'
   bootstrap_recovery_emit 'If this came from configuration, check BOOTSTRAP_PACKAGE_MANAGER in the environment or .env.'
 }
 
@@ -112,6 +113,10 @@ bootstrap_recovery_package_unavailable() {
   apk)
     bootstrap_recovery_emit "For APK, try: sudo apk update"
     bootstrap_recovery_emit "For APK, search for the package with: apk search ${package}"
+    ;;
+  dnf)
+    bootstrap_recovery_emit "For DNF, try: sudo dnf makecache"
+    bootstrap_recovery_emit "For DNF, search for the package with: dnf search ${package}"
     ;;
   *)
     bootstrap_recovery_emit "Check that ${manager} has package metadata for: ${package}"
@@ -201,6 +206,10 @@ bootstrap_recovery_execution_failed() {
     ;;
   apk)
     bootstrap_recovery_emit "Run the native command directly for full details: sudo apk add ${package}"
+    bootstrap_recovery_emit 'Check for package-manager locks, network failures, or repository errors.'
+    ;;
+  dnf)
+    bootstrap_recovery_emit "Run the native command directly for full details: sudo dnf install -y ${package}"
     bootstrap_recovery_emit 'Check for package-manager locks, network failures, or repository errors.'
     ;;
   *)

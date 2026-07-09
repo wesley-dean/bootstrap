@@ -26,6 +26,8 @@ jobs:
             make_target: test-et2e-apt
           - package_manager: apk
             make_target: test-ete-apk
+          - package_manager: dnf
+            make_target: test-e2e-dnf
 
     steps:
       - name: Check out repository
