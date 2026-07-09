@@ -30,6 +30,7 @@ bootstrap.bash --dry-run
 bootstrap.bash --dry-run packages.txt
 bootstrap.bash --dry-run -
 bootstrap.bash --package-manager apt
+bootstrap.bash --package-manager apk
 bootstrap.bash --explain
 bootstrap.bash --verbose
 bootstrap.bash --quiet
@@ -135,8 +136,9 @@ execution planning.
 
 Supported values are:
 
-- `auto`, which asks the resolver to detect a supported package manager; and
-- `apt`, which explicitly selects the APT backend.
+- `auto`, which asks the resolver to detect a supported package manager;
+- `apt`, which explicitly selects the APT backend; and
+- `apk`, which explicitly selects the Alpine APK backend.
 
 The same setting may be provided by the environment or by `.env` as
 `BOOTSTRAP_PACKAGE_MANAGER`.  The command-line option has the highest
@@ -144,6 +146,7 @@ precedence:
 
 ```bash
 BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apt --dry-run packages.txt
+BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apk --dry-run packages.txt
 ```
 
 ## `--explain`
@@ -201,9 +204,9 @@ Bootstrap diagnostics are designed to explain both what failed and what can be
 tried next.  Error messages describe the conservative stop.  Recovery messages
 then provide concrete follow-up steps using the normalized `recovery` log level.
 
-For example, if APT cannot find a package, bootstrap may report that the package
-is unavailable and then suggest checking the manifest spelling, refreshing APT
-metadata with `sudo apt update`, or searching for the package with `apt search`.
+For example, if APT or APK cannot find a package, bootstrap may report that the
+package is unavailable and then suggest checking the manifest spelling, refreshing
+native package metadata, or searching through the selected package manager.
 
 Recovery guidance is considered essential output.  The `--quiet` option
 suppresses non-essential informational output, but it does not suppress warnings,

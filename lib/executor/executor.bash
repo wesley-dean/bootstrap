@@ -73,6 +73,12 @@ bootstrap_executor_execute_resolved_action() {
         "${operator:-}" \
         "${version:-}"
       ;;
+    apk)
+      bootstrap_executor_apk_install_package \
+        "${package}" \
+        "${operator:-}" \
+        "${version:-}"
+      ;;
     *)
       bootstrap_execution_result_create \
         'not-executed' \

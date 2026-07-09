@@ -252,7 +252,7 @@ bootstrap_config_validate_package_manager() {
   value="$1"
 
   case "${value}" in
-  auto | apt)
+  auto | apt | apk)
     return "${BOOTSTRAP_EXIT_SUCCESS}"
     ;;
   *)

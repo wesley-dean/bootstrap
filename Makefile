@@ -13,20 +13,20 @@ SHELL := /bin/bash
 DIST_DIR := dist
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
 DIST_CHECKSUM := $(DIST_SCRIPT).sha256
-SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/executor.bash src/bootstrap.bash
+SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/apk.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/apk.bash lib/executor/executor.bash src/bootstrap.bash
 TESTS_DIR := tests/
 TEST_SCRIPTS := ${TESTS_DIR}/*.bats
 TEST_RESULTS_DIR := test-results
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
 E2E_TEST_IMAGE_PREFIX := bootstrap_e2e_tmp_image
-E2E_TEST_PLATFORMS := ubuntu
+E2E_TEST_PLATFORMS := ubuntu alpine
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-e2e-ubuntu
+.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-e2e-ubuntu test-e2e-alpine
 
 all: $(DIST_SCRIPT)
 
@@ -80,9 +80,9 @@ test-report: $(DIST_SCRIPT)
 ##
 # Run all currently enabled containerized end-to-end test environments.
 #
-# The enabled platform list is intentionally explicit.  Alpine and RedHat-family
+# The enabled platform list is intentionally explicit.  RedHat-family
 # directories exist as reserved test contexts, but they are not included until the
-# corresponding APK and DNF backends are implemented.
+# corresponding DNF backend is implemented.
 #
 test-e2e: $(addprefix test-e2e-,$(E2E_TEST_PLATFORMS))
 
@@ -91,6 +91,12 @@ test-e2e: $(addprefix test-e2e-,$(E2E_TEST_PLATFORMS))
 #
 test-e2e-ubuntu: all
 	$(MAKE) test-e2e-platform E2E_PLATFORM=ubuntu
+
+##
+# Run the Alpine/APK end-to-end test environment.
+#
+test-e2e-alpine: all
+	$(MAKE) test-e2e-platform E2E_PLATFORM=alpine
 
 ##
 # Run one platform-specific containerized end-to-end test environment.
