@@ -13,34 +13,33 @@
 ## external dependencies while still creating a clear boundary around invocation
 ## context.
 ##
-## @var BOOTSTRAP_FLAG_DRY_RUN
-## True when the user requested planning without system changes.
-##
-## @var BOOTSTRAP_FLAG_EXPLAIN
-## True when the user requested explanatory output for planned behavior.
-##
-## @var BOOTSTRAP_FLAG_VERBOSE
-## True when the user requested more detailed diagnostic output.
-##
-## @var BOOTSTRAP_FLAG_QUIET
-## True when the user requested non-essential output suppression.
-##
-## @var BOOTSTRAP_MANIFEST_PATH
-## Optional package manifest path supplied as the single positional argument.
-##
-## @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
-## Effective package-manager selector after defaults and configuration are applied.
-##
 ## This internal state deliberately avoids the public `BOOTSTRAP_` configuration
 ## variable names accepted from `.env` files and the process environment.  Keeping
 ## the names separate lets the loader distinguish an exported environment
 ## override from runtime state that was populated by a lower-priority source.
 
+## @var BOOTSTRAP_FLAG_DRY_RUN
+## True when the user requested planning without system changes.
 BOOTSTRAP_FLAG_DRY_RUN=false
+
+## @var BOOTSTRAP_FLAG_EXPLAIN
+## True when the user requested explanatory output for planned behavior.
 BOOTSTRAP_FLAG_EXPLAIN=false
+
+## @var BOOTSTRAP_FLAG_VERBOSE
+## True when the user requested more detailed diagnostic output.
 BOOTSTRAP_FLAG_VERBOSE=false
+
+## @var BOOTSTRAP_FLAG_QUIET
+## True when the user requested non-essential output suppression.
 BOOTSTRAP_FLAG_QUIET=false
+
+## @var BOOTSTRAP_MANIFEST_PATH
+## Optional package manifest path supplied as the single positional argument.
 BOOTSTRAP_MANIFEST_PATH=""
+
+## @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
+## Effective package-manager selector after defaults and configuration are applied.
 BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 
 ## @fn bootstrap_context_reset()
@@ -146,7 +145,8 @@ bootstrap_context_set_package_manager() {
 
 ## @fn bootstrap_context_get_package_manager()
 ## @brief Prints the effective package-manager selector.
-## @returns The package-manager selector on standard output.
+## @par Standard Output
+## The package-manager selector.
 ## @retval 0 The selector was printed successfully.
 ## @par Examples
 ## @code
@@ -173,7 +173,8 @@ bootstrap_context_has_manifest_path() {
 
 ## @fn bootstrap_context_get_manifest_path()
 ## @brief Prints the manifest path associated with the current invocation.
-## @returns The manifest path on standard output.
+## @par Standard Output
+## The manifest path.
 ## @retval 0 The manifest path was printed successfully.
 ## @par Examples
 ## @code

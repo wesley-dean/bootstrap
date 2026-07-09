@@ -33,7 +33,8 @@
 ## @param manager Package manager or backend selected by the resolver.
 ## @param package Package name associated with the resolved action.
 ## @param message Short human-readable result message.
-## @returns A pipe-delimited Execution Result on standard output.
+## @par Standard Output
+## A pipe-delimited Execution Result.
 ## @retval 0 The Execution Result was created successfully.
 ## @retval 69 Required execution result fields were missing.
 ## @par Examples

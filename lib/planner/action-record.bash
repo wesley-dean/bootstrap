@@ -33,7 +33,8 @@
 ## @param version Optional version constraint value from the manifest entry.
 ## @param source Optional manifest source path from the manifest entry.
 ## @param line_number Optional manifest line number from the manifest entry.
-## @returns A pipe-delimited Action Record on standard output.
+## @par Standard Output
+## A pipe-delimited Action Record.
 ## @retval 0 The action record was created successfully.
 ## @retval 65 The package field was empty or invalid for planning.
 ## @par Examples

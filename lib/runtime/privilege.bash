@@ -16,7 +16,8 @@
 ## This helper exists so tests may override it after sourcing the generated
 ## artifact.  Production code should treat it as a thin wrapper around `id -u`.
 ##
-## @returns The effective user identifier on standard output.
+## @par Standard Output
+## The effective user identifier.
 ## @retval 0 The user identifier was printed successfully.
 ## @par Examples
 ## @code
@@ -34,7 +35,8 @@ bootstrap_privilege_effective_uid() {
 ## running as a non-root user, sudo is preferred when available, followed by doas.
 ## If neither tool is available, execution fails conservatively.
 ##
-## @returns Optional privilege command prefix on standard output.
+## @par Standard Output
+## Optional privilege command prefix.
 ## @retval 0 A usable privilege strategy was selected.
 ## @retval 71 No usable privilege escalation command was available.
 ## @par Examples

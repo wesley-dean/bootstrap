@@ -11,22 +11,21 @@
 ## source revision produced an artifact, but it does not control package
 ## installation, planning, configuration, or command-line behavior.
 ##
-## @var BOOTSTRAP_VERSION
-## Human-readable version string embedded by the build process.
-##
-## @var BOOTSTRAP_BUILD_DATE
-## Source revision timestamp embedded by the build process.
-##
-## @var BOOTSTRAP_BUILD_COMMIT
-## Short Git commit identifier embedded by the build process.
-##
 ## @par Examples
 ## @code
 ## bootstrap_print_version
 ## @endcode
 
+## @var BOOTSTRAP_VERSION
+## Human-readable version string embedded by the build process.
 BOOTSTRAP_VERSION="${BOOTSTRAP_VERSION:-0.0.0-dev}"
+
+## @var BOOTSTRAP_BUILD_DATE
+## Source revision timestamp embedded by the build process.
 BOOTSTRAP_BUILD_DATE="${BOOTSTRAP_BUILD_DATE:-unknown}"
+
+## @var BOOTSTRAP_BUILD_COMMIT
+## Short Git commit identifier embedded by the build process.
 BOOTSTRAP_BUILD_COMMIT="${BOOTSTRAP_BUILD_COMMIT:-unknown}"
 
 ## @fn bootstrap_print_version()
@@ -40,7 +39,8 @@ BOOTSTRAP_BUILD_COMMIT="${BOOTSTRAP_BUILD_COMMIT:-unknown}"
 ## generated. Local source execution uses the safe defaults above, which makes
 ## this function predictable even outside the generated artifact.
 ##
-## @returns Version metadata on standard output.
+## @par Standard Output
+## Version metadata.
 ## @retval 0 Version metadata was printed successfully.
 ## @par Examples
 ## @code

@@ -27,7 +27,8 @@
 ## @param version Optional version constraint value.
 ## @param source Optional manifest source path preserved for explanation output.
 ## @param line_number Optional manifest line number preserved for explanation output.
-## @returns A pipe-delimited Resolved Action on standard output.
+## @par Standard Output
+## A pipe-delimited Resolved Action.
 ## @retval 0 The Resolved Action was created successfully.
 ## @retval 69 Required resolver fields were missing.
 ## @par Examples

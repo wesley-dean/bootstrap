@@ -24,7 +24,8 @@
 ## The resolver delegates package-manager discovery to the backend interface.
 ## This keeps operating-system-specific detection rules in the same layer that
 ## owns native package manager inspection.
-## @returns The detected package manager identifier on standard output.
+## @par Standard Output
+## The detected package manager identifier.
 ## @retval 0 A supported package manager was detected.
 ## @retval 69 No supported package manager was detected.
 ## @par Examples
@@ -54,7 +55,8 @@ bootstrap_resolver_detect_package_manager() {
 ## @param source Optional manifest source path.
 ## @param line_number Optional manifest line number.
 ## @param manager Package manager identifier or `auto`.
-## @returns A pipe-delimited Resolved Action on standard output.
+## @par Standard Output
+## A pipe-delimited Resolved Action.
 ## @retval 0 The Action Record was resolved successfully.
 ## @retval 69 The Action Record could not be resolved on this system.
 ## @par Examples
@@ -123,7 +125,8 @@ bootstrap_resolver_resolve_action_record() {
 ## record processing function.  It keeps tests and future CLI integration focused
 ## on observable records rather than private arrays or global state.
 ## @param manager Optional package manager identifier, defaulting to `auto`.
-## @returns Pipe-delimited Resolved Actions on standard output.
+## @par Standard Output
+## Pipe-delimited Resolved Actions.
 ## @retval 0 All Action Records were resolved successfully.
 ## @retval 69 At least one Action Record could not be resolved.
 ## @par Examples

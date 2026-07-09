@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034
 ## @file lib/runtime/exit-codes.bash
 ## @brief Defines process exit codes used by the bootstrap command.
 ## @details
@@ -11,24 +12,6 @@
 ## successful run from a command-line usage error without parsing diagnostic
 ## text.
 ##
-## @var BOOTSTRAP_EXIT_SUCCESS
-## Exit status used when a command completes successfully.
-##
-## @var BOOTSTRAP_EXIT_USAGE
-## Exit status used when command-line input is unsupported or invalid.
-##
-## @var BOOTSTRAP_EXIT_MANIFEST
-## Exit status used when manifest input cannot be read or parsed.
-##
-## @var BOOTSTRAP_EXIT_UNSUPPORTED
-## Exit status used when the current system cannot resolve a requested action.
-##
-## @var BOOTSTRAP_EXIT_EXECUTION
-## Exit status used when execution of a resolved action fails.
-##
-## @var BOOTSTRAP_EXIT_PRIVILEGE
-## Exit status used when required privilege escalation is unavailable.
-##
 ## @par Example
 ## @code
 ## if ! bootstrap_parse_arguments "$@"; then
@@ -36,10 +19,26 @@
 ## fi
 ## @endcode
 
-# shellcheck disable=SC2034
+## @var BOOTSTRAP_EXIT_SUCCESS
+## Exit status used when a command completes successfully.
 BOOTSTRAP_EXIT_SUCCESS=0
+
+## @var BOOTSTRAP_EXIT_USAGE
+## Exit status used when command-line input is unsupported or invalid.
 BOOTSTRAP_EXIT_USAGE=64
+
+## @var BOOTSTRAP_EXIT_MANIFEST
+## Exit status used when manifest input cannot be read or parsed.
 BOOTSTRAP_EXIT_MANIFEST=65
+
+## @var BOOTSTRAP_EXIT_UNSUPPORTED
+## Exit status used when the current system cannot resolve a requested action.
 BOOTSTRAP_EXIT_UNSUPPORTED=69
+
+## @var BOOTSTRAP_EXIT_EXECUTION
+## Exit status used when execution of a resolved action fails.
 BOOTSTRAP_EXIT_EXECUTION=70
+
+## @var BOOTSTRAP_EXIT_PRIVILEGE
+## Exit status used when required privilege escalation is unavailable.
 BOOTSTRAP_EXIT_PRIVILEGE=71

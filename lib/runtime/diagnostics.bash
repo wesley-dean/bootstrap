@@ -22,7 +22,8 @@
 ## a missing file.
 ##
 ## @param path Manifest path supplied by the user or caller.
-## @returns Human-readable diagnostic text on standard error.
+## @par Standard Error
+## Human-readable diagnostic text.
 ## @retval 65 The manifest file could not be read.
 ## @par Examples
 ## @code
@@ -55,7 +56,8 @@ bootstrap_diagnostic_manifest_unreadable() {
 ## @param source Manifest source path used for provenance.
 ## @param line_number One-based logical line number within the manifest.
 ## @param input Trimmed manifest input after comments were removed.
-## @returns Human-readable diagnostic text on standard error.
+## @par Standard Error
+## Human-readable diagnostic text.
 ## @retval 65 The manifest line was malformed.
 ## @par Examples
 ## @code

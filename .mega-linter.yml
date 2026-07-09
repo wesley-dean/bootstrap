@@ -1,6 +1,6 @@
 ---
 # don't use Mega-Linter to test the reports Mega-Linter created
-ADDITIONAL_EXCLUDED_DIRECTORIES: [report, megalinter-reports, .git, site, tests, dist, test-results]
+ADDITIONAL_EXCLUDED_DIRECTORIES: [report, megalinter-reports, .git, site, tests, dist, test-results, doc/reference]
 
 # don't scan files listed in .gitignore (e.g., node_modules)
 IGNORE_GITIGNORED_FILES: true
@@ -68,3 +68,5 @@ BASH_EXEC_FILTER_REGEX_EXCLUDE: "(libs?|tests?|examples?|vendor)"
 #   - place spaces around redirections
 #   - keep column alignment padding
 BASH_SHFMT_ARGUMENTS: -i 2 -bn -ci -sr -kp
+
+REPOSITORY_SEMGREP_ARGUMENTS: "--exclude=doc/reference --exclude=doc/reference/**"

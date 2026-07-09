@@ -100,7 +100,8 @@ bootstrap_backend_apt_package_exists() {
 ## cannot conservatively plan an install when APT has no installable candidate.
 ##
 ## @param package Package name to inspect through APT policy metadata.
-## @returns The candidate version on standard output.
+## @par Standard Output
+## The candidate version.
 ## @retval 0 APT reported an installable candidate version.
 ## @retval 69 APT did not report an installable candidate version.
 ## @par Examples
@@ -135,7 +136,8 @@ bootstrap_backend_apt_candidate_version() {
 ## boundary instead of spreading that native detail through resolver code.
 ##
 ## @param operator Manifest operator such as `=`, `==`, `>`, or `>=`.
-## @returns The corresponding dpkg comparison operator on standard output.
+## @par Standard Output
+## The corresponding dpkg comparison operator.
 ## @retval 0 The operator is supported by the APT backend.
 ## @retval 69 The operator is not supported by the APT backend.
 ## @par Examples

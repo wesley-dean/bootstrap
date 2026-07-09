@@ -28,7 +28,8 @@
 ## The action stream deliberately preserves manifest order.  Later phases may add
 ## deterministic sorting or dependency-aware ordering where appropriate, but this
 ## planner slice keeps the user's stated order visible and testable.
-## @returns Pipe-delimited Action Records on standard output.
+## @par Standard Output
+## Pipe-delimited Action Records.
 ## @retval 0 All manifest records were planned successfully.
 ## @retval 65 A malformed or incomplete manifest record could not be planned.
 ## @par Examples
@@ -69,7 +70,8 @@ bootstrap_planner_plan_manifest_records() {
 ## No resolver or executor work occurs here.  The resulting Action Records remain
 ## platform independent and immutable.
 ## @param path Path to the manifest file to parse and plan.
-## @returns Pipe-delimited Action Records on standard output.
+## @par Standard Output
+## Pipe-delimited Action Records.
 ## @retval 0 The manifest was parsed and planned successfully.
 ## @retval 65 The manifest could not be parsed or planned.
 ## @par Examples

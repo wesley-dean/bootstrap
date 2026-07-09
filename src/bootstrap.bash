@@ -30,7 +30,8 @@ set -euo pipefail
 ## The help output documents behavior that is implemented and tested. Operational
 ## options are listed because the parser recognizes them and records their state
 ## before planning or execution begins.
-## @returns Help text on standard output.
+## @par Standard Output
+## Help text.
 ## @retval 0 Help text was printed successfully.
 ## @par Examples
 ## @code
@@ -63,7 +64,8 @@ HELP_TEXT
 ## ignored. This keeps misspelled flags visible and avoids implying that the
 ## engine accepted an instruction that it cannot safely honor.
 ## @param message The specific usage problem to show to the user.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 0 The diagnostic was printed successfully.
 ## @par Examples
 ## @code
@@ -155,7 +157,8 @@ bootstrap_parse_arguments() {
 ## @details
 ## This function preserves the established no-manifest behavior while respecting
 ## --quiet as the only flag whose behavior is meaningful without manifest input.
-## @returns A placeholder status message on standard output unless quiet mode is enabled.
+## @par Standard Output
+## A placeholder status message unless quiet mode is enabled.
 ## @retval 0 The placeholder operation completed successfully.
 ## @par Examples
 ## @code
@@ -384,7 +387,8 @@ bootstrap_print_resolved_action_explanation() {
 ## @param manifest_path Manifest path used to produce the plan.
 ## @param action_file File containing pipe-delimited Action Records.
 ## @param resolved_file File containing pipe-delimited Resolved Actions.
-## @returns Human-readable dry-run output on standard output.
+## @par Standard Output
+## Human-readable dry-run output.
 ## @retval 0 The dry-run plan was printed successfully.
 ## @retval 65 An Action Record could not be rendered.
 ## @retval 69 A Resolved Action could not be rendered.
@@ -556,7 +560,8 @@ bootstrap_run_dry_run_plan() {
 ## @param manager Backend or package manager that handled the action.
 ## @param package Package name associated with the result.
 ## @param message Human-readable execution result message.
-## @returns Human-readable execution output on standard output.
+## @par Standard Output
+## Human-readable execution output.
 ## @retval 0 The Execution Result was printed successfully.
 ## @par Examples
 ## @code
@@ -619,7 +624,8 @@ bootstrap_print_execution_result() {
 ## output formatting outside the executor so executor tests can focus on record
 ## contracts while CLI tests focus on user-visible behavior.
 ## @param result_file File containing pipe-delimited Execution Result records.
-## @returns Human-readable execution output on standard output.
+## @par Standard Output
+## Human-readable execution output.
 ## @retval 0 Execution Results were printed successfully.
 ## @par Examples
 ## @code
@@ -755,7 +761,8 @@ bootstrap_run_execution_plan() {
 ## used by themselves. Operational flags are parsed, configuration is validated,
 ## and a supplied manifest is then either dry-run planned or executed.
 ## @param arguments[] Command-line arguments supplied by the user.
-## @returns Command output on standard output, or diagnostics on standard error.
+## @par Output Streams
+## Command output on standard output, or diagnostics on standard error.
 ## @retval 0 The command completed successfully.
 ## @retval 64 The user supplied unsupported or invalid command-line arguments.
 ## @retval 65 Manifest parsing or planning failed.
