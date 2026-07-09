@@ -23,9 +23,9 @@ jobs:
       matrix:
         include:
           - package_manager: apt
-            make_target: test-et2e-apt
+            make_target: test-e2e-apt
           - package_manager: apk
-            make_target: test-ete-apk
+            make_target: test-e2e-apk
           - package_manager: dnf
             make_target: test-e2e-dnf
 

@@ -69,8 +69,8 @@ inside the container to install the tools used by the project test environment.
 At present, the Ubuntu/APT, Alpine/APK, and RedHat-family/DNF environments are enabled:
 
 ``` bash
-make test-et2e-apt
-make test-ete-apk
+make test-e2e-apt
+make test-e2e-apk
 make test-e2e-dnf
 ```
 

@@ -20,13 +20,13 @@ TEST_RESULTS_DIR := test-results
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
 E2E_TEST_IMAGE_PREFIX := bootstrap_e2e_tmp_image
-E2E_TEST_TARGETS := test-et2e-apt test-ete-apk test-e2e-dnf
+E2E_TEST_TARGETS := test-e2e-apt test-e2e-apk test-e2e-dnf
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-et2e-apt test-ete-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
+.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
 
 all: $(DIST_SCRIPT)
 
@@ -89,13 +89,13 @@ test-e2e: $(E2E_TEST_TARGETS)
 ##
 # Run the Ubuntu/APT end-to-end test environment.
 #
-test-et2e-apt: all
+test-e2e-apt: all
 	$(MAKE) test-e2e-platform E2E_PLATFORM=ubuntu
 
 ##
 # Run the Alpine/APK end-to-end test environment.
 #
-test-ete-apk: all
+test-e2e-apk: all
 	$(MAKE) test-e2e-platform E2E_PLATFORM=alpine
 
 ##
@@ -107,12 +107,12 @@ test-e2e-dnf: all
 ##
 # Backward-compatible alias for the Ubuntu/APT end-to-end test environment.
 #
-test-e2e-ubuntu: test-et2e-apt
+test-e2e-ubuntu: test-e2e-apt
 
 ##
 # Backward-compatible alias for the Alpine/APK end-to-end test environment.
 #
-test-e2e-alpine: test-ete-apk
+test-e2e-alpine: test-e2e-apk
 
 ##
 # Backward-compatible alias for the RedHat-family/DNF end-to-end test environment.
