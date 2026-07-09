@@ -7,7 +7,7 @@
 PROJECT_NAME           = "Bootstrap"
 PROJECT_BRIEF          = "Bash-based bootstrap engine reference documentation"
 
-OUTPUT_DIRECTORY       = docs/reference
+OUTPUT_DIRECTORY       = doc/reference
 CREATE_SUBDIRS         = NO
 
 GENERATE_HTML          = YES

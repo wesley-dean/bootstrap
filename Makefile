@@ -21,7 +21,7 @@ TEST_RESULTS_DIR := test-results
 VENDOR_DIR := vendor
 DOXYGEN_BASH_FILTER := $(VENDOR_DIR)/doxygen-bash.awk
 DOXYGEN_BASH_FILTER_URL := https://raw.githubusercontent.com/wesley-dean/bash-doxygen/refs/heads/main/doxygen-bash.awk
-REFERENCE_DOC_DIR := docs/reference
+REFERENCE_DOC_DIR := doc/reference
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
 E2E_TEST_IMAGE_PREFIX := bootstrap_e2e_tmp_image
