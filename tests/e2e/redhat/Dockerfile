@@ -1,6 +1,7 @@
 FROM fedora:44
 
 RUN dnf install -y bash ca-certificates sudo \
+  && dnf clean all \
   && dnf makecache \
   && useradd --create-home --shell /usr/bin/bash bootstrap \
   && printf 'bootstrap ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/bootstrap \
