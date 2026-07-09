@@ -43,6 +43,11 @@ bootstrap_backend_detect_package_manager() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
+  if bootstrap_backend_apk_is_available; then
+    printf 'apk\n'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
   bootstrap_backend_diagnostic_no_supported_manager
 }
 
@@ -87,6 +92,18 @@ bootstrap_backend_supports_capability() {
   apt)
     case "${capability}" in
     package-availability | version-constraints | package-execution)
+      return "${BOOTSTRAP_EXIT_SUCCESS}"
+      ;;
+    *)
+      bootstrap_backend_diagnostic_unsupported_capability \
+        "${manager}" \
+        "${capability}"
+      ;;
+    esac
+    ;;
+  apk)
+    case "${capability}" in
+    package-availability | package-execution)
       return "${BOOTSTRAP_EXIT_SUCCESS}"
       ;;
     *)
@@ -144,6 +161,9 @@ bootstrap_backend_package_exists() {
       "${package}" \
       "${operator}" \
       "${version}"
+    ;;
+  apk)
+    bootstrap_backend_apk_package_exists "${package}"
     ;;
   *)
     bootstrap_backend_diagnostic_unsupported_manager "${manager}"

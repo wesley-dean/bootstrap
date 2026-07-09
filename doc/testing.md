@@ -56,33 +56,41 @@ required check.
 
 ## Run containerized end-to-end tests
 
-Run the Ubuntu-based end-to-end test environment with:
+Run all currently enabled end-to-end test environments with:
 
 ``` bash
 make test-e2e
 ```
 
-This target builds a container image, copies the generated Bootstrap
-script into the container context, and uses Bootstrap inside the
-container to install the tools used by the project test environment.
+This target builds each enabled platform container image, copies the generated
+Bootstrap script into that platform's container context, and uses Bootstrap
+inside the container to install the tools used by the project test environment.
 
-The end-to-end test is intended to verify that Bootstrap can provision a
-fresh supported operating-system image using a real package manager.
+At present, the Ubuntu/APT and Alpine/APK environments are enabled:
+
+``` bash
+make test-et2e-apt
+make test-ete-apk
+```
+
+The older platform-named targets remain available as compatibility aliases:
+
+``` bash
+make test-e2e-ubuntu
+make test-e2e-alpine
+```
+
+The RedHat-family/DNF directory is present as a reserved test context. It is
+intentionally not enabled until the corresponding package-manager backend is
+implemented.
+
+The end-to-end tests are intended to verify that Bootstrap can provision fresh
+supported operating-system images using real package managers.
 
 ## Release end-to-end check
 
-For releases, the project will add a dedicated end-to-end GitHub Action.
-It will look like the existing `.github/workflows/test.yml` workflow,
-but it will run:
-
-``` bash
-make test-e2e
-```
-
-instead of:
-
-``` bash
-make test-report
-```
+The GitHub Action at `.github/workflows/e2e.yml` runs the enabled
+end-to-end environments as a matrix so each package-manager environment has an
+independent result.
 
 That release end-to-end workflow will also be a required check.
