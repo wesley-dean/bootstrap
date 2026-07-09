@@ -10,7 +10,9 @@ resolves them through a native package-manager backend, and then either explains
 or executes the resulting plan.
 
 The goal is not to replace the operating system package manager. The goal is to
-make bootstrap intent easier to read, review, test, and repeat.
+make bootstrap intent easier to read, review, test, and repeat.  The
+distribution's package maanger is used on the backend.  This is not a
+replacement, but a wrapper.
 
 ## Features
 
@@ -22,6 +24,10 @@ make bootstrap intent easier to read, review, test, and repeat.
 - Native package-manager delegation for APT, Alpine APK, and DNF.
 - Conservative diagnostics that stop rather than guessing when input is unclear.
 - A single generated `bootstrap.bash` release artifact.
+- Support for multiple system package managers:
+  - APT: Ubuntu / Debian variants
+  - DNF: RedHat variants
+  - APK: Alpine
 
 ## Install
 
@@ -224,6 +230,21 @@ curl https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap
 | bash -s -- --dry-run --explain packages.manifest
 ```
 
+## Privilege Escalation
+
+Bootstrap is designed to run either with elevated (root) privileges or as a
+normal system user in which case it uses `sudo` or `doas` only when needed.
+
+If neither `sudo` nor `doas` are available and Bootstrap is run as a normal
+user, Bootstrap will not be able to perform operations that modify the
+underlying system.  That is, it won't be able to install packages.
+
+In this case, all is not lost.  Another option would be to use `su` to run
+Bootstrap as a user with elevated privileges:
+
+```bash
+su -c '/path/to/bash /path/to/bootstrap.bash`
+```
 
 ## Documentation
 
