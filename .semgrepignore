@@ -1,1 +1,4 @@
-doc/reference/
+doc/
+test/
+vendor/
+doc/

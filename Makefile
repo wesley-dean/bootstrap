@@ -31,7 +31,7 @@ VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean docs docs-clean format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
+.PHONY: all check checksums clean distclean docs docs-clean docs-stage format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
 
 all: $(DIST_SCRIPT)
 
@@ -131,6 +131,9 @@ docs: docs-clean $(DOXYGEN_BASH_FILTER)
 		printf '%s\n' 'make docs'; \
 		printf '%s\n' '```'; \
 	} >"$(REFERENCE_DOC_DIR)/README.md"
+
+docs-stage: docs
+	git add -A "$(REFERENCE_DOC_DIR)"
 
 ##
 # Run all currently enabled containerized end-to-end test environments.
