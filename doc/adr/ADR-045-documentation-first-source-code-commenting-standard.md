@@ -188,6 +188,9 @@ following concrete syntax:
   include an `@par Examples` section followed by `@code` and `@endcode`.
 - Function signatures in `@fn` use the simple function name form, such as
   `bootstrap_example()`, rather than repeating positional parameter names.
+- Variable documentation uses standalone `@var` blocks immediately adjacent to
+  the declarations they describe, with `@brief` and, when useful, `@details`
+  lines rather than explanatory text placed directly on the `@var` line.
 - Example blocks should demonstrate realistic maintainer usage whenever that can
   be inferred safely from the code.  They should not merely restate the function
   signature unless no more meaningful example can be established.
@@ -352,14 +355,16 @@ This behavior is preferred to speculative documentation.
 ## unsafe defaults.  It favors explicit configuration and fails closed when
 ## required inputs are missing.
 ##
-## @var CONFIG_PATH
-## Path to the configuration file.  Later values override earlier ones.
-##
 ## @par Examples
 ## @code
 ## ./example.bash --dry-run ./maintenance.env
 ## @endcode
 
+## @var CONFIG_PATH
+## @brief Path to the configuration file used by the maintenance task.
+## @details
+## Defaults to `./maintenance.env` so local development and dry-run examples can
+## run without requiring a system-level configuration location.
 CONFIG_PATH="${CONFIG_PATH:-./maintenance.env}"
 
 ## @fn example_validate_config()
@@ -384,34 +389,6 @@ example_validate_config() {
 
   [[ -r "${path}" && -f "${path}" ]]
 }
-```
-
-## Addendum B: Python Example
-
-```python
-def example_function(value, dry_run=True):
-    """
-    @brief Perform a controlled operation.
-
-    @details
-    This function exists to make an otherwise risky operation explicit and
-    reviewable.  Dry-run mode is the default to reduce accidental impact.
-
-    @param value
-        The input value to operate on.
-
-    @param dry_run
-        When True, no changes are made.
-
-    @retval dict
-        A structured summary of actions taken or proposed.
-
-    @par Examples
-    @code
-    result = example_function(42, dry_run=True)
-    print(result)
-    @endcode
-    """
 ```
 
 ## Summary

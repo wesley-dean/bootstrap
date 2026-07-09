@@ -13,34 +13,45 @@
 ## external dependencies while still creating a clear boundary around invocation
 ## context.
 ##
-## @var BOOTSTRAP_FLAG_DRY_RUN
-## True when the user requested planning without system changes.
-##
-## @var BOOTSTRAP_FLAG_EXPLAIN
-## True when the user requested explanatory output for planned behavior.
-##
-## @var BOOTSTRAP_FLAG_VERBOSE
-## True when the user requested more detailed diagnostic output.
-##
-## @var BOOTSTRAP_FLAG_QUIET
-## True when the user requested non-essential output suppression.
-##
-## @var BOOTSTRAP_MANIFEST_PATH
-## Optional package manifest path supplied as the single positional argument.
-##
-## @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
-## Effective package-manager selector after defaults and configuration are applied.
-##
 ## This internal state deliberately avoids the public `BOOTSTRAP_` configuration
 ## variable names accepted from `.env` files and the process environment.  Keeping
 ## the names separate lets the loader distinguish an exported environment
 ## override from runtime state that was populated by a lower-priority source.
 
+## @var BOOTSTRAP_FLAG_DRY_RUN
+## @brief Tracks whether the user requested planning without system changes.
+## @details
+## Defaults to `false` at process start and after each context reset.
 BOOTSTRAP_FLAG_DRY_RUN=false
+
+## @var BOOTSTRAP_FLAG_EXPLAIN
+## @brief Tracks whether the user requested explanatory output for planned behavior.
+## @details
+## Defaults to `false` at process start and after each context reset.
 BOOTSTRAP_FLAG_EXPLAIN=false
+
+## @var BOOTSTRAP_FLAG_VERBOSE
+## @brief Tracks whether verbose diagnostics are active.
+## @details
+## Defaults to `false` at process start and after each context reset.
 BOOTSTRAP_FLAG_VERBOSE=false
+
+## @var BOOTSTRAP_FLAG_QUIET
+## @brief Tracks whether non-essential output should be suppressed.
+## @details
+## Defaults to `false` at process start and after each context reset.
 BOOTSTRAP_FLAG_QUIET=false
+
+## @var BOOTSTRAP_MANIFEST_PATH
+## @brief Stores the optional manifest path supplied as the positional argument.
+## @details
+## Defaults to an empty string until argument parsing records a manifest path.
 BOOTSTRAP_MANIFEST_PATH=""
+
+## @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
+## @brief Stores the effective package-manager selector for this invocation.
+## @details
+## Defaults to `auto` until configuration or command-line parsing selects another supported manager.
 BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 
 ## @fn bootstrap_context_reset()

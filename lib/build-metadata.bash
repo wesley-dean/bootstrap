@@ -11,22 +11,27 @@
 ## source revision produced an artifact, but it does not control package
 ## installation, planning, configuration, or command-line behavior.
 ##
-## @var BOOTSTRAP_VERSION
-## Human-readable version string embedded by the build process.
-##
-## @var BOOTSTRAP_BUILD_DATE
-## Source revision timestamp embedded by the build process.
-##
-## @var BOOTSTRAP_BUILD_COMMIT
-## Short Git commit identifier embedded by the build process.
-##
 ## @par Examples
 ## @code
 ## bootstrap_print_version
 ## @endcode
 
+## @var BOOTSTRAP_VERSION
+## @brief Human-readable version string embedded by the build process.
+## @details
+## Defaults to `0.0.0-dev` when the build process does not provide a version.
 BOOTSTRAP_VERSION="${BOOTSTRAP_VERSION:-0.0.0-dev}"
+
+## @var BOOTSTRAP_BUILD_DATE
+## @brief Source revision timestamp embedded by the build process.
+## @details
+## Defaults to `unknown` when the build process does not provide a timestamp.
 BOOTSTRAP_BUILD_DATE="${BOOTSTRAP_BUILD_DATE:-unknown}"
+
+## @var BOOTSTRAP_BUILD_COMMIT
+## @brief Short Git commit identifier embedded by the build process.
+## @details
+## Defaults to `unknown` when the build process does not provide a commit.
 BOOTSTRAP_BUILD_COMMIT="${BOOTSTRAP_BUILD_COMMIT:-unknown}"
 
 ## @fn bootstrap_print_version()
