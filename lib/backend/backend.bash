@@ -48,6 +48,11 @@ bootstrap_backend_detect_package_manager() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
+  if bootstrap_backend_dnf_is_available; then
+    printf 'dnf\n'
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
   bootstrap_backend_diagnostic_no_supported_manager
 }
 
@@ -101,7 +106,7 @@ bootstrap_backend_supports_capability() {
       ;;
     esac
     ;;
-  apk)
+  apk | dnf)
     case "${capability}" in
     package-availability | package-execution)
       return "${BOOTSTRAP_EXIT_SUCCESS}"
@@ -164,6 +169,9 @@ bootstrap_backend_package_exists() {
     ;;
   apk)
     bootstrap_backend_apk_package_exists "${package}"
+    ;;
+  dnf)
+    bootstrap_backend_dnf_package_exists "${package}"
     ;;
   *)
     bootstrap_backend_diagnostic_unsupported_manager "${manager}"

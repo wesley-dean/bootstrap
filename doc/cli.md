@@ -31,6 +31,7 @@ bootstrap.bash --dry-run packages.txt
 bootstrap.bash --dry-run -
 bootstrap.bash --package-manager apt
 bootstrap.bash --package-manager apk
+bootstrap.bash --package-manager dnf
 bootstrap.bash --explain
 bootstrap.bash --verbose
 bootstrap.bash --quiet
@@ -137,16 +138,16 @@ execution planning.
 Supported values are:
 
 - `auto`, which asks the resolver to detect a supported package manager;
-- `apt`, which explicitly selects the APT backend; and
-- `apk`, which explicitly selects the Alpine APK backend.
+- `apt`, which explicitly selects the APT backend;
+- `apk`, which explicitly selects the Alpine APK backend; and
+- `dnf`, which explicitly selects the RedHat-family DNF backend.
 
 The same setting may be provided by the environment or by `.env` as
 `BOOTSTRAP_PACKAGE_MANAGER`.  The command-line option has the highest
 precedence:
 
 ```bash
-BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apt --dry-run packages.txt
-BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager apk --dry-run packages.txt
+BOOTSTRAP_PACKAGE_MANAGER=auto bootstrap.bash --package-manager dnf --dry-run packages.txt
 ```
 
 ## `--explain`

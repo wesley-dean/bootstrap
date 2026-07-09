@@ -35,7 +35,7 @@ setup() {
 
     [ "$status" -eq 69 ]
     [[ "$output" == *"unsupported package manager"* ]]
-    [[ "$output" == *"Supported package managers in this release: auto, apt, apk."* ]]
+    [[ "$output" == *"Supported package managers in this release: auto, apt, apk, dnf."* ]]
 }
 
 @test "resolver rejects unsupported action records" {

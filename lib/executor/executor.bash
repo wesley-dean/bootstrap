@@ -79,6 +79,12 @@ bootstrap_executor_execute_resolved_action() {
         "${operator:-}" \
         "${version:-}"
       ;;
+    dnf)
+      bootstrap_executor_dnf_install_package \
+        "${package}" \
+        "${operator:-}" \
+        "${version:-}"
+      ;;
     *)
       bootstrap_execution_result_create \
         'not-executed' \

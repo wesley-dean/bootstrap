@@ -239,7 +239,7 @@ bootstrap_config_apply_environment() {
 # @details
 # The current stable backend surface supports automatic detection and APT.  The
 # validation function is deliberately small so future package managers, such as
-# APK, can be added by extending one explicit allowlist instead of scattering
+# APK or DNF, can be added by extending one explicit allowlist instead of scattering
 # string checks through the command-line and runtime code.
 #
 # @param value Effective package-manager selector.
@@ -252,7 +252,7 @@ bootstrap_config_validate_package_manager() {
   value="$1"
 
   case "${value}" in
-  auto | apt | apk)
+  auto | apt | apk | dnf)
     return "${BOOTSTRAP_EXIT_SUCCESS}"
     ;;
   *)
