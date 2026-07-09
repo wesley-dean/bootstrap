@@ -56,18 +56,28 @@ required check.
 
 ## Run containerized end-to-end tests
 
-Run the Ubuntu-based end-to-end test environment with:
+Run all currently enabled end-to-end test environments with:
 
 ``` bash
 make test-e2e
 ```
 
-This target builds a container image, copies the generated Bootstrap
-script into the container context, and uses Bootstrap inside the
-container to install the tools used by the project test environment.
+This target builds each enabled platform container image, copies the generated
+Bootstrap script into that platform's container context, and uses Bootstrap
+inside the container to install the tools used by the project test environment.
 
-The end-to-end test is intended to verify that Bootstrap can provision a
-fresh supported operating-system image using a real package manager.
+At present, only the Ubuntu/APT environment is enabled:
+
+``` bash
+make test-e2e-ubuntu
+```
+
+Alpine/APK and RedHat-family/DNF directories are present as reserved test
+contexts. They are intentionally not enabled until their corresponding package
+manager backends are implemented.
+
+The end-to-end tests are intended to verify that Bootstrap can provision fresh
+supported operating-system images using real package managers.
 
 ## Release end-to-end check
 

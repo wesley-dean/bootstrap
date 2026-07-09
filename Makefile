@@ -19,15 +19,14 @@ TEST_SCRIPTS := ${TESTS_DIR}/*.bats
 TEST_RESULTS_DIR := test-results
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
-E2E_TEST_IMAGE := bootstrap_e2e_tmp_image
-E2E_TEST_BOOTSTRAP := ${E2E_TEST_DIR}/bootstrap.bash
-E2E_TEST_DOCKERFILE := ${E2E_TEST_DIR}/Dockerfile.ubuntu
+E2E_TEST_IMAGE_PREFIX := bootstrap_e2e_tmp_image
+E2E_TEST_PLATFORMS := ubuntu
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean format test test-report test-e2e
+.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-e2e-ubuntu
 
 all: $(DIST_SCRIPT)
 
@@ -78,13 +77,44 @@ test-report: $(DIST_SCRIPT)
 	mkdir -p "$(TEST_RESULTS_DIR)"
 	bats --formatter junit $(TEST_SCRIPTS) >"$(TEST_RESULTS_DIR)/bats.xml"
 
-test-e2e: all
-	mkdir -p "${E2E_TEST_DIR}"
-	cp "${DIST_SCRIPT}" "${E2E_TEST_BOOTSTRAP}"
-	docker build -t "${E2E_TEST_IMAGE}" -f "${E2E_TEST_DOCKERFILE}" "${E2E_TEST_DIR}"
-	docker run --rm "${E2E_TEST_IMAGE}" || { rm -f "${E2E_TEST_BOOTSTRAP}"; docker image rm "${E2E_TEST_IMAGE}" ; false; }
-	docker image rm "${E2E_TEST_IMAGE}"
-	rm -f "${E2E_TEST_BOOTSTRAP}"
+##
+# Run all currently enabled containerized end-to-end test environments.
+#
+# The enabled platform list is intentionally explicit.  Alpine and RedHat-family
+# directories exist as reserved test contexts, but they are not included until the
+# corresponding APK and DNF backends are implemented.
+#
+test-e2e: $(addprefix test-e2e-,$(E2E_TEST_PLATFORMS))
+
+##
+# Run the Ubuntu/APT end-to-end test environment.
+#
+test-e2e-ubuntu: all
+	$(MAKE) test-e2e-platform E2E_PLATFORM=ubuntu
+
+##
+# Run one platform-specific containerized end-to-end test environment.
+#
+# Each platform context lives under tests/e2e/<platform>.  The generated
+# bootstrap.bash artifact is copied into that context immediately before the
+# image is built and removed again during cleanup.
+#
+test-e2e-platform: all
+	@if [[ -z "$${E2E_PLATFORM:-}" ]]; then \
+		printf '%s\n' 'E2E_PLATFORM is required' >&2; \
+		exit 2; \
+	fi; \
+	context="${E2E_TEST_DIR}/$${E2E_PLATFORM}"; \
+	image="${E2E_TEST_IMAGE_PREFIX}_$${E2E_PLATFORM}"; \
+	bootstrap="$${context}/bootstrap.bash"; \
+	if [[ ! -f "$${context}/Dockerfile" ]]; then \
+		printf 'No e2e Dockerfile found for platform: %s\n' "$${E2E_PLATFORM}" >&2; \
+		exit 2; \
+	fi; \
+	cp "${DIST_SCRIPT}" "$${bootstrap}"; \
+	trap 'rm -f "'"$${bootstrap}"'"; docker image rm "'"$${image}"'" >/dev/null 2>&1 || true' EXIT; \
+	docker build -t "$${image}" -f "$${context}/Dockerfile" "$${context}"; \
+	docker run --rm "$${image}"
 
 ##
 # Generate SHA-256 checksums for release artifacts.
