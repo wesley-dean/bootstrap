@@ -167,15 +167,33 @@ This ADR adopts a **Doxygen-style conceptual structure** across languages.
 
 Exact syntax varies by language, but the following concepts should be present:
 
+- @file
 - @brief
 - @details
 - @param / inputs
-- @retval / return semantics
+- @returns / standard-output semantics
+- @retval / exit-status or return semantics
 - @var (for configuration and globals)
 - @par Examples
 - @code blocks
 
 Consistency matters more than syntax perfection.
+
+For Bash and Bourne-like shell source files, this project standardizes on the
+following concrete syntax:
+
+- Every Doxygen documentation line begins with `##`.
+- Decorative separator lines made only of repeated `#` characters are not used.
+- File-level documentation blocks and function-level documentation blocks both
+  include an `@par Examples` section followed by `@code` and `@endcode`.
+- Function signatures in `@fn` use the simple function name form, such as
+  `bootstrap_example()`, rather than repeating positional parameter names.
+- Example blocks should demonstrate realistic maintainer usage whenever that can
+  be inferred safely from the code.  They should not merely restate the function
+  signature unless no more meaningful example can be established.
+
+Shell documentation examples remain comments.  Lines inside `@code` blocks should
+still begin with `##` so the examples cannot alter executable behavior.
 
 ## Non-Destructive AI-Assisted Documentation Updates
 
@@ -213,7 +231,14 @@ These outcomes increase incident risk and are unacceptable.
 
 5. **Verification**
    - Use diffs, checksums, or tooling to confirm only comments changed.
-   - Run linters and tests where feasible.
+   - Run syntax checks, linters, and tests where feasible.
+   - For shell scripts, compare non-comment lines before and after the change.
+
+6. **Prefer reviewable increments**
+   - Documentation-only source patches should be small enough for a human to
+     inspect confidently.
+   - When practical, one source file per patch is preferred over large multi-file
+     rewrites.
 
 Destructive “helpfulness” invalidates the change.
 
@@ -320,18 +345,45 @@ This behavior is preferred to speculative documentation.
 ## Addendum A: Shell Script Example
 
 ```bash
-###############################################################################
-# @file example.bash
-# @brief Performs a privileged maintenance task safely.
-#
-# @details
-# This script exists to solve a specific operational problem while avoiding
-# unsafe defaults.  It favors explicit configuration and fails closed when
-# required inputs are missing.
-#
-# @var CONFIG_PATH
-# Path to the configuration file.  Later values override earlier ones.
-###############################################################################
+## @file example.bash
+## @brief Performs a privileged maintenance task safely.
+## @details
+## This script exists to solve a specific operational problem while avoiding
+## unsafe defaults.  It favors explicit configuration and fails closed when
+## required inputs are missing.
+##
+## @var CONFIG_PATH
+## Path to the configuration file.  Later values override earlier ones.
+##
+## @par Examples
+## @code
+## ./example.bash --dry-run ./maintenance.env
+## @endcode
+
+CONFIG_PATH="${CONFIG_PATH:-./maintenance.env}"
+
+## @fn example_validate_config()
+## @brief Verifies that the configured input file can be read.
+## @details
+## Validation is kept separate from execution so callers can fail before any
+## privileged work begins.  The function only checks readability; it does not
+## source or execute the configuration file.
+##
+## @param path Path to the configuration file to inspect.
+## @retval 0 The configuration file is readable.
+## @retval 1 The configuration file is missing or unreadable.
+##
+## @par Examples
+## @code
+## example_validate_config "${CONFIG_PATH}"
+## @endcode
+example_validate_config() {
+  local path
+
+  path="$1"
+
+  [[ -r "${path}" && -f "${path}" ]]
+}
 ```
 
 ## Addendum B: Python Example
