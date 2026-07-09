@@ -30,7 +30,8 @@
 ## tiny normalization step that is needed for every parsed line.
 ##
 ## @param value The string to trim.
-## @returns The trimmed string on standard output.
+## @par Standard Output
+## The trimmed string.
 ## @retval 0 The value was trimmed successfully.
 ## @par Examples
 ## @code
@@ -61,7 +62,8 @@ bootstrap_manifest_trim() {
 ## @param line The raw manifest line to parse.
 ## @param source Human-readable source name used in diagnostics.
 ## @param line_number One-based line number used in diagnostics.
-## @returns A pipe-delimited package/operator/version/source/line-number record.
+## @par Standard Output
+## A pipe-delimited package/operator/version/source/line-number record.
 ## @retval 0 The line was blank, a comment, or a valid package requirement.
 ## @retval 65 The line was malformed manifest input.
 ## @par Examples
@@ -129,7 +131,8 @@ bootstrap_manifest_parse_line() {
 ## without inventing a temporary filename.
 ##
 ## @param path Path to the manifest file to parse, or `-` for standard input.
-## @returns Pipe-delimited Manifest Entry records on standard output.
+## @par Standard Output
+## Pipe-delimited Manifest Entry records.
 ## @retval 0 The manifest was read and parsed successfully.
 ## @retval 65 The manifest path was unreadable or contained malformed input.
 ## @par Examples

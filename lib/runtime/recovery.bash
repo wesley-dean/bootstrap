@@ -20,7 +20,8 @@
 ## preserving one output shape.
 ##
 ## @param message Recovery guidance text to print after the recovery label.
-## @returns A normalized recovery line on standard error.
+## @par Standard Error
+## A normalized recovery line.
 ## @retval 0 The recovery line was emitted successfully.
 ## @par Examples
 ## @code
@@ -42,7 +43,8 @@ bootstrap_recovery_emit() {
 ## manager that bootstrap currently knows how to use.  The message names the
 ## current support boundary rather than guessing about the host operating system.
 ##
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code
@@ -66,7 +68,8 @@ bootstrap_recovery_no_supported_package_manager() {
 ## know which layer provided the effective value.
 ##
 ## @param manager Unsupported package manager name supplied by the user or config.
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code
@@ -96,7 +99,8 @@ bootstrap_recovery_unsupported_package_manager() {
 ##
 ## @param manager Package manager that could not provide the package.
 ## @param package Package name that could not be resolved.
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code
@@ -142,7 +146,8 @@ bootstrap_recovery_package_unavailable() {
 ##
 ## @param manager Package manager that evaluated the version constraint.
 ## @param package Package name whose candidate did not satisfy the constraint.
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code
@@ -179,7 +184,8 @@ bootstrap_recovery_version_constraint() {
 ## the explanation concrete without hiding the conservative stop that already
 ## happened in the privilege helper.
 ##
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code
@@ -202,7 +208,8 @@ bootstrap_recovery_privilege_unavailable() {
 ##
 ## @param manager Package manager that attempted the installation.
 ## @param package Package name that failed to install.
-## @returns Recovery guidance on standard error.
+## @par Standard Error
+## Recovery guidance.
 ## @retval 0 The guidance was emitted successfully.
 ## @par Examples
 ## @code

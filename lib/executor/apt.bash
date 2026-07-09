@@ -53,7 +53,8 @@ bootstrap_executor_apt_package_is_installed() {
 ## @param package Package name selected by the manifest, planner, and resolver pipeline.
 ## @param operator Optional version constraint operator, currently preserved but not enforced.
 ## @param version Optional version constraint value, currently preserved but not enforced.
-## @returns An Execution Result record on standard output.
+## @par Standard Output
+## An Execution Result record.
 ## @retval 0 The package was already installed or APT completed successfully.
 ## @retval 70 The APT command failed.
 ## @par Examples

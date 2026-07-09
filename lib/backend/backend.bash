@@ -29,7 +29,8 @@
 ## The return value is a backend identifier such as `apt`.  It is an internal
 ## stable concept used by resolved actions and dispatcher functions.
 ##
-## @returns The detected backend identifier on standard output.
+## @par Standard Output
+## The detected backend identifier.
 ## @retval 0 A supported backend was detected.
 ## @retval 69 No supported backend was detected.
 ## @par Examples

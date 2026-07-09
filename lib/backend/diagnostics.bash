@@ -20,7 +20,8 @@
 ## supported package manager, planning cannot honestly claim that requested
 ## packages can be resolved for the current system.
 ##
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 No supported package manager was detected.
 ## @par Examples
 ## @code
@@ -43,7 +44,8 @@ bootstrap_backend_diagnostic_no_supported_manager() {
 ## tools were found.
 ##
 ## @param manager Backend identifier that could not be handled.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The package manager is unsupported.
 ## @par Examples
 ## @code
@@ -67,7 +69,8 @@ bootstrap_backend_diagnostic_unsupported_manager() {
 ## manager keeps the diagnostic useful once additional package backends exist.
 ##
 ## @param manager Backend identifier that received the incomplete request.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The package lookup request was incomplete.
 ## @par Examples
 ## @code
@@ -96,7 +99,8 @@ bootstrap_backend_diagnostic_missing_package_name() {
 ##
 ## @param manager Backend identifier that was asked to provide the capability.
 ## @param capability Capability name that is not supported.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The backend capability is unsupported.
 ## @par Examples
 ## @code
@@ -123,7 +127,8 @@ bootstrap_backend_diagnostic_unsupported_capability() {
 ##
 ## @param manager Backend identifier that performed the lookup.
 ## @param package Package name that could not be found.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The package is unavailable through the selected backend.
 ## @par Examples
 ## @code
@@ -153,7 +158,8 @@ bootstrap_backend_diagnostic_package_unavailable() {
 ##
 ## @param manager Backend identifier that inspected the package.
 ## @param package Package name that lacks an install candidate.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The package has no installable candidate.
 ## @par Examples
 ## @code
@@ -184,7 +190,8 @@ bootstrap_backend_diagnostic_no_candidate() {
 ##
 ## @param manager Backend identifier that rejected the operator.
 ## @param operator Manifest operator that could not be translated.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The backend cannot evaluate the operator.
 ## @par Examples
 ## @code
@@ -212,7 +219,8 @@ bootstrap_backend_diagnostic_unsupported_version_operator() {
 ## @param manager Backend identifier that received the incomplete constraint.
 ## @param package Package name being inspected.
 ## @param operator Version operator that lacked a right-hand value.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The version constraint is incomplete.
 ## @par Examples
 ## @code
@@ -248,7 +256,8 @@ bootstrap_backend_diagnostic_missing_version() {
 ## @param candidate Candidate version reported by the backend.
 ## @param operator Manifest version operator.
 ## @param version Manifest version value.
-## @returns Diagnostic text on standard error.
+## @par Standard Error
+## Diagnostic text.
 ## @retval 69 The candidate does not satisfy the requested constraint.
 ## @par Examples
 ## @code

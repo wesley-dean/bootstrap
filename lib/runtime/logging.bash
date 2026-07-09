@@ -34,7 +34,8 @@
 ## @param level Lowercase severity label such as info, warning, or error.
 ## @param message Human-readable message to show after the severity label.
 ## @param stream Output stream selector: stdout or stderr.
-## @returns A normalized log line on the requested stream.
+## @par Output Stream
+## A normalized log line on the requested stream.
 ## @retval 0 The log line was emitted successfully.
 ## @retval 69 The requested stream selector is unsupported.
 ## @par Examples
@@ -73,7 +74,8 @@ bootstrap_log_emit() {
 ## messages without suppressing usage errors or other necessary diagnostics.
 ##
 ## @param message The informational message to print on standard output.
-## @returns A normalized info log line on standard output when quiet mode is inactive.
+## @par Standard Output
+## A normalized info log line when quiet mode is inactive.
 ## @retval 0 The logging decision completed successfully.
 ## @par Examples
 ## @code
@@ -99,7 +101,8 @@ bootstrap_log_info() {
 ## them would make conservative behavior harder to understand.
 ##
 ## @param message The warning message to print on standard error.
-## @returns A normalized warning log line on standard error.
+## @par Standard Error
+## A normalized warning log line.
 ## @retval 0 The warning was printed successfully.
 ## @par Examples
 ## @code
@@ -121,7 +124,8 @@ bootstrap_log_warning() {
 ## the user still needs to know what failed.
 ##
 ## @param message The error message to print on standard error.
-## @returns A normalized error log line on standard error.
+## @par Standard Error
+## A normalized error log line.
 ## @retval 0 The error was printed successfully.
 ## @par Examples
 ## @code

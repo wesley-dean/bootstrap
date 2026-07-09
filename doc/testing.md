@@ -11,6 +11,7 @@ tests, and continuous integration behavior consistent.
   Format the source                   `make format`
   Run the test suite                  `make test`
   Generate the CI-style test report   `make test-report`
+  Generate reference documentation    `make docs`
   Run end-to-end tests                `make test-e2e`
 
 ## Check the source
@@ -53,6 +54,21 @@ make test-report
 The GitHub Action at `.github/workflows/test.yml` runs
 `make test-report` to verify project functionality. This workflow is a
 required check.
+
+## Generate reference documentation
+
+Generate the Doxygen reference documentation with:
+
+``` bash
+make docs
+```
+
+This target downloads the Bash Doxygen filter into `vendor/` when needed
+and runs Doxygen using the repository `Doxyfile`.
+
+Generated reference documentation is written under `docs/reference/`.
+Files in that directory are generated artifacts and should be regenerated
+with `make docs` rather than edited manually.
 
 ## Run containerized end-to-end tests
 

@@ -38,7 +38,8 @@
 ## process, before the engine should assume much about the target system.
 ##
 ## @param value Text to trim.
-## @returns The trimmed text on standard output.
+## @par Standard Output
+## The trimmed text.
 ## @retval 0 The value was trimmed successfully.
 ## @par Examples
 ## @code
@@ -67,7 +68,8 @@ bootstrap_config_trim() {
 ## base for little benefit during bootstrap.
 ##
 ## @param value Value text read after the `=` separator.
-## @returns The unquoted value on standard output.
+## @par Standard Output
+## The unquoted value.
 ## @retval 0 The value was normalized successfully.
 ## @par Examples
 ## @code

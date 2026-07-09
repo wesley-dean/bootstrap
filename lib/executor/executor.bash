@@ -29,7 +29,8 @@
 ## @param version Optional version constraint value.
 ## @param source Optional manifest source path preserved for provenance.
 ## @param line_number Optional manifest line number preserved for provenance.
-## @returns An Execution Result record on standard output when possible.
+## @par Standard Output
+## An Execution Result record when possible.
 ## @retval 69 Execution is not implemented for the Resolved Action.
 ## @par Examples
 ## @code
@@ -125,7 +126,8 @@ bootstrap_executor_execute_resolved_action() {
 ## The initial implementation stops at the first unsupported or unimplemented
 ## action.  That conservative behavior prevents later execution paths from
 ## skipping failures and continuing with a partially applied bootstrap.
-## @returns Execution Result records on standard output.
+## @par Standard Output
+## Execution Result records.
 ## @retval 0 All Resolved Actions executed successfully.
 ## @retval 69 At least one Resolved Action could not be executed.
 ## @par Examples
