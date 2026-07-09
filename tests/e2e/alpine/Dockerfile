@@ -1,9 +1,10 @@
 FROM alpine:3.20
 
-RUN apk add --no-cache bash ca-certificates doas \
+RUN apk update \
+  && apk add bash ca-certificates sudo \
   && adduser -D -s /bin/bash bootstrap \
-  && printf 'permit nopass bootstrap as root\n' > /etc/doas.d/bootstrap.conf \
-  && chmod 0400 /etc/doas.d/bootstrap.conf \
+  && printf 'bootstrap ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/bootstrap \
+  && chmod 0440 /etc/sudoers.d/bootstrap \
   && mkdir -p /workspace \
   && chown bootstrap:bootstrap /workspace
 
