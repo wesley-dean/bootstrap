@@ -19,7 +19,7 @@ make bootstrap intent easier to read, review, test, and repeat.
 - Package version constraints such as `>=`, `=`, `==`, `<`, and `>`.
 - Dry-run mode for reviewing planned work before changing a system.
 - Explain mode for understanding how manifest entries become planned actions.
-- Native package-manager delegation, starting with APT.
+- Native package-manager delegation for APT and Alpine APK.
 - Conservative diagnostics that stop rather than guessing when input is unclear.
 - A single generated `bootstrap.bash` release artifact.
 
@@ -165,6 +165,7 @@ To select the package-manager backend explicitly:
 
 ```bash
 ./bootstrap.bash --package-manager apt packages.manifest
+./bootstrap.bash --package-manager apk packages.manifest
 ```
 
 ## Running without installing
@@ -242,8 +243,9 @@ in focused files:
 ## Project status
 
 Bootstrap is under active development. The current implementation focuses on a
-small, reviewable package-manifest workflow with an APT backend. Additional
-package-manager backends and richer provisioning features are future work.
+small, reviewable package-manifest workflow with APT and Alpine APK backends.
+Additional package-manager backends and richer provisioning features are future
+work.
 
 ## License
 
