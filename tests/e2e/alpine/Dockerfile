@@ -1,7 +1,6 @@
 FROM alpine:3.20
 
-RUN apk update \
-  && apk add bash ca-certificates sudo \
+RUN apk add --no-cache bash ca-certificates sudo \
   && adduser -D -s /bin/bash bootstrap \
   && printf 'bootstrap ALL=(ALL) NOPASSWD:ALL\n' > /etc/sudoers.d/bootstrap \
   && chmod 0440 /etc/sudoers.d/bootstrap \
