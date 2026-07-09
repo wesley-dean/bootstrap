@@ -35,7 +35,7 @@ EXCLUDE_PATTERNS       = */dist/* \
 EXTENSION_MAPPING      = bash=C \
                          sh=C
 FILTER_PATTERNS        = *.bash=vendor/doxygen-bash.awk \
-                         *.sh=vendor/doxygen-bash.awk
+                         *.sh=awkvendor/doxygen-bash.awk
 
 EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
