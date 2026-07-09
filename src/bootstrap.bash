@@ -1,39 +1,41 @@
 # shellcheck shell=bash
-###############################################################################
-# @file src/bootstrap.bash
-# @brief Provides the bootstrap engine source entry point.
-#
-# @details
-# This file contains the public command-line entry point that is assembled into
-# dist/bootstrap.bash. Phase 2 establishes the supported option surface without
-# introducing manifest parsing, planning, or package execution ahead of the
-# roadmap.
-#
-# The command model is intentionally a single primary operation modified by
-# explicit long options. The project does not currently use subcommands. That
-# keeps the initial bootstrap experience compact while still making user intent
-# visible through flags such as --dry-run, --explain, --verbose, and --quiet.
-#
-# The no-argument placeholder output is preserved so the Phase 1 observable
-# behavior remains stable while the project incrementally adds supported command
-# behavior.
-###############################################################################
+## @file src/bootstrap.bash
+## @brief Provides the bootstrap engine source entry point.
+## @details
+## This file contains the public command-line entry point that is assembled into
+## dist/bootstrap.bash. The entry point owns user-facing option handling, dry-run
+## rendering, execution-result rendering, and the final choice between planning
+## and execution.
+##
+## The command model is intentionally a single primary operation modified by
+## explicit long options. That keeps the bootstrap experience compact while still
+## making user intent visible through flags such as --dry-run, --explain,
+## --verbose, and --quiet.
+##
+## This source file is assembled into the distribution artifact together with the
+## runtime, manifest, planner, resolver, backend, and executor modules. It should
+## therefore avoid duplicating lower-level package-manager policy.
+## @par Examples
+## @code
+## bootstrap.bash --help
+## bootstrap.bash --dry-run --explain packages.txt
+## bootstrap.bash --package-manager apt packages.txt
+## @endcode
 
 set -euo pipefail
 
-###############################################################################
-# @fn bootstrap_print_help()
-# @brief Prints the currently supported command-line usage summary.
-#
-# @details
-# The help output documents behavior that is implemented and tested. Operational
-# options are listed because Phase 2 now recognizes them and records their state,
-# even though later roadmap phases will give those options deeper planning and
-# execution meaning.
-#
-# @returns Help text on standard output.
-# @retval 0 Help text was printed successfully.
-###############################################################################
+## @fn bootstrap_print_help()
+## @brief Prints the currently supported command-line usage summary.
+## @details
+## The help output documents behavior that is implemented and tested. Operational
+## options are listed because the parser recognizes them and records their state
+## before planning or execution begins.
+## @returns Help text on standard output.
+## @retval 0 Help text was printed successfully.
+## @par Examples
+## @code
+## bootstrap_print_help
+## @endcode
 bootstrap_print_help() {
   cat <<'HELP_TEXT'
 Usage:
@@ -54,19 +56,19 @@ Arguments:
 HELP_TEXT
 }
 
-###############################################################################
-# @fn bootstrap_print_usage_error(message)
-# @brief Prints a human-readable command-line usage error.
-#
-# @details
-# Unsupported or contradictory options fail conservatively instead of being
-# ignored. This keeps misspelled flags visible and avoids implying that the
-# engine accepted an instruction that it cannot safely honor.
-#
-# @param message The specific usage problem to show to the user.
-# @returns Diagnostic text on standard error.
-# @retval 0 The diagnostic was printed successfully.
-###############################################################################
+## @fn bootstrap_print_usage_error()
+## @brief Prints a human-readable command-line usage error.
+## @details
+## Unsupported or contradictory options fail conservatively instead of being
+## ignored. This keeps misspelled flags visible and avoids implying that the
+## engine accepted an instruction that it cannot safely honor.
+## @param message The specific usage problem to show to the user.
+## @returns Diagnostic text on standard error.
+## @retval 0 The diagnostic was printed successfully.
+## @par Examples
+## @code
+## bootstrap_print_usage_error "unsupported option: --force"
+## @endcode
 bootstrap_print_usage_error() {
   local message
 
@@ -76,24 +78,24 @@ bootstrap_print_usage_error() {
   printf "Try 'bootstrap.bash --help' for usage.\n" >&2
 }
 
-###############################################################################
-# @fn bootstrap_parse_arguments(...)
-# @brief Parses supported long-form command-line options.
-#
-# @details
-# The parser intentionally accepts only explicit long options. Short aliases are
-# not added yet because the ADRs prefer clarity and compatibility over a broad
-# convenience surface.
-#
-# The parser records option state in global variables for later roadmap phases.
-# At this stage, the flags are accepted and made available to the runtime, but
-# manifest planning and execution are handled after parsing so argument
-# validation remains separate from pipeline orchestration.
-#
-# @param ... Command-line arguments supplied by the user.
-# @retval 0 All arguments were parsed successfully.
-# @retval 64 The user supplied unsupported, unexpected, or contradictory input.
-###############################################################################
+## @fn bootstrap_parse_arguments()
+## @brief Parses supported long-form command-line options.
+## @details
+## The parser intentionally accepts only explicit long options. Short aliases are
+## not added yet because the ADRs prefer clarity and compatibility over a broad
+## convenience surface.
+##
+## The parser records option state in runtime context for later phases. Manifest
+## planning and execution happen after parsing so argument validation remains
+## separate from pipeline orchestration.
+## @param arguments[] Command-line arguments supplied by the user.
+## @retval 0 All arguments were parsed successfully.
+## @retval 64 The user supplied unsupported, unexpected, or contradictory input.
+## @par Examples
+## @code
+## bootstrap_parse_arguments --dry-run --package-manager apt packages.txt
+## bootstrap_parse_arguments --verbose packages.txt
+## @endcode
 bootstrap_parse_arguments() {
   while (($# > 0)); do
     case "$1" in
@@ -148,40 +150,38 @@ bootstrap_parse_arguments() {
   return "${BOOTSTRAP_EXIT_SUCCESS}"
 }
 
-###############################################################################
-# @fn bootstrap_run_placeholder()
-# @brief Runs the current placeholder operation after option parsing.
-#
-# @details
-# The project has not yet implemented manifest parsing, planning, or execution.
-# This function preserves the established placeholder behavior while respecting
-# --quiet as the only flag whose behavior is meaningful before planning exists.
-#
-# @returns A placeholder status message on standard output unless quiet mode is enabled.
-# @retval 0 The placeholder operation completed successfully.
-###############################################################################
+## @fn bootstrap_run_placeholder()
+## @brief Runs the placeholder operation when no manifest was supplied.
+## @details
+## This function preserves the established no-manifest behavior while respecting
+## --quiet as the only flag whose behavior is meaningful without manifest input.
+## @returns A placeholder status message on standard output unless quiet mode is enabled.
+## @retval 0 The placeholder operation completed successfully.
+## @par Examples
+## @code
+## bootstrap_run_placeholder
+## @endcode
 bootstrap_run_placeholder() {
   bootstrap_log_info 'not yet implemented'
 }
 
-###############################################################################
-# @fn bootstrap_print_action_record(action, package, operator, version)
-# @brief Prints one human-readable dry-run line for an Action Record.
-#
-# @details
-# The planner emits abstract Action Records.  This function renders the small
-# install-package action model that exists today without resolving package
-# managers or command lines.  Unknown action types are reported as manifest
-# errors because the CLI should not silently hide planner output it cannot
-# explain.
-#
-# @param action Action Record type.
-# @param package Package name associated with the action.
-# @param operator Optional version constraint operator.
-# @param version Optional version constraint value.
-# @retval 0 The Action Record was rendered successfully.
-# @retval 65 The Action Record type was unsupported by this renderer.
-###############################################################################
+## @fn bootstrap_print_action_record()
+## @brief Prints one human-readable dry-run line for an Action Record.
+## @details
+## The planner emits abstract Action Records. This function renders the current
+## install-package action model without resolving package managers or command
+## lines. Unknown action types are reported as manifest errors.
+## @param action Action Record type.
+## @param package Package name associated with the action.
+## @param operator Optional version constraint operator.
+## @param version Optional version constraint value.
+## @retval 0 The Action Record was rendered successfully.
+## @retval 65 The Action Record type was unsupported by this renderer.
+## @par Examples
+## @code
+## bootstrap_print_action_record install-package shellcheck
+## bootstrap_print_action_record install-package bash ">=" 5.0
+## @endcode
 bootstrap_print_action_record() {
   local action
   local operator
@@ -211,25 +211,25 @@ bootstrap_print_action_record() {
   esac
 }
 
-###############################################################################
-# @fn bootstrap_print_action_explanation(action, package, operator, version, source, line_number)
-# @brief Prints provenance and architectural context for one Action Record.
-#
-# @details
-# Explain output should make the plan easier to inspect without pretending that
-# executor work has already happened. This helper reports the manifest line that
-# produced the action and restates that the planner output remains the immutable,
-# platform-independent source of intent.
-#
-# @param action Action Record type.
-# @param package Package name associated with the action.
-# @param operator Optional version constraint operator.
-# @param version Optional version constraint value.
-# @param source Manifest source path preserved by the parser and planner.
-# @param line_number Manifest line number preserved by the parser and planner.
-# @retval 0 The explanation was printed successfully.
-# @retval 65 The Action Record type was unsupported by this renderer.
-###############################################################################
+## @fn bootstrap_print_action_explanation()
+## @brief Prints provenance and architectural context for one Action Record.
+## @details
+## Explain output should make the plan easier to inspect without pretending that
+## executor work has already happened. This helper reports the manifest line that
+## produced the action and restates the planner boundary.
+## @param action Action Record type.
+## @param package Package name associated with the action.
+## @param operator Optional version constraint operator.
+## @param version Optional version constraint value.
+## @param source Manifest source path preserved by the parser and planner.
+## @param line_number Manifest line number preserved by the parser and planner.
+## @retval 0 The explanation was printed successfully.
+## @retval 65 The Action Record type was unsupported by this renderer.
+## @par Examples
+## @code
+## bootstrap_print_action_explanation install-package shellcheck "" "" packages.txt 3
+## bootstrap_print_action_explanation install-package bash ">=" 5.0 packages.txt 4
+## @endcode
 bootstrap_print_action_explanation() {
   local action
   local line_number
@@ -269,24 +269,24 @@ bootstrap_print_action_explanation() {
   esac
 }
 
-###############################################################################
-# @fn bootstrap_print_resolved_action(action, manager, package, operator, version)
-# @brief Prints one human-readable dry-run line for a Resolved Action.
-#
-# @details
-# Resolved Actions bind abstract planner output to the current platform without
-# executing anything. This renderer intentionally names the selected package
-# manager while avoiding command-line syntax that could be mistaken for work that
-# has already been performed.
-#
-# @param action Resolved Action type.
-# @param manager Package manager selected by the resolver.
-# @param package Package name associated with the action.
-# @param operator Optional version constraint operator.
-# @param version Optional version constraint value.
-# @retval 0 The Resolved Action was rendered successfully.
-# @retval 69 The Resolved Action type was unsupported by this renderer.
-###############################################################################
+## @fn bootstrap_print_resolved_action()
+## @brief Prints one human-readable dry-run line for a Resolved Action.
+## @details
+## Resolved Actions bind abstract planner output to the current platform without
+## executing anything. This renderer names the selected package manager while
+## avoiding command-line syntax that could be mistaken for completed work.
+## @param action Resolved Action type.
+## @param manager Package manager selected by the resolver.
+## @param package Package name associated with the action.
+## @param operator Optional version constraint operator.
+## @param version Optional version constraint value.
+## @retval 0 The Resolved Action was rendered successfully.
+## @retval 69 The Resolved Action type was unsupported by this renderer.
+## @par Examples
+## @code
+## bootstrap_print_resolved_action install-package apt shellcheck
+## bootstrap_print_resolved_action install-package apt bash ">=" 5.0
+## @endcode
 bootstrap_print_resolved_action() {
   local action
   local manager
@@ -319,25 +319,26 @@ bootstrap_print_resolved_action() {
   esac
 }
 
-###############################################################################
-# @fn bootstrap_print_resolved_action_explanation(action, manager, package, operator, version, source, line_number)
-# @brief Prints explanatory context for one Resolved Action.
-#
-# @details
-# This helper describes how the current environment resolved a planned action.
-# It is deliberately phrased as future intent rather than completed work because
-# dry-run mode must never mutate the system.
-#
-# @param action Resolved Action type.
-# @param manager Package manager selected by the resolver.
-# @param package Package name associated with the resolved action.
-# @param operator Optional version constraint operator.
-# @param version Optional version constraint value.
-# @param source Manifest source path preserved for provenance.
-# @param line_number Manifest line number preserved for provenance.
-# @retval 0 The explanation was printed successfully.
-# @retval 69 The Resolved Action type was unsupported by this renderer.
-###############################################################################
+## @fn bootstrap_print_resolved_action_explanation()
+## @brief Prints explanatory context for one Resolved Action.
+## @details
+## This helper describes how the current environment resolved a planned action.
+## It is deliberately phrased as future intent rather than completed work because
+## dry-run mode must never mutate the system.
+## @param action Resolved Action type.
+## @param manager Package manager selected by the resolver.
+## @param package Package name associated with the resolved action.
+## @param operator Optional version constraint operator.
+## @param version Optional version constraint value.
+## @param source Manifest source path preserved for provenance.
+## @param line_number Manifest line number preserved for provenance.
+## @retval 0 The explanation was printed successfully.
+## @retval 69 The Resolved Action type was unsupported by this renderer.
+## @par Examples
+## @code
+## bootstrap_print_resolved_action_explanation install-package apt shellcheck "" "" packages.txt 3
+## bootstrap_print_resolved_action_explanation install-package apt bash ">=" 5.0 packages.txt 4
+## @endcode
 bootstrap_print_resolved_action_explanation() {
   local action
   local line_number
@@ -373,28 +374,24 @@ bootstrap_print_resolved_action_explanation() {
   esac
 }
 
-###############################################################################
-# @fn bootstrap_print_dry_run_plan(manifest_path, action_file, resolved_file)
-# @brief Renders a planned and resolved dry-run action list for a manifest.
-#
-# @details
-# Dry-run output is deliberately generated from Action Records and Resolved
-# Actions rather than from parser records. This keeps the user-facing output
-# aligned with the same pipeline that later executor phases will consume while
-# still guaranteeing that dry-run mode performs no system changes.
-#
-# Explain mode reports the user-facing reasoning behind the plan: what was
-# inspected, how manifest requests became actions, how the resolver bound those
-# actions to package managers, and why dry-run mode stops before execution.
-#
-# @param manifest_path Manifest path used to produce the plan.
-# @param action_file File containing pipe-delimited Action Records.
-# @param resolved_file File containing pipe-delimited Resolved Actions.
-# @returns Human-readable dry-run output on standard output.
-# @retval 0 The dry-run plan was printed successfully.
-# @retval 65 An Action Record could not be rendered.
-# @retval 69 A Resolved Action could not be rendered.
-###############################################################################
+## @fn bootstrap_print_dry_run_plan()
+## @brief Renders a planned and resolved dry-run action list for a manifest.
+## @details
+## Dry-run output is deliberately generated from Action Records and Resolved
+## Actions rather than parser records. This keeps user-facing output aligned with
+## the same pipeline that later executor phases consume while guaranteeing that
+## dry-run mode performs no system changes.
+## @param manifest_path Manifest path used to produce the plan.
+## @param action_file File containing pipe-delimited Action Records.
+## @param resolved_file File containing pipe-delimited Resolved Actions.
+## @returns Human-readable dry-run output on standard output.
+## @retval 0 The dry-run plan was printed successfully.
+## @retval 65 An Action Record could not be rendered.
+## @retval 69 A Resolved Action could not be rendered.
+## @par Examples
+## @code
+## bootstrap_print_dry_run_plan packages.txt /tmp/bootstrap-plan.txt /tmp/bootstrap-resolved.txt
+## @endcode
 bootstrap_print_dry_run_plan() {
   local action
   local action_file
@@ -496,21 +493,21 @@ bootstrap_print_dry_run_plan() {
   fi
 }
 
-###############################################################################
-# @fn bootstrap_run_dry_run_plan()
-# @brief Parses, plans, resolves, and prints a read-only dry-run plan.
-#
-# @details
-# This path composes the manifest parser, planner, and resolver, captures their
-# intermediate records, and renders the results for the user without executing
-# the resolved actions. It is the first end-to-end path through the engine that
-# can report both what the project intends to do and how the current system
-# would satisfy that intent.
-#
-# @retval 0 The manifest was parsed, planned, resolved, and displayed successfully.
-# @retval 65 The manifest could not be parsed or planned.
-# @retval 69 The planned actions could not be resolved on this system.
-###############################################################################
+## @fn bootstrap_run_dry_run_plan()
+## @brief Parses, plans, resolves, and prints a read-only dry-run plan.
+## @details
+## This path composes the manifest parser, planner, and resolver, captures their
+## intermediate records, and renders the result without executing resolved
+## actions. Temporary files are removed before the function returns.
+## @retval 0 The manifest was parsed, planned, resolved, and displayed successfully.
+## @retval 65 The manifest could not be parsed or planned.
+## @retval 69 The planned actions could not be resolved on this system.
+## @par Examples
+## @code
+## bootstrap_context_set_manifest_path packages.txt
+## bootstrap_context_enable_dry_run
+## bootstrap_run_dry_run_plan
+## @endcode
 bootstrap_run_dry_run_plan() {
   local action_file
   local manifest_path
@@ -547,24 +544,25 @@ bootstrap_run_dry_run_plan() {
   return "${status}"
 }
 
-###############################################################################
-# @fn bootstrap_print_execution_result(status, exit_code, action, manager, package, message)
-# @brief Prints one human-readable execution result line.
-#
-# @details
-# Execution Results are the final records in the Phase 4 pipeline.  This renderer
-# keeps user-facing reporting separate from executor behavior so executors can
-# remain focused on performing resolved work and returning structured outcomes.
-#
-# @param status Execution Result status such as `success`, `already-satisfied`, or `failed`.
-# @param exit_code Process-style exit code attached to the result.
-# @param action Resolved Action type that was executed.
-# @param manager Backend or package manager that handled the action.
-# @param package Package name associated with the result.
-# @param message Human-readable execution result message.
-# @returns Human-readable execution output on standard output.
-# @retval 0 The Execution Result was printed successfully.
-###############################################################################
+## @fn bootstrap_print_execution_result()
+## @brief Prints one human-readable execution result line.
+## @details
+## Execution Results are the final records in the pipeline. This renderer keeps
+## user-facing reporting separate from executor behavior so executor tests can
+## focus on record contracts.
+## @param status Execution Result status such as success, already-satisfied, or failed.
+## @param exit_code Process-style exit code attached to the result.
+## @param action Resolved Action type that was executed.
+## @param manager Backend or package manager that handled the action.
+## @param package Package name associated with the result.
+## @param message Human-readable execution result message.
+## @returns Human-readable execution output on standard output.
+## @retval 0 The Execution Result was printed successfully.
+## @par Examples
+## @code
+## bootstrap_print_execution_result success 0 install-package apt shellcheck installed
+## bootstrap_print_execution_result already-satisfied 0 install-package apt bash "already installed"
+## @endcode
 bootstrap_print_execution_result() {
   local action
   local exit_code
@@ -614,19 +612,19 @@ bootstrap_print_execution_result() {
   esac
 }
 
-###############################################################################
-# @fn bootstrap_print_execution_results(result_file)
-# @brief Prints a human-readable execution summary from Execution Result records.
-#
-# @details
-# This helper renders the structured records emitted by the executor.  It keeps
-# output formatting outside the executor so executor tests can focus on record
-# contracts while CLI tests focus on user-visible behavior.
-#
-# @param result_file File containing pipe-delimited Execution Result records.
-# @returns Human-readable execution output on standard output.
-# @retval 0 Execution Results were printed successfully.
-###############################################################################
+## @fn bootstrap_print_execution_results()
+## @brief Prints a human-readable execution summary from Execution Result records.
+## @details
+## This helper renders the structured records emitted by the executor. It keeps
+## output formatting outside the executor so executor tests can focus on record
+## contracts while CLI tests focus on user-visible behavior.
+## @param result_file File containing pipe-delimited Execution Result records.
+## @returns Human-readable execution output on standard output.
+## @retval 0 Execution Results were printed successfully.
+## @par Examples
+## @code
+## bootstrap_print_execution_results /tmp/bootstrap-results.txt
+## @endcode
 bootstrap_print_execution_results() {
   local action
   local already_satisfied_count
@@ -695,23 +693,21 @@ bootstrap_print_execution_results() {
   printf '  unknown:           %s\n' "${unknown_count}"
 }
 
-###############################################################################
-# @fn bootstrap_run_execution_plan()
-# @brief Parses, plans, resolves, executes, and prints execution results.
-#
-# @details
-# This path is the first CLI integration that performs resolved work.  It uses
-# the same parser, planner, and resolver pipeline as dry-run mode, then streams
-# Resolved Actions into the executor.
-#
-# Dry-run mode continues to stop before this function.  That keeps read-only
-# inspection and execution separated by a clear CLI boundary.
-#
-# @retval 0 The manifest was executed successfully or no actions were needed.
-# @retval 65 The manifest could not be parsed or planned.
-# @retval 69 The planned actions could not be resolved on this system.
-# @retval 70 At least one resolved action failed during execution.
-###############################################################################
+## @fn bootstrap_run_execution_plan()
+## @brief Parses, plans, resolves, executes, and prints execution results.
+## @details
+## This path uses the same parser, planner, and resolver pipeline as dry-run
+## mode, then streams Resolved Actions into the executor. Dry-run mode stops
+## before this function so inspection and execution remain separate.
+## @retval 0 The manifest was executed successfully or no actions were needed.
+## @retval 65 The manifest could not be parsed or planned.
+## @retval 69 The planned actions could not be resolved on this system.
+## @retval 70 At least one resolved action failed during execution.
+## @par Examples
+## @code
+## bootstrap_context_set_manifest_path packages.txt
+## bootstrap_run_execution_plan
+## @endcode
 bootstrap_run_execution_plan() {
   local action_file
   local manifest_path
@@ -752,26 +748,25 @@ bootstrap_run_execution_plan() {
   return "${status}"
 }
 
-###############################################################################
-# @fn main(...)
-# @brief Runs the bootstrap command-line entry point.
-#
-# @details
-# Phase 2 provides a small, explicit CLI. Discovery commands such as --help and
-# --version return immediately and must be used by themselves. Operational flags
-# are parsed and stored for later phases, but the current operation remains the
-# placeholder until the roadmap introduces manifest parsing, planning, and
-# execution.
-#
-# Unsupported options return a usage-oriented failure rather than being silently
-# ignored. This follows the project's conservative CLI posture and keeps public
-# behavior predictable for both people and automation.
-#
-# @param ... Command-line arguments supplied by the user.
-# @returns Command output on standard output, or diagnostics on standard error.
-# @retval 0 The command completed successfully.
-# @retval 64 The user supplied unsupported or invalid command-line arguments.
-###############################################################################
+## @fn main()
+## @brief Runs the bootstrap command-line entry point.
+## @details
+## Discovery commands such as --help and --version return immediately and must be
+## used by themselves. Operational flags are parsed, configuration is validated,
+## and a supplied manifest is then either dry-run planned or executed.
+## @param arguments[] Command-line arguments supplied by the user.
+## @returns Command output on standard output, or diagnostics on standard error.
+## @retval 0 The command completed successfully.
+## @retval 64 The user supplied unsupported or invalid command-line arguments.
+## @retval 65 Manifest parsing or planning failed.
+## @retval 69 Resolution failed for the current system.
+## @retval 70 Execution failed for at least one resolved action.
+## @par Examples
+## @code
+## main --help
+## main --dry-run --explain packages.txt
+## main --package-manager apt packages.txt
+## @endcode
 main() {
   bootstrap_context_reset
 
