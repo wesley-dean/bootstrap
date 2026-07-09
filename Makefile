@@ -20,13 +20,13 @@ TEST_RESULTS_DIR := test-results
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
 E2E_TEST_IMAGE_PREFIX := bootstrap_e2e_tmp_image
-E2E_TEST_PLATFORMS := ubuntu alpine
+E2E_TEST_TARGETS := test-et2e-apt test-ete-apk
 
 VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev')
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-e2e-ubuntu test-e2e-alpine
+.PHONY: all check checksums clean distclean format test test-report test-e2e test-e2e-platform test-et2e-apt test-ete-apk test-e2e-ubuntu test-e2e-alpine
 
 all: $(DIST_SCRIPT)
 
@@ -84,19 +84,29 @@ test-report: $(DIST_SCRIPT)
 # directories exist as reserved test contexts, but they are not included until the
 # corresponding DNF backend is implemented.
 #
-test-e2e: $(addprefix test-e2e-,$(E2E_TEST_PLATFORMS))
+test-e2e: $(E2E_TEST_TARGETS)
 
 ##
 # Run the Ubuntu/APT end-to-end test environment.
 #
-test-e2e-ubuntu: all
+test-et2e-apt: all
 	$(MAKE) test-e2e-platform E2E_PLATFORM=ubuntu
 
 ##
 # Run the Alpine/APK end-to-end test environment.
 #
-test-e2e-alpine: all
+test-ete-apk: all
 	$(MAKE) test-e2e-platform E2E_PLATFORM=alpine
+
+##
+# Backward-compatible alias for the Ubuntu/APT end-to-end test environment.
+#
+test-e2e-ubuntu: test-et2e-apt
+
+##
+# Backward-compatible alias for the Alpine/APK end-to-end test environment.
+#
+test-e2e-alpine: test-ete-apk
 
 ##
 # Run one platform-specific containerized end-to-end test environment.

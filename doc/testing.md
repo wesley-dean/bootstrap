@@ -69,6 +69,13 @@ inside the container to install the tools used by the project test environment.
 At present, the Ubuntu/APT and Alpine/APK environments are enabled:
 
 ``` bash
+make test-et2e-apt
+make test-ete-apk
+```
+
+The older platform-named targets remain available as compatibility aliases:
+
+``` bash
 make test-e2e-ubuntu
 make test-e2e-alpine
 ```
@@ -82,18 +89,8 @@ supported operating-system images using real package managers.
 
 ## Release end-to-end check
 
-For releases, the project will add a dedicated end-to-end GitHub Action.
-It will look like the existing `.github/workflows/test.yml` workflow,
-but it will run:
-
-``` bash
-make test-e2e
-```
-
-instead of:
-
-``` bash
-make test-report
-```
+The GitHub Action at `.github/workflows/e2e.yml` runs the enabled
+end-to-end environments as a matrix so each package-manager environment has an
+independent result.
 
 That release end-to-end workflow will also be a required check.

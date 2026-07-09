@@ -13,12 +13,19 @@ permissions:
 
 jobs:
   e2e:
-    name: Containerized end-to-end tests
+    name: Containerized end-to-end tests (${{ matrix.package_manager }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
       checks: write
-
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package_manager: apt
+            make_target: test-et2e-apt
+          - package_manager: apk
+            make_target: test-ete-apk
 
     steps:
       - name: Check out repository
@@ -28,4 +35,4 @@ jobs:
         run: make all
 
       - name: Run containerized end-to-end tests
-        run: make test-e2e
+        run: make ${{ matrix.make_target }}
