@@ -352,14 +352,13 @@ This behavior is preferred to speculative documentation.
 ## unsafe defaults.  It favors explicit configuration and fails closed when
 ## required inputs are missing.
 ##
-## @var CONFIG_PATH
-## Path to the configuration file.  Later values override earlier ones.
-##
 ## @par Examples
 ## @code
 ## ./example.bash --dry-run ./maintenance.env
 ## @endcode
 
+## @var CONFIG_PATH
+## @brief path to maintenance.env file
 CONFIG_PATH="${CONFIG_PATH:-./maintenance.env}"
 
 ## @fn example_validate_config()
@@ -384,34 +383,6 @@ example_validate_config() {
 
   [[ -r "${path}" && -f "${path}" ]]
 }
-```
-
-## Addendum B: Python Example
-
-```python
-def example_function(value, dry_run=True):
-    """
-    @brief Perform a controlled operation.
-
-    @details
-    This function exists to make an otherwise risky operation explicit and
-    reviewable.  Dry-run mode is the default to reduce accidental impact.
-
-    @param value
-        The input value to operate on.
-
-    @param dry_run
-        When True, no changes are made.
-
-    @retval dict
-        A structured summary of actions taken or proposed.
-
-    @par Examples
-    @code
-    result = example_function(42, dry_run=True)
-    print(result)
-    @endcode
-    """
 ```
 
 ## Summary
