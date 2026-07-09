@@ -31,7 +31,7 @@ VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all check checksums clean distclean docs format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
+.PHONY: all check checksums clean distclean docs docs-clean format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat
 
 all: $(DIST_SCRIPT)
 
@@ -96,14 +96,27 @@ $(DOXYGEN_BASH_FILTER):
 	mv "$@.tmp" "$@"
 
 ##
+# Remove generated Doxygen reference documentation.
+#
+# The README is preserved because it is the hand-maintained sentinel that tells
+# readers and contributors that this directory contains generated output.
+#
+docs-clean:
+	@if [ -d "$(REFERENCE_DOC_DIR)" ]; then \
+		find "$(REFERENCE_DOC_DIR)" -mindepth 1 ! -name README.md -exec rm -rf {} +; \
+	fi
+
+##
 # Generate browsable reference documentation with Doxygen.
 #
 # Doxygen writes generated documentation under docs/reference so it can be
-# committed and browsed through GitHub. The README is regenerated with the
-# documentation output so readers and contributors know the directory contains
-# generated artifacts rather than hand-maintained prose.
+# committed and browsed through GitHub. The directory is cleaned before each
+# generation run so removed or renamed source files do not leave stale reference
+# documentation behind. The README is regenerated with the documentation output
+# so readers and contributors know the directory contains generated artifacts
+# rather than hand-maintained prose.
 #
-docs: $(DOXYGEN_BASH_FILTER)
+docs: docs-clean $(DOXYGEN_BASH_FILTER)
 	mkdir -p "$(REFERENCE_DOC_DIR)"
 	doxygen Doxyfile
 	{ \
@@ -205,7 +218,10 @@ clean:
 # closest practical equivalent of a fresh checkout without touching source
 # files or downloaded dependencies.
 #
-distclean: clean
+distclean: clean docs-clean
 	$(RM) -f "$(DOXYGEN_BASH_FILTER)"
 	-rmdir "$(VENDOR_DIR)" >/dev/null 2>&1
 	rm -rf "$(TEST_RESULTS_DIR)"
+	if [ -d "$(REFERENCE_DOC_DIR)" ]; then \
+	  find "$(REFERENCE_DOC_DIR)" -mindepth 1 ! -name README.md -exec rm -rf {} +; \
+	fi
