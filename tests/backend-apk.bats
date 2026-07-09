@@ -41,7 +41,7 @@ STUB
     [ "$output" = "apt" ]
 }
 
-@test "backend apk package existence succeeds when apk search returns an exact match" {
+@test "backend apk package existence succeeds when apk search returns exact package metadata" {
     fake_bin="${TEST_TMPDIR}/bin"
     mkdir -p "$fake_bin"
     cat >"${fake_bin}/apk" <<'STUB'
@@ -50,7 +50,7 @@ STUB
 [ "$2" = "-q" ]
 [ "$3" = "-x" ]
 [ "$4" = "git" ]
-printf 'git\n'
+printf 'git-2.45.2-r0\n'
 STUB
     chmod +x "${fake_bin}/apk"
 

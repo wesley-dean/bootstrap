@@ -44,8 +44,8 @@ bootstrap_backend_apk_is_available() {
 #
 # `apk search` is used as a read-only query against configured APK repositories.
 # The exact-match flag avoids treating similarly named packages as satisfying the
-# manifest request, and quiet output keeps the status test focused on package
-# names rather than descriptions.
+# manifest request. APK prints package records with native version suffixes, so
+# Bootstrap treats any non-empty exact-match result as repository availability.
 #
 # @param package Package name to look up through APK metadata.
 # @retval 0 APK metadata exists for the package.
@@ -61,7 +61,7 @@ bootstrap_backend_apk_package_exists() {
     return "$?"
   fi
 
-  if apk search -q -x "${package}" 2>/dev/null | grep -qx -- "${package}"; then
+  if [[ -n "$(apk search -q -x "${package}" 2>/dev/null)" ]]; then
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
