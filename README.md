@@ -260,7 +260,7 @@ in focused files:
   work.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) describes contribution expectations.
 - [`SECURITY.md`](SECURITY.md) explains how to report security concerns.
-- [`Reference Documentation`](https://wesley-dean.github.io/bootstrap/doc/reference/files.html) development reference material
+- [`Reference Documentation`](https://wesley-dean.github.io/bootstrap/) development reference material
 
 ## Project status
 
