@@ -18,7 +18,9 @@ jobs:
   versioning:
     runs-on: ubuntu-22.04
     permissions:
+      attestations: write
       contents: write
+      id-token: write
     steps:
       - name: Checkout code
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # pin@v4
@@ -51,6 +53,13 @@ jobs:
 
       - name: Build release artifact
         run: make checksums VERSION="${{ steps.calculate-version.outputs.version-string }}"
+
+      - name: Attest release artifacts
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # pin@v3.0.0
+        with:
+          subject-path: |
+            dist/bootstrap.bash
+            dist/bootstrap.bash.sha256
 
       - name: Create release
         id: create-release
