@@ -114,7 +114,6 @@ bootstrap_executor_execute_resolved_action() {
   esac
 }
 
-
 ## @fn bootstrap_executor_execute_resolved_actions()
 ## @brief Executes Resolved Actions from standard input.
 ## @details

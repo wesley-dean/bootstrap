@@ -123,3 +123,39 @@ STUB
     [[ "$output" == *"total:             0"* ]]
     [ ! -e "$mutation_log" ]
 }
+
+@test "a later parse failure prevents execution of every manifest" {
+    write_resolver_stubs
+    first="${WORK_DIR}/first-valid.txt"
+    second="${WORK_DIR}/second-invalid.txt"
+    mutation_log="${WORK_DIR}/preflight-parse-mutation.log"
+    printf 'git\n' >"$first"
+    printf 'not valid syntax\n' >"$second"
+
+    run env \
+        PATH="${FAKE_BIN}:$PATH" \
+        PHASE9_MUTATION_LOG="$mutation_log" \
+        "$SCRIPT" --package-manager apt "$first" "$second"
+
+    [ "$status" -eq 65 ]
+    [[ "$output" == *"location: $second:1"* ]]
+    [ ! -e "$mutation_log" ]
+}
+
+@test "a later resolution failure prevents execution of every manifest" {
+    write_resolver_stubs
+    first="${WORK_DIR}/first-resolvable.txt"
+    second="${WORK_DIR}/second-unresolvable.txt"
+    mutation_log="${WORK_DIR}/preflight-resolve-mutation.log"
+    printf 'git\n' >"$first"
+    printf 'missing-package\n' >"$second"
+
+    run env \
+        PATH="${FAKE_BIN}:$PATH" \
+        PHASE9_MUTATION_LOG="$mutation_log" \
+        "$SCRIPT" --package-manager apt "$first" "$second"
+
+    [ "$status" -eq 69 ]
+    [[ "$output" == *"apt package not available: missing-package"* ]]
+    [ ! -e "$mutation_log" ]
+}

@@ -53,7 +53,7 @@ MANIFEST
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Explanation:"* ]]
-    [[ "$output" == *"What happened: bootstrap inspected the manifest"* ]]
+    [[ "$output" == *"What happened: bootstrap inspected all manifests"* ]]
     [[ "$output" == *"Safety boundary: --dry-run is active"* ]]
     [[ "$output" == *"Package manager selector: auto"* ]]
     [[ "$output" == *"How to read this output:"* ]]
@@ -107,14 +107,39 @@ MANIFEST
     [[ "$output" == *"install package: make"* ]]
 }
 
-@test "dry-run rejects multiple manifest arguments" {
+@test "dry-run preflights multiple manifests in argument order" {
     first="${WORK_DIR}/first.txt"
     second="${WORK_DIR}/second.txt"
     printf 'git\n' >"$first"
     printf 'curl\n' >"$second"
 
+    run "$SCRIPT" --dry-run --explain "$first" "$second"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Dry run plan for manifests:"* ]]
+    [[ "$output" == *"  - $first"* ]]
+    [[ "$output" == *"  - $second"* ]]
+    [[ "$output" == *"$first:1 requested package git"* ]]
+    [[ "$output" == *"$second:1 requested package curl"* ]]
+    [[ "$output" == *"Summary: 2 action(s) planned; 2 action(s) resolved."* ]]
+}
+
+@test "dry-run reports the original filename and line for a later manifest error" {
+    first="${WORK_DIR}/valid.txt"
+    second="${WORK_DIR}/invalid.txt"
+    printf 'git\n' >"$first"
+    printf 'curl\ninvalid package entry\n' >"$second"
+
     run "$SCRIPT" --dry-run "$first" "$second"
 
+    [ "$status" -eq 65 ]
+    [[ "$output" == *"location: $second:2"* ]]
+    [[ "$output" != *"Dry run plan for manifests:"* ]]
+}
+
+@test "command line rejects more than one standard input manifest" {
+    run "$SCRIPT" --dry-run - -
+
     [ "$status" -eq 64 ]
-    [[ "$output" == *"unexpected argument: $second"* ]]
+    [[ "$output" == *"standard input manifest '-' may be specified at most once"* ]]
 }

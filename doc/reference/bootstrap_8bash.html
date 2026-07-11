@@ -85,10 +85,10 @@ Functions</h2></td></tr>
 <tr class="memdesc:a97c7b285accd3cb4b7abf9b47206b408"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runs the placeholder operation when no manifest was supplied.  <a href="bootstrap_8bash.html#a97c7b285accd3cb4b7abf9b47206b408">More...</a><br /></td></tr>
 <tr class="separator:a97c7b285accd3cb4b7abf9b47206b408"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1bc3aa994ba2573d90c2b2f0fb0b6ebb"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bootstrap_8bash.html#a1bc3aa994ba2573d90c2b2f0fb0b6ebb">bootstrap_run_dry_run_plan</a> ()</td></tr>
-<tr class="memdesc:a1bc3aa994ba2573d90c2b2f0fb0b6ebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses, plans, resolves, and prints a read-only dry-run plan.  <a href="bootstrap_8bash.html#a1bc3aa994ba2573d90c2b2f0fb0b6ebb">More...</a><br /></td></tr>
+<tr class="memdesc:a1bc3aa994ba2573d90c2b2f0fb0b6ebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Preflights all manifests and prints one read-only invocation plan.  <a href="bootstrap_8bash.html#a1bc3aa994ba2573d90c2b2f0fb0b6ebb">More...</a><br /></td></tr>
 <tr class="separator:a1bc3aa994ba2573d90c2b2f0fb0b6ebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac6bc309223f1e7094cbd7ae2dd933ec0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="bootstrap_8bash.html#ac6bc309223f1e7094cbd7ae2dd933ec0">bootstrap_run_execution_plan</a> ()</td></tr>
-<tr class="memdesc:ac6bc309223f1e7094cbd7ae2dd933ec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parses, plans, resolves, executes, and prints execution results.  <a href="bootstrap_8bash.html#ac6bc309223f1e7094cbd7ae2dd933ec0">More...</a><br /></td></tr>
+<tr class="memdesc:ac6bc309223f1e7094cbd7ae2dd933ec0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Preflights all manifests before executing the complete resolved plan.  <a href="bootstrap_8bash.html#ac6bc309223f1e7094cbd7ae2dd933ec0">More...</a><br /></td></tr>
 <tr class="separator:ac6bc309223f1e7094cbd7ae2dd933ec0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -144,21 +144,15 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Parses, plans, resolves, and prints a read-only dry-run plan. </p>
-<p >This path composes the manifest parser, planner, and resolver, captures their intermediate records, and renders the result without executing resolved actions. Temporary files are removed before the function returns. </p><dl class="retval"><dt>Return values</dt><dd>
+<p>Preflights all manifests and prints one read-only invocation plan. </p>
+<p >Dry-run uses the same complete Action Record and Resolved Action streams that execution would consume. No output plan is rendered until every manifest has crossed the global preflight barrier successfully. </p><dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">0</td><td>The manifest was parsed, planned, resolved, and displayed successfully. </td></tr>
-    <tr><td class="paramname">65</td><td>The manifest could not be parsed or planned. </td></tr>
-    <tr><td class="paramname">69</td><td>The planned actions could not be resolved on this system. </td></tr>
+    <tr><td class="paramname">0</td><td>All manifests were preflighted and displayed successfully. </td></tr>
+    <tr><td class="paramname">65</td><td>A manifest could not be parsed or planned. </td></tr>
+    <tr><td class="paramname">69</td><td>The complete action set could not be resolved on this system. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Examples</dt><dd><div class="fragment"><div class="line">bootstrap_context_set_manifest_path packages.txt</div>
-<div class="line"><a class="code hl_function" href="context_8bash.html#a03c0f2a8aa9142e2bfe82743f2a85f17">bootstrap_context_enable_dry_run</a></div>
-<div class="line"><a class="code hl_function" href="bootstrap_8bash.html#a1bc3aa994ba2573d90c2b2f0fb0b6ebb">bootstrap_run_dry_run_plan</a></div>
-<div class="ttc" id="abootstrap_8bash_html_a1bc3aa994ba2573d90c2b2f0fb0b6ebb"><div class="ttname"><a href="bootstrap_8bash.html#a1bc3aa994ba2573d90c2b2f0fb0b6ebb">bootstrap_run_dry_run_plan</a></div><div class="ttdeci">int bootstrap_run_dry_run_plan()</div><div class="ttdoc">Parses, plans, resolves, and prints a read-only dry-run plan.</div></div>
-<div class="ttc" id="acontext_8bash_html_a03c0f2a8aa9142e2bfe82743f2a85f17"><div class="ttname"><a href="context_8bash.html#a03c0f2a8aa9142e2bfe82743f2a85f17">bootstrap_context_enable_dry_run</a></div><div class="ttdeci">int bootstrap_context_enable_dry_run()</div><div class="ttdoc">Records that dry-run mode was requested.</div></div>
-</div><!-- fragment --> </dd></dl>
 
 </div>
 </div>
@@ -177,20 +171,16 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Parses, plans, resolves, executes, and prints execution results. </p>
-<p >This path uses the same parser, planner, and resolver pipeline as dry-run mode, then streams Resolved Actions into the executor. Dry-run mode stops before this function so inspection and execution remain separate. </p><dl class="retval"><dt>Return values</dt><dd>
+<p>Preflights all manifests before executing the complete resolved plan. </p>
+<p >No executor is invoked until every supplied manifest has parsed, planned, and resolved successfully. The resulting Resolved Action stream preserves manifest argument order and source provenance, satisfying ADR-049 without concatenating source files or losing filename and line-number diagnostics. </p><dl class="retval"><dt>Return values</dt><dd>
   <table class="retval">
-    <tr><td class="paramname">0</td><td>The manifest was executed successfully or no actions were needed. </td></tr>
-    <tr><td class="paramname">65</td><td>The manifest could not be parsed or planned. </td></tr>
-    <tr><td class="paramname">69</td><td>The planned actions could not be resolved on this system. </td></tr>
+    <tr><td class="paramname">0</td><td>The complete manifest set executed successfully or required no work. </td></tr>
+    <tr><td class="paramname">65</td><td>At least one manifest could not be parsed or planned. </td></tr>
+    <tr><td class="paramname">69</td><td>At least one planned action could not be resolved. </td></tr>
     <tr><td class="paramname">70</td><td>At least one resolved action failed during execution. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section user"><dt>Examples</dt><dd><div class="fragment"><div class="line">bootstrap_context_set_manifest_path packages.txt</div>
-<div class="line"><a class="code hl_function" href="bootstrap_8bash.html#ac6bc309223f1e7094cbd7ae2dd933ec0">bootstrap_run_execution_plan</a></div>
-<div class="ttc" id="abootstrap_8bash_html_ac6bc309223f1e7094cbd7ae2dd933ec0"><div class="ttname"><a href="bootstrap_8bash.html#ac6bc309223f1e7094cbd7ae2dd933ec0">bootstrap_run_execution_plan</a></div><div class="ttdeci">int bootstrap_run_execution_plan()</div><div class="ttdoc">Parses, plans, resolves, executes, and prints execution results.</div></div>
-</div><!-- fragment --> </dd></dl>
 
 </div>
 </div>

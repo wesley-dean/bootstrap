@@ -32,7 +32,6 @@ bootstrap_backend_apk_is_available() {
   command -v apk >/dev/null 2>&1
 }
 
-
 ## @fn bootstrap_backend_apk_package_exists()
 ## @brief Reports whether APK knows about a package in configured repositories.
 ## @details

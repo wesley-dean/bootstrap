@@ -18,7 +18,6 @@
 ## in this file, rather than by adding package-manager branches throughout the
 ## planner or resolver.
 
-
 ## @fn bootstrap_backend_detect_package_manager()
 ## @brief Detects the supported package backend for the current environment.
 ## @details
@@ -56,7 +55,6 @@ bootstrap_backend_detect_package_manager() {
 
   bootstrap_backend_diagnostic_no_supported_manager
 }
-
 
 ## @fn bootstrap_backend_supports_capability()
 ## @brief Reports whether a backend advertises a named package capability.
@@ -128,7 +126,6 @@ bootstrap_backend_supports_capability() {
     ;;
   esac
 }
-
 
 ## @fn bootstrap_backend_package_exists()
 ## @brief Checks whether the selected backend can find a requested package.

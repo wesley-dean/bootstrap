@@ -155,6 +155,17 @@ Then run Bootstrap with the manifest:
 ./bootstrap.bash packages.manifest
 ```
 
+Multiple manifests may be supplied in one invocation:
+
+```bash
+./bootstrap.bash core.manifest containers.manifest security.manifest
+./bootstrap.bash *.manifest
+```
+
+Bootstrap parses, plans, and resolves every supplied manifest before executing
+any package operation. If preflight fails, no package changes are made, and the
+diagnostic retains the original manifest filename and line number.
+
 To inspect the plan without making package-manager changes:
 
 ```bash

@@ -13,6 +13,6 @@ var searchData=
   ['bootstrap_5fflag_5fexplain_10',['BOOTSTRAP_FLAG_EXPLAIN',['../context_8bash.html#a2f4c34f846a66b8a81991f523299c731',1,'context.bash']]],
   ['bootstrap_5fflag_5fquiet_11',['BOOTSTRAP_FLAG_QUIET',['../context_8bash.html#ae5e42230aebb93d609f1fd4d2d32d119',1,'context.bash']]],
   ['bootstrap_5fflag_5fverbose_12',['BOOTSTRAP_FLAG_VERBOSE',['../context_8bash.html#a8724808926e2bc1f9951651a0fdae67b',1,'context.bash']]],
-  ['bootstrap_5fmanifest_5fpath_13',['BOOTSTRAP_MANIFEST_PATH',['../context_8bash.html#a3f09465b28178e504c7ee77a18cde06c',1,'context.bash']]],
+  ['bootstrap_5fmanifest_5fpaths_13',['BOOTSTRAP_MANIFEST_PATHS',['../context_8bash.html#a4c22bd55ea2a8ffe436a6946ebcc159a',1,'context.bash']]],
   ['bootstrap_5fversion_14',['BOOTSTRAP_VERSION',['../build-metadata_8bash.html#aea89ca8732527aa21a863d2701e15bed',1,'build-metadata.bash']]]
 ];

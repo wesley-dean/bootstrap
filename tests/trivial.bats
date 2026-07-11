@@ -44,7 +44,7 @@ setup() {
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"Usage:"* ]]
-    [[ "$output" == *"bootstrap.bash [options] [manifest]"* ]]
+    [[ "$output" == *"bootstrap.bash [options] [manifest ...]"* ]]
     [[ "$output" == *"--dry-run"* ]]
     [[ "$output" == *"--explain"* ]]
     [[ "$output" == *"--verbose"* ]]

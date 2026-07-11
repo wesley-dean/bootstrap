@@ -35,7 +35,6 @@ bootstrap_recovery_emit() {
   bootstrap_log_emit 'recovery' "${message}" 'stderr'
 }
 
-
 ## @fn bootstrap_recovery_no_supported_package_manager()
 ## @brief Explains next steps when no supported package manager was detected.
 ## @details
@@ -58,7 +57,6 @@ bootstrap_recovery_no_supported_package_manager() {
   bootstrap_recovery_emit 'If you expected APK, check that apk is on PATH.'
   bootstrap_recovery_emit 'If you expected DNF, check that dnf and rpm are on PATH.'
 }
-
 
 ## @fn bootstrap_recovery_unsupported_package_manager()
 ## @brief Explains next steps when the selected package manager is unsupported.
@@ -87,7 +85,6 @@ bootstrap_recovery_unsupported_package_manager() {
   bootstrap_recovery_emit 'Use --package-manager apt for APT, --package-manager apk for APK, --package-manager dnf for DNF, or --package-manager auto to let bootstrap detect one.'
   bootstrap_recovery_emit 'If this came from configuration, check BOOTSTRAP_PACKAGE_MANAGER in the environment or .env.'
 }
-
 
 ## @fn bootstrap_recovery_package_unavailable()
 ## @brief Explains next steps when a package cannot be found or installed.
@@ -135,7 +132,6 @@ bootstrap_recovery_package_unavailable() {
   esac
 }
 
-
 ## @fn bootstrap_recovery_version_constraint()
 ## @brief Explains next steps for unsatisfied version constraints.
 ## @details
@@ -176,7 +172,6 @@ bootstrap_recovery_version_constraint() {
   bootstrap_recovery_emit 'If the available candidate is acceptable, update the manifest constraint.'
 }
 
-
 ## @fn bootstrap_recovery_privilege_unavailable()
 ## @brief Explains next steps when elevated privileges are required but unavailable.
 ## @details
@@ -196,7 +191,6 @@ bootstrap_recovery_privilege_unavailable() {
   bootstrap_recovery_emit 'Run bootstrap as root, or install/configure sudo or doas for privilege escalation.'
   bootstrap_recovery_emit 'Use --dry-run first if you want to inspect the plan before retrying execution.'
 }
-
 
 ## @fn bootstrap_recovery_execution_failed()
 ## @brief Explains next steps when native package installation fails.
