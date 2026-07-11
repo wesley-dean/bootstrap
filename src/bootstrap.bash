@@ -40,7 +40,7 @@ set -euo pipefail
 bootstrap_print_help() {
   cat <<'HELP_TEXT'
 Usage:
-  bootstrap.bash [options] [manifest]
+  bootstrap.bash [options] [manifest ...]
 
 Options:
   --help     Show this help text and exit.
@@ -53,7 +53,7 @@ Options:
   --quiet    Suppress non-essential output.
 
 Arguments:
-  manifest   Optional package manifest path. Without --dry-run, resolved actions are executed.
+  manifest   Optional package manifest path. Multiple paths are preflighted before execution.
 HELP_TEXT
 }
 
@@ -133,16 +133,29 @@ bootstrap_parse_arguments() {
       return "${BOOTSTRAP_EXIT_USAGE}"
       ;;
     *)
-      if bootstrap_context_has_manifest_path; then
-        bootstrap_print_usage_error "unexpected argument: $1"
-        return "${BOOTSTRAP_EXIT_USAGE}"
-      fi
-      bootstrap_context_set_manifest_path "$1"
+      bootstrap_context_add_manifest_path "$1"
       ;;
     esac
 
     shift
   done
+
+  local manifest_index
+  local manifest_path
+  local stdin_count
+
+  stdin_count=0
+  for ((manifest_index = 0; manifest_index < $(bootstrap_context_get_manifest_count); manifest_index++)); do
+    manifest_path="$(bootstrap_context_get_manifest_path_at "${manifest_index}")"
+    if [[ "${manifest_path}" == "-" ]]; then
+      stdin_count=$((stdin_count + 1))
+    fi
+  done
+
+  if ((stdin_count > 1)); then
+    bootstrap_print_usage_error "standard input manifest '-' may be specified at most once"
+    return "${BOOTSTRAP_EXIT_USAGE}"
+  fi
 
   if bootstrap_context_is_verbose && bootstrap_context_is_quiet; then
     bootstrap_print_usage_error "--verbose and --quiet cannot be used together"
@@ -377,14 +390,43 @@ bootstrap_print_resolved_action_explanation() {
   esac
 }
 
+## @fn bootstrap_print_manifest_scope()
+## @brief Prints the ordered manifests included in the current invocation.
+## @details
+## Single-manifest output retains the established wording for compatibility.
+## Multi-manifest output lists every path explicitly so users can verify the
+## preflight scope and correlate later provenance-bearing diagnostics.
+## @param heading Singular heading prefix used before the manifest description.
+## @retval 0 The manifest scope was printed successfully.
+bootstrap_print_manifest_scope() {
+  local count
+  local heading
+  local index
+  local manifest_path
+
+  heading="$1"
+  count="$(bootstrap_context_get_manifest_count)"
+
+  if ((count == 1)); then
+    manifest_path="$(bootstrap_context_get_manifest_path_at 0)"
+    printf '%s manifest: %s\n' "${heading}" "${manifest_path}"
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf '%s manifests:\n' "${heading}"
+  for ((index = 0; index < count; index++)); do
+    manifest_path="$(bootstrap_context_get_manifest_path_at "${index}")"
+    printf '  - %s\n' "${manifest_path}"
+  done
+}
+
 ## @fn bootstrap_print_dry_run_plan()
-## @brief Renders a planned and resolved dry-run action list for a manifest.
+## @brief Renders a planned and resolved dry-run action list for all manifests.
 ## @details
 ## Dry-run output is deliberately generated from Action Records and Resolved
 ## Actions rather than parser records. This keeps user-facing output aligned with
 ## the same pipeline that later executor phases consume while guaranteeing that
 ## dry-run mode performs no system changes.
-## @param manifest_path Manifest path used to produce the plan.
 ## @param action_file File containing pipe-delimited Action Records.
 ## @param resolved_file File containing pipe-delimited Resolved Actions.
 ## @par Standard Output
@@ -394,7 +436,7 @@ bootstrap_print_resolved_action_explanation() {
 ## @retval 69 A Resolved Action could not be rendered.
 ## @par Examples
 ## @code
-## bootstrap_print_dry_run_plan packages.txt /tmp/bootstrap-plan.txt /tmp/bootstrap-resolved.txt
+## bootstrap_print_dry_run_plan /tmp/bootstrap-plan.txt /tmp/bootstrap-resolved.txt
 ## @endcode
 bootstrap_print_dry_run_plan() {
   local action
@@ -404,21 +446,19 @@ bootstrap_print_dry_run_plan() {
   local operator
   local package
   local planned_count
-  local manifest_path
   local package_manager_selector
   local resolved_file
   local resolved_count
   local source
   local version
 
-  manifest_path="$1"
-  action_file="$2"
-  resolved_file="$3"
+  action_file="$1"
+  resolved_file="$2"
   package_manager_selector="$(bootstrap_context_get_package_manager)"
   planned_count=0
   resolved_count=0
 
-  printf 'Dry run plan for manifest: %s\n' "${manifest_path}"
+  bootstrap_print_manifest_scope "Dry run plan for"
 
   printf '\nPlanned actions:\n'
   while IFS='|' read -r action package operator version source line_number || [[ -n "${action:-}" ]]; do
@@ -455,11 +495,11 @@ bootstrap_print_dry_run_plan() {
 
   if bootstrap_context_should_explain; then
     printf '\nExplanation:\n'
-    printf '  What happened: bootstrap inspected the manifest, planned package work,\n'
+    printf '  What happened: bootstrap inspected all manifests, planned package work,\n'
     printf '  and resolved that plan for the selected package manager.\n'
     printf '  Safety boundary: --dry-run is active, so execution stops here and no\n'
     printf '  system changes were made.\n'
-    printf '  Manifest: %s\n' "${manifest_path}"
+    bootstrap_print_manifest_scope "  Preflight scope includes"
     printf '  Package manager selector: %s\n' "${package_manager_selector}"
     printf '  Planned actions: %s\n' "${planned_count}"
     printf '  Resolved actions: %s\n' "${resolved_count}"
@@ -497,32 +537,72 @@ bootstrap_print_dry_run_plan() {
   fi
 }
 
-## @fn bootstrap_run_dry_run_plan()
-## @brief Parses, plans, resolves, and prints a read-only dry-run plan.
+## @fn bootstrap_preflight_manifests()
+## @brief Parses, plans, and resolves every supplied manifest before execution.
 ## @details
-## This path composes the manifest parser, planner, and resolver, captures their
-## intermediate records, and renders the result without executing resolved
-## actions. Temporary files are removed before the function returns.
-## @retval 0 The manifest was parsed, planned, resolved, and displayed successfully.
-## @retval 65 The manifest could not be parsed or planned.
-## @retval 69 The planned actions could not be resolved on this system.
-## @par Examples
-## @code
-## bootstrap_context_set_manifest_path packages.txt
-## bootstrap_context_enable_dry_run
-## bootstrap_run_dry_run_plan
-## @endcode
+## Each manifest is planned into a private temporary file first. Its Action
+## Records are appended to the invocation plan only after that manifest succeeds,
+## preventing partial records from a failed manifest from entering the executable
+## plan. Resolution runs only after every manifest has parsed and planned
+## successfully. This establishes the ADR-049 global preflight barrier.
+##
+## @param action_file Destination for the complete ordered Action Record stream.
+## @param resolved_file Destination for the complete ordered Resolved Action stream.
+## @retval 0 Every manifest parsed, planned, and resolved successfully.
+## @retval 65 A manifest could not be read, parsed, or planned.
+## @retval 69 At least one planned action could not be resolved.
+bootstrap_preflight_manifests() {
+  local count
+  local index
+  local manifest_action_file
+  local manifest_path
+  local status
+
+  count="$(bootstrap_context_get_manifest_count)"
+  : >"$1"
+  : >"$2"
+
+  for ((index = 0; index < count; index++)); do
+    manifest_path="$(bootstrap_context_get_manifest_path_at "${index}")"
+    manifest_action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-manifest-plan.XXXXXX")"
+
+    if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${manifest_action_file}"; then
+      cat "${manifest_action_file}" >>"$1"
+      rm -f "${manifest_action_file}"
+    else
+      status="$?"
+      rm -f "${manifest_action_file}"
+      return "${status}"
+    fi
+  done
+
+  if bootstrap_resolver_resolve_action_records \
+    "$(bootstrap_context_get_package_manager)" <"$1" >"$2"; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  else
+    status="$?"
+    return "${status}"
+  fi
+}
+
+## @fn bootstrap_run_dry_run_plan()
+## @brief Preflights all manifests and prints one read-only invocation plan.
+## @details
+## Dry-run uses the same complete Action Record and Resolved Action streams that
+## execution would consume. No output plan is rendered until every manifest has
+## crossed the global preflight barrier successfully.
+## @retval 0 All manifests were preflighted and displayed successfully.
+## @retval 65 A manifest could not be parsed or planned.
+## @retval 69 The complete action set could not be resolved on this system.
 bootstrap_run_dry_run_plan() {
   local action_file
-  local manifest_path
   local resolved_file
   local status
 
-  manifest_path="$(bootstrap_context_get_manifest_path)"
   action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-plan.XXXXXX")"
   resolved_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-resolved.XXXXXX")"
 
-  if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
+  if bootstrap_preflight_manifests "${action_file}" "${resolved_file}"; then
     :
   else
     status="$?"
@@ -530,21 +610,13 @@ bootstrap_run_dry_run_plan() {
     return "${status}"
   fi
 
-  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
-    :
-  else
-    status="$?"
-    rm -f "${action_file}" "${resolved_file}"
-    return "${status}"
-  fi
-
-  if bootstrap_print_dry_run_plan "${manifest_path}" "${action_file}" "${resolved_file}"; then
+  if bootstrap_print_dry_run_plan "${action_file}" "${resolved_file}"; then
     status="${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
   fi
-  rm -f "${action_file}" "${resolved_file}"
 
+  rm -f "${action_file}" "${resolved_file}"
   return "${status}"
 }
 
@@ -700,41 +772,27 @@ bootstrap_print_execution_results() {
 }
 
 ## @fn bootstrap_run_execution_plan()
-## @brief Parses, plans, resolves, executes, and prints execution results.
+## @brief Preflights all manifests before executing the complete resolved plan.
 ## @details
-## This path uses the same parser, planner, and resolver pipeline as dry-run
-## mode, then streams Resolved Actions into the executor. Dry-run mode stops
-## before this function so inspection and execution remain separate.
-## @retval 0 The manifest was executed successfully or no actions were needed.
-## @retval 65 The manifest could not be parsed or planned.
-## @retval 69 The planned actions could not be resolved on this system.
+## No executor is invoked until every supplied manifest has parsed, planned, and
+## resolved successfully. The resulting Resolved Action stream preserves manifest
+## argument order and source provenance, satisfying ADR-049 without concatenating
+## source files or losing filename and line-number diagnostics.
+## @retval 0 The complete manifest set executed successfully or required no work.
+## @retval 65 At least one manifest could not be parsed or planned.
+## @retval 69 At least one planned action could not be resolved.
 ## @retval 70 At least one resolved action failed during execution.
-## @par Examples
-## @code
-## bootstrap_context_set_manifest_path packages.txt
-## bootstrap_run_execution_plan
-## @endcode
 bootstrap_run_execution_plan() {
   local action_file
-  local manifest_path
   local resolved_file
   local result_file
   local status
 
-  manifest_path="$(bootstrap_context_get_manifest_path)"
   action_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-plan.XXXXXX")"
   resolved_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-resolved.XXXXXX")"
   result_file="$(mktemp "${TMPDIR:-/tmp}/bootstrap-results.XXXXXX")"
 
-  if bootstrap_planner_plan_manifest_file "${manifest_path}" >"${action_file}"; then
-    :
-  else
-    status="$?"
-    rm -f "${action_file}" "${resolved_file}" "${result_file}"
-    return "${status}"
-  fi
-
-  if bootstrap_resolver_resolve_action_records "$(bootstrap_context_get_package_manager)" <"${action_file}" >"${resolved_file}"; then
+  if bootstrap_preflight_manifests "${action_file}" "${resolved_file}"; then
     :
   else
     status="$?"
@@ -802,7 +860,7 @@ main() {
   bootstrap_parse_arguments "$@" || return "$?"
   bootstrap_config_validate_effective_runtime || return "$?"
 
-  if bootstrap_context_has_manifest_path; then
+  if bootstrap_context_has_manifest_paths; then
     if bootstrap_context_is_dry_run; then
       bootstrap_run_dry_run_plan
       return "$?"

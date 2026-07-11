@@ -28,6 +28,7 @@ bootstrap.bash --help
 bootstrap.bash --version
 bootstrap.bash --dry-run
 bootstrap.bash --dry-run packages.txt
+bootstrap.bash --dry-run core.manifest security.manifest
 bootstrap.bash --dry-run -
 bootstrap.bash --package-manager apt
 bootstrap.bash --package-manager apk
@@ -82,11 +83,23 @@ This placeholder exists only until later roadmap phases introduce manifest
 parsing, planning, and package execution.
 
 
-## Manifest argument
+## Manifest arguments
 
-When a manifest path is provided, Bootstrap parses package requirements from
-that manifest and uses the same parser, planner, resolver, and executor pipeline
-for dry-run and execution modes.
+When one or more manifest paths are provided, Bootstrap parses, plans, and
+resolves the complete ordered set before beginning execution. If any manifest
+fails during this preflight phase, Bootstrap reports the original filename and
+line number, returns a non-zero status, and performs no package changes.
+
+For example:
+
+```bash
+bootstrap.bash core.manifest containers.manifest security.manifest
+bootstrap.bash *.manifest
+```
+
+Manifest order is the order supplied by the shell. Bootstrap does not discover,
+sort, or merge manifest files. Records retain their original source paths and
+line numbers through planning, resolution, dry-run explanation, and execution.
 
 A manifest path of `-` follows the common Unix convention of reading manifest
 content from standard input:
@@ -96,7 +109,10 @@ printf '%s\n' git curl shellcheck | bootstrap.bash --dry-run -
 ```
 
 This is useful for generated manifests, shell pipelines, and temporary package
-lists that do not need to be written to a separate file.
+lists that do not need to be written to a separate file. Standard input may be
+specified at most once per invocation. Because its source name is `-`, users who
+need per-file provenance should pass manifest paths instead of concatenating
+files into standard input.
 
 ## `--help`
 
@@ -196,8 +212,6 @@ Unsupported options fail conservatively with a human-readable diagnostic and a
 non-zero exit status. This avoids silently accepting misspelled flags or
 implying that future roadmap options already work.
 
-Unexpected positional arguments also fail conservatively until later roadmap
-phases define manifest input behavior.
 
 ## Recovery guidance
 

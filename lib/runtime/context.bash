@@ -2,8 +2,8 @@
 ## @file lib/runtime/context.bash
 ## @brief Owns runtime option state for a bootstrap invocation.
 ## @details
-## The command-line parser records operational flags and the optional manifest
-## path in this module rather than asking unrelated parts of the program to
+## The command-line parser records operational flags and ordered manifest paths
+## in this module rather than asking unrelated parts of the program to
 ## inspect raw arguments.  Later roadmap phases can ask small,
 ## intention-revealing questions such as bootstrap_context_is_dry_run instead of
 ## reading global variables directly.
@@ -34,9 +34,9 @@ BOOTSTRAP_FLAG_VERBOSE=false
 ## True when the user requested non-essential output suppression.
 BOOTSTRAP_FLAG_QUIET=false
 
-## @var BOOTSTRAP_MANIFEST_PATH
-## Optional package manifest path supplied as the single positional argument.
-BOOTSTRAP_MANIFEST_PATH=""
+## @var BOOTSTRAP_MANIFEST_PATHS
+## Ordered package manifest paths supplied as positional arguments.
+BOOTSTRAP_MANIFEST_PATHS=()
 
 ## @var BOOTSTRAP_CONTEXT_PACKAGE_MANAGER
 ## Effective package-manager selector after defaults and configuration are applied.
@@ -60,7 +60,7 @@ bootstrap_context_reset() {
   BOOTSTRAP_FLAG_EXPLAIN=false
   BOOTSTRAP_FLAG_VERBOSE=false
   BOOTSTRAP_FLAG_QUIET=false
-  BOOTSTRAP_MANIFEST_PATH=""
+  BOOTSTRAP_MANIFEST_PATHS=()
   BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 }
 
@@ -108,28 +108,64 @@ bootstrap_context_enable_quiet() {
   BOOTSTRAP_FLAG_QUIET=true
 }
 
-## @fn bootstrap_context_set_manifest_path()
-## @brief Records the manifest path supplied by the user.
+## @fn bootstrap_context_add_manifest_path()
+## @brief Appends one manifest path to the ordered invocation scope.
 ## @details
-## The CLI accepts at most one manifest path.  This function stores the already
-## validated positional argument so downstream code can ask for the manifest path
-## without reparsing command-line input.
+## Positional manifest operands are retained in the order supplied by the user.
+## The preflight orchestrator later processes them in this same order so shell
+## glob expansion and explicit argument ordering remain deterministic.
 ##
-## @param path Package manifest path supplied as the positional argument.
+## @param path Package manifest path supplied as a positional argument.
 ## @retval 0 Manifest path was recorded successfully.
 ## @par Examples
 ## @code
-## bootstrap_context_set_manifest_path ./packages.txt
+## bootstrap_context_add_manifest_path ./core.manifest
+## bootstrap_context_add_manifest_path ./security.manifest
 ## @endcode
-bootstrap_context_set_manifest_path() {
-  BOOTSTRAP_MANIFEST_PATH="$1"
+bootstrap_context_add_manifest_path() {
+  BOOTSTRAP_MANIFEST_PATHS+=("$1")
+}
+
+## @fn bootstrap_context_has_manifest_paths()
+## @brief Tests whether at least one manifest path was supplied.
+## @retval 0 One or more manifest paths are available.
+## @retval 1 No manifest path was supplied.
+bootstrap_context_has_manifest_paths() {
+  ((${#BOOTSTRAP_MANIFEST_PATHS[@]} > 0))
+}
+
+## @fn bootstrap_context_get_manifest_count()
+## @brief Prints the number of manifest operands in the invocation scope.
+## @par Standard Output
+## The number of manifest paths.
+## @retval 0 The count was printed successfully.
+bootstrap_context_get_manifest_count() {
+  printf '%s\n' "${#BOOTSTRAP_MANIFEST_PATHS[@]}"
+}
+
+## @fn bootstrap_context_get_manifest_path_at()
+## @brief Prints the manifest path at a zero-based position.
+## @param index Zero-based manifest position.
+## @par Standard Output
+## The selected manifest path.
+## @retval 0 The path was printed successfully.
+## @retval 1 The index was outside the recorded manifest range.
+bootstrap_context_get_manifest_path_at() {
+  local index
+
+  index="$1"
+  if ((index < 0 || index >= ${#BOOTSTRAP_MANIFEST_PATHS[@]})); then
+    return 1
+  fi
+
+  printf '%s\n' "${BOOTSTRAP_MANIFEST_PATHS[index]}"
 }
 
 ## @fn bootstrap_context_set_package_manager()
 ## @brief Records the package-manager selector for this invocation.
 ## @details
 ## Configuration loading and command-line parsing apply precedence before the
-## resolver runs.  The context stores the effective selector so dry-run and
+## resolver runs. The context stores the effective selector so dry-run and
 ## execution paths use the same package-manager decision instead of each path
 ## hard-coding its own default.
 ##
@@ -155,34 +191,6 @@ bootstrap_context_set_package_manager() {
 ## @endcode
 bootstrap_context_get_package_manager() {
   printf '%s\n' "${BOOTSTRAP_CONTEXT_PACKAGE_MANAGER}"
-}
-
-## @fn bootstrap_context_has_manifest_path()
-## @brief Tests whether a manifest path was supplied.
-## @retval 0 A manifest path is available.
-## @retval 1 No manifest path was supplied.
-## @par Examples
-## @code
-## if bootstrap_context_has_manifest_path; then
-##   bootstrap_context_get_manifest_path
-## fi
-## @endcode
-bootstrap_context_has_manifest_path() {
-  [[ -n "${BOOTSTRAP_MANIFEST_PATH}" ]]
-}
-
-## @fn bootstrap_context_get_manifest_path()
-## @brief Prints the manifest path associated with the current invocation.
-## @par Standard Output
-## The manifest path.
-## @retval 0 The manifest path was printed successfully.
-## @par Examples
-## @code
-## manifest_path="$(bootstrap_context_get_manifest_path)"
-## printf 'manifest: %s\n' "${manifest_path}"
-## @endcode
-bootstrap_context_get_manifest_path() {
-  printf '%s\n' "${BOOTSTRAP_MANIFEST_PATH}"
 }
 
 ## @fn bootstrap_context_is_dry_run()
