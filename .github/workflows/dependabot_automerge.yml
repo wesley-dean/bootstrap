@@ -9,7 +9,6 @@ permissions:
 jobs:
   dependabot:
     permissions:
-      contents: write
       pull-requests: write
 
     runs-on: ubuntu-22.04
