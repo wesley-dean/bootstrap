@@ -1,0 +1,22 @@
+#------------------------------------------------------------------------------
+# Ubuntu 26.04 core workstation example
+#
+# This manifest is a starting point for a small, generally useful collection
+# of command-line tools. Review it before use and add or remove packages to
+# match the system's purpose.
+#------------------------------------------------------------------------------
+
+# Version control and build tools
+git
+make
+
+# Download and transfer tools
+curl
+wget
+
+# Archive and compression tools
+zip
+unzip
+
+# HTTPS certificate roots
+ca-certificates
