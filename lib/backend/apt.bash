@@ -16,7 +16,6 @@
 ## backend modules rather than teaching the resolver package-manager-specific
 ## command syntax.
 
-
 ## @fn bootstrap_backend_apt_is_available()
 ## @brief Reports whether the APT backend can inspect packages on this system.
 ## @details
@@ -41,7 +40,6 @@ bootstrap_backend_apt_is_available() {
     command -v apt-get >/dev/null 2>&1 &&
     command -v dpkg >/dev/null 2>&1
 }
-
 
 ## @fn bootstrap_backend_apt_package_exists()
 ## @brief Reports whether APT knows about a package in configured repositories.
@@ -86,7 +84,6 @@ bootstrap_backend_apt_package_exists() {
   bootstrap_backend_diagnostic_package_unavailable apt "${package}"
 }
 
-
 ## @fn bootstrap_backend_apt_candidate_version()
 ## @brief Prints the APT candidate version for a package.
 ## @details
@@ -126,7 +123,6 @@ bootstrap_backend_apt_candidate_version() {
   printf '%s\n' "${candidate}"
 }
 
-
 ## @fn bootstrap_backend_apt_dpkg_operator()
 ## @brief Translates a manifest version operator into a dpkg comparison operator.
 ## @details
@@ -165,7 +161,6 @@ bootstrap_backend_apt_dpkg_operator() {
     ;;
   esac
 }
-
 
 ## @fn bootstrap_backend_apt_package_satisfies_version()
 ## @brief Checks whether the APT candidate satisfies a version constraint.

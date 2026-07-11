@@ -12,7 +12,6 @@
 ## quiet mode.  Quiet mode is allowed to hide non-essential progress output, but
 ## it must not hide information required to understand a conservative failure.
 
-
 ## @fn bootstrap_diagnostic_manifest_unreadable()
 ## @brief Reports that a manifest file cannot be read.
 ## @details
@@ -43,7 +42,6 @@ bootstrap_diagnostic_manifest_unreadable() {
 
   return "${BOOTSTRAP_EXIT_MANIFEST}"
 }
-
 
 ## @fn bootstrap_diagnostic_manifest_malformed_line()
 ## @brief Reports one malformed manifest line with recovery guidance.
