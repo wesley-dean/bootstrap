@@ -266,6 +266,8 @@ in focused files:
 - [`doc/cli.md`](doc/cli.md) describes the supported command-line interface.
 - [`doc/manifest-format.md`](doc/manifest-format.md) describes the manifest
   grammar and parser behavior.
+- [`doc/examples/`](doc/examples/) contains small, release-specific starter
+  manifests.
 - [`doc/adr/`](doc/adr/) contains the project's Architecture Decision Records.
 - [`testing.md`](doc/testing.md) describes how to test the tool during development
   work.
