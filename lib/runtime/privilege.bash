@@ -97,3 +97,35 @@ bootstrap_privilege_run() {
 
   "$@"
 }
+
+
+## @fn bootstrap_privilege_run_install()
+## @brief Runs one privileged package installation with an optional timeout.
+## @details
+## GNU timeout is used when available.  Minimal systems without timeout remain
+## supported, but Bootstrap emits one warning per invocation before continuing
+## with an unbounded package-manager command.
+## @param command Package-manager command to execute.
+## @param ... Command arguments.
+## @retval 0 The command completed successfully.
+## @retval 124 GNU timeout ended the command after the configured duration.
+## @retval 71 Required privilege escalation was unavailable.
+## @retval * The package-manager command's own exit status.
+bootstrap_privilege_run_install() {
+  local timeout
+
+  timeout="$(bootstrap_context_get_install_timeout)"
+
+  if command -v timeout >/dev/null 2>&1; then
+    bootstrap_privilege_run timeout "${timeout}" "$@"
+    return "$?"
+  fi
+
+  if ! bootstrap_context_timeout_warning_was_emitted; then
+    bootstrap_log_warning \
+      "timeout is unavailable; package installations will not be time-bounded"
+    bootstrap_context_mark_timeout_warning_emitted
+  fi
+
+  bootstrap_privilege_run "$@"
+}

@@ -85,7 +85,10 @@ bootstrap_executor_apt_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  if bootstrap_privilege_run apt-get install -y "${package}" >/dev/null; then
+  bootstrap_log_install_start "${package}"
+
+  if bootstrap_privilege_run_install apt-get install -y --no-install-recommends "${package}" >/dev/null; then
+    bootstrap_log_install_done
     bootstrap_execution_result_create \
       'success' \
       "${BOOTSTRAP_EXIT_SUCCESS}" \
@@ -96,6 +99,19 @@ bootstrap_executor_apt_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
+    bootstrap_log_install_failed
+    if [[ "${status}" == "124" ]]; then
+      bootstrap_execution_result_create \
+        'failed' \
+        "${BOOTSTRAP_EXIT_EXECUTION}" \
+        'install-package' \
+        'apt' \
+        "${package}" \
+        "package installation timed out after $(bootstrap_context_get_install_timeout) seconds"
+      bootstrap_recovery_execution_failed 'apt' "${package}"
+      return "${BOOTSTRAP_EXIT_EXECUTION}"
+    fi
+
     if [[ "${status}" == "${BOOTSTRAP_EXIT_PRIVILEGE}" ]]; then
       bootstrap_execution_result_create \
         'failed' \

@@ -88,3 +88,43 @@ setup() {
     [[ "$output" == *"would install package: git"* ]]
     [[ "$output" != *"unsupported package manager: bogus"* ]]
 }
+
+
+@test "installation timeout defaults to 30 seconds" {
+    run bash -c "source '$SCRIPT'; bootstrap_context_reset; bootstrap_context_get_install_timeout"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "30" ]
+}
+
+@test "environment installation timeout overrides the default" {
+    run env BOOTSTRAP_INSTALL_TIMEOUT=45 bash -c "source '$SCRIPT'; bootstrap_context_reset; bootstrap_config_apply_environment; bootstrap_config_validate_effective_runtime; bootstrap_context_get_install_timeout"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "45" ]
+}
+
+@test "invalid installation timeout fails conservatively" {
+    manifest="${WORK_DIR}/packages.txt"
+    printf 'git
+' >"$manifest"
+
+    run env BOOTSTRAP_INSTALL_TIMEOUT=0 "$SCRIPT" --dry-run "$manifest"
+
+    [ "$status" -eq 64 ]
+    [[ "$output" == *"BOOTSTRAP_INSTALL_TIMEOUT must be a positive whole number of seconds: 0"* ]]
+}
+
+@test "installation timeout may be loaded from .env" {
+    manifest="${WORK_DIR}/packages.txt"
+    printf 'git
+' >"$manifest"
+    printf 'BOOTSTRAP_INSTALL_TIMEOUT=12
+BOOTSTRAP_PACKAGE_MANAGER=apt
+' >"${WORK_DIR}/.env"
+
+    run bash -c 'cd "$1" && source "$2"; bootstrap_context_reset; bootstrap_config_load_default_file; bootstrap_context_get_install_timeout' _ "$WORK_DIR" "$SCRIPT"
+
+    [ "$status" -eq 0 ]
+    [ "$output" = "12" ]
+}

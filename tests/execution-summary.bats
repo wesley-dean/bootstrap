@@ -90,5 +90,5 @@ STUB
     [[ "$output" == *"installed:         1"* ]]
     [[ "$output" == *"failed:            0"* ]]
     [[ "$output" == *"not executed:      0"* ]]
-    [ "$(cat "$install_log")" = "install -y new-package" ]
+    [ "$(cat "$install_log")" = "install -y --no-install-recommends new-package" ]
 }

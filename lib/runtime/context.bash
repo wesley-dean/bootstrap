@@ -42,6 +42,14 @@ BOOTSTRAP_MANIFEST_PATHS=()
 ## Effective package-manager selector after defaults and configuration are applied.
 BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
 
+## @var BOOTSTRAP_CONTEXT_INSTALL_TIMEOUT
+## Per-package installation timeout in seconds.
+BOOTSTRAP_CONTEXT_INSTALL_TIMEOUT="30"
+
+## @var BOOTSTRAP_TIMEOUT_WARNING_EMITTED
+## True after the missing-timeout warning has been emitted for this invocation.
+BOOTSTRAP_TIMEOUT_WARNING_EMITTED=false
+
 ## @fn bootstrap_context_reset()
 ## @brief Restores runtime option state to documented defaults.
 ## @details
@@ -62,6 +70,8 @@ bootstrap_context_reset() {
   BOOTSTRAP_FLAG_QUIET=false
   BOOTSTRAP_MANIFEST_PATHS=()
   BOOTSTRAP_CONTEXT_PACKAGE_MANAGER="auto"
+  BOOTSTRAP_CONTEXT_INSTALL_TIMEOUT="30"
+  BOOTSTRAP_TIMEOUT_WARNING_EMITTED=false
 }
 
 ## @fn bootstrap_context_enable_dry_run()
@@ -247,4 +257,38 @@ bootstrap_context_is_verbose() {
 ## @endcode
 bootstrap_context_is_quiet() {
   [[ "${BOOTSTRAP_FLAG_QUIET}" == true ]]
+}
+
+
+## @fn bootstrap_context_set_install_timeout()
+## @brief Records the per-package installation timeout in seconds.
+## @param seconds Positive whole-number timeout value.
+## @retval 0 Timeout state was recorded successfully.
+bootstrap_context_set_install_timeout() {
+  BOOTSTRAP_CONTEXT_INSTALL_TIMEOUT="$1"
+}
+
+## @fn bootstrap_context_get_install_timeout()
+## @brief Prints the effective per-package installation timeout.
+## @par Standard Output
+## Timeout duration in seconds.
+## @retval 0 The timeout was printed successfully.
+bootstrap_context_get_install_timeout() {
+  printf '%s
+' "${BOOTSTRAP_CONTEXT_INSTALL_TIMEOUT}"
+}
+
+## @fn bootstrap_context_timeout_warning_was_emitted()
+## @brief Tests whether the degraded timeout warning was already printed.
+## @retval 0 The warning was already printed.
+## @retval 1 The warning has not been printed.
+bootstrap_context_timeout_warning_was_emitted() {
+  [[ "${BOOTSTRAP_TIMEOUT_WARNING_EMITTED}" == true ]]
+}
+
+## @fn bootstrap_context_mark_timeout_warning_emitted()
+## @brief Records that the degraded timeout warning has been printed.
+## @retval 0 Warning state was recorded successfully.
+bootstrap_context_mark_timeout_warning_emitted() {
+  BOOTSTRAP_TIMEOUT_WARNING_EMITTED=true
 }

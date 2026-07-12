@@ -22,6 +22,9 @@ replacement, but a wrapper.
 - Dry-run mode for reviewing planned work before changing a system.
 - Explain mode for understanding how manifest entries become planned actions.
 - Native package-manager delegation for APT, Alpine APK, and DNF.
+- Visible per-package installation progress outside quiet mode.
+- Per-package installation timeouts when GNU `timeout` is available.
+- APT installations that omit automatically recommended packages.
 - Conservative diagnostics that stop rather than guessing when input is unclear.
 - A single generated `bootstrap.bash` release artifact.
 - Support for multiple system package managers:

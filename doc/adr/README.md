@@ -73,7 +73,7 @@ Topics include:
 
 These ADRs describe how the project should evolve over time.
 
--   ADR-031 through ADR-044
+-   ADR-031 through ADR-050
 
 Topics include:
 
@@ -84,7 +84,8 @@ Topics include:
 -   determinism;
 -   documentation;
 -   trusted computing base;
--   contributor philosophy.
+-   contributor philosophy;
+-   bounded package installation and visible progress.
 
 ## Architectural Themes
 

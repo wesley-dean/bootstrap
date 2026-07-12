@@ -114,6 +114,50 @@ specified at most once per invocation. Because its source name is `-`, users who
 need per-file provenance should pass manifest paths instead of concatenating
 files into standard input.
 
+
+## Package installation timeout
+
+Bootstrap bounds each mutating APT, APK, and DNF package installation when GNU
+`timeout` is available.  The timeout applies separately to each package rather
+than to the complete manifest or Bootstrap invocation.
+
+The duration is configured in seconds with `BOOTSTRAP_INSTALL_TIMEOUT`:
+
+```dotenv
+BOOTSTRAP_INSTALL_TIMEOUT=30
+```
+
+The built-in default is 30 seconds.  The effective value must be a positive
+whole number.  Empty, zero, negative, fractional, and nonnumeric values are
+usage errors discovered before package execution begins.
+
+`timeout` is an optional runtime capability.  When it is unavailable, Bootstrap
+prints one warning for the invocation and continues with unbounded native
+package-manager installations.  The warning remains visible under `--quiet`
+because it identifies a degraded safety boundary.
+
+A package that exceeds the configured duration produces a failed Execution
+Result and Bootstrap's existing execution-failure exit status.  Package-state
+inspection is not included in the timeout boundary.
+
+APT installations use `--no-install-recommends`, so packages classified only as
+recommended dependencies are not installed automatically.
+
+## Package installation progress
+
+Immediately before installing a missing package, Bootstrap writes a progress
+message to standard error:
+
+```text
+Installing curl...done.
+```
+
+A failed or timed-out installation completes the same line with `failed.` before
+printing its normal failure and recovery information.  Already-installed
+packages do not produce an installation progress message.  `--quiet` suppresses
+this routine progress output, while warnings, errors, and recovery guidance
+remain visible.
+
 ## `--help`
 
 `--help` prints a short usage summary and exits successfully.

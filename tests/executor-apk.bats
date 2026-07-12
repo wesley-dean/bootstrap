@@ -108,3 +108,28 @@ STUB
     [[ "$output" == *"apk exited with status 99"* ]]
     [[ "$output" == *"bootstrap.bash: recovery: Run the native command directly for full details: sudo apk add git"* ]]
 }
+
+@test "executor applies the configured timeout to apk installs" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    timeout_log="${TEST_TMPDIR}/timeout.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/apk" <<'STUB'
+#!/usr/bin/env bash
+if [ "$1" = "info" ] && [ "$2" = "-e" ]; then
+    exit 1
+fi
+exit 0
+STUB
+    cat >"${fake_bin}/timeout" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >"${TIMEOUT_LOG}"
+exit 124
+STUB
+    chmod +x "${fake_bin}/apk" "${fake_bin}/timeout"
+
+    run env PATH="${fake_bin}:$PATH" TIMEOUT_LOG="$timeout_log" BOOTSTRAP_INSTALL_TIMEOUT=8 bash -c "source '$SCRIPT'; bootstrap_context_reset; bootstrap_config_apply_environment; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apk|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 70 ]
+    [[ "$output" == *"package installation timed out after 8 seconds"* ]]
+    [ "$(cat "$timeout_log")" = "8 apk add git" ]
+}

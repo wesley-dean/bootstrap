@@ -36,5 +36,5 @@ STUB
 
     [ "$status" -eq 70 ]
     [[ "$output" == *"failed|70|install-package|apt|first|apt-get exited with status 23"* ]]
-    [ "$(cat "$install_log")" = "install -y first" ]
+    [ "$(cat "$install_log")" = "install -y --no-install-recommends first" ]
 }

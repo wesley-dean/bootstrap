@@ -138,3 +138,46 @@ bootstrap_log_error() {
 
   bootstrap_log_emit 'error' "${message}" 'stderr'
 }
+
+
+## @fn bootstrap_log_install_start()
+## @brief Prints an installation progress prefix unless quiet mode is active.
+## @param package Package being installed.
+## @par Standard Error
+## An unterminated progress prefix.
+## @retval 0 The logging decision completed successfully.
+bootstrap_log_install_start() {
+  if bootstrap_context_is_quiet; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf 'Installing %s...' "$1" >&2
+}
+
+## @fn bootstrap_log_install_done()
+## @brief Completes an installation progress line successfully.
+## @par Standard Error
+## The text `done.` followed by a newline when quiet mode is inactive.
+## @retval 0 The logging decision completed successfully.
+bootstrap_log_install_done() {
+  if bootstrap_context_is_quiet; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf 'done.
+' >&2
+}
+
+## @fn bootstrap_log_install_failed()
+## @brief Completes an installation progress line unsuccessfully.
+## @par Standard Error
+## The text `failed.` followed by a newline when quiet mode is inactive.
+## @retval 0 The logging decision completed successfully.
+bootstrap_log_install_failed() {
+  if bootstrap_context_is_quiet; then
+    return "${BOOTSTRAP_EXIT_SUCCESS}"
+  fi
+
+  printf 'failed.
+' >&2
+}
