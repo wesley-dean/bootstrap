@@ -113,3 +113,29 @@ STUB
     [[ "$output" == *"dnf exited with status 99"* ]]
     [[ "$output" == *"bootstrap.bash: recovery: Run the native command directly for full details: sudo dnf install -y git"* ]]
 }
+
+@test "executor applies the configured timeout to dnf installs" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    timeout_log="${TEST_TMPDIR}/timeout.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/rpm" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/dnf" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+    cat >"${fake_bin}/timeout" <<'STUB'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >"${TIMEOUT_LOG}"
+exit 124
+STUB
+    chmod +x "${fake_bin}/rpm" "${fake_bin}/dnf" "${fake_bin}/timeout"
+
+    run env PATH="${fake_bin}:$PATH" TIMEOUT_LOG="$timeout_log" BOOTSTRAP_INSTALL_TIMEOUT=9 bash -c "source '$SCRIPT'; bootstrap_context_reset; bootstrap_config_apply_environment; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|dnf|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 70 ]
+    [[ "$output" == *"package installation timed out after 9 seconds"* ]]
+    [ "$(cat "$timeout_log")" = "9 dnf install -y git" ]
+}

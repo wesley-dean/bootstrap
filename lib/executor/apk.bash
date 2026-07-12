@@ -84,7 +84,10 @@ bootstrap_executor_apk_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   fi
 
-  if bootstrap_privilege_run apk add "${package}" >/dev/null; then
+  bootstrap_log_install_start "${package}"
+
+  if bootstrap_privilege_run_install apk add "${package}" >/dev/null; then
+    bootstrap_log_install_done
     bootstrap_execution_result_create \
       'success' \
       "${BOOTSTRAP_EXIT_SUCCESS}" \
@@ -95,6 +98,19 @@ bootstrap_executor_apk_install_package() {
     return "${BOOTSTRAP_EXIT_SUCCESS}"
   else
     status="$?"
+    bootstrap_log_install_failed
+    if [[ "${status}" == "124" ]]; then
+      bootstrap_execution_result_create \
+        'failed' \
+        "${BOOTSTRAP_EXIT_EXECUTION}" \
+        'install-package' \
+        'apk' \
+        "${package}" \
+        "package installation timed out after $(bootstrap_context_get_install_timeout) seconds"
+      bootstrap_recovery_execution_failed 'apk' "${package}"
+      return "${BOOTSTRAP_EXIT_EXECUTION}"
+    fi
+
     if [[ "${status}" == "${BOOTSTRAP_EXIT_PRIVILEGE}" ]]; then
       bootstrap_execution_result_create \
         'failed' \

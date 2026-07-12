@@ -220,7 +220,7 @@ bootstrap_recovery_execution_failed() {
 
   case "${manager}" in
   apt)
-    bootstrap_recovery_emit "Run the native command directly for full details: sudo apt-get install -y ${package}"
+    bootstrap_recovery_emit "Run the native command directly for full details: sudo apt-get install -y --no-install-recommends ${package}"
     bootstrap_recovery_emit 'Check for package-manager locks, network failures, or repository errors.'
     ;;
   apk)

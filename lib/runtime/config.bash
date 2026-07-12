@@ -125,6 +125,9 @@ bootstrap_config_apply_assignment() {
   BOOTSTRAP_PACKAGE_MANAGER)
     bootstrap_context_set_package_manager "${value}"
     ;;
+  BOOTSTRAP_INSTALL_TIMEOUT)
+    bootstrap_context_set_install_timeout "${value}"
+    ;;
   BOOTSTRAP_*)
     if [[ -n "${line_number}" ]]; then
       bootstrap_print_usage_error \
@@ -244,6 +247,10 @@ bootstrap_config_apply_environment() {
   if [[ -v BOOTSTRAP_PACKAGE_MANAGER ]]; then
     bootstrap_context_set_package_manager "${BOOTSTRAP_PACKAGE_MANAGER}"
   fi
+
+  if [[ -v BOOTSTRAP_INSTALL_TIMEOUT ]]; then
+    bootstrap_context_set_install_timeout "${BOOTSTRAP_INSTALL_TIMEOUT}"
+  fi
 }
 
 ## @fn bootstrap_config_validate_package_manager()
@@ -296,6 +303,15 @@ bootstrap_config_validate_package_manager() {
 ## bootstrap_config_validate_effective_runtime
 ## @endcode
 bootstrap_config_validate_effective_runtime() {
+  local timeout
+
   bootstrap_config_validate_package_manager \
-    "$(bootstrap_context_get_package_manager)"
+    "$(bootstrap_context_get_package_manager)" || return "$?"
+
+  timeout="$(bootstrap_context_get_install_timeout)"
+  if [[ ! "${timeout}" =~ ^[1-9][0-9]*$ ]]; then
+    bootstrap_print_usage_error \
+      "BOOTSTRAP_INSTALL_TIMEOUT must be a positive whole number of seconds: ${timeout:-<empty>}"
+    return "${BOOTSTRAP_EXIT_USAGE}"
+  fi
 }

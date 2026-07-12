@@ -139,7 +139,7 @@ STUB
     [ "$status" -eq 0 ]
     [[ "$output" == *"Execution results:"* ]]
     [[ "$output" == *"package installation completed"* ]]
-    [ "$(cat "$log_file")" = "install -y git" ]
+    [ "$(cat "$log_file")" = "install -y --no-install-recommends git" ]
 }
 
 @test "generated bootstrap.bash requires help to be used alone" {

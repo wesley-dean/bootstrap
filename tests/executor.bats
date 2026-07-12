@@ -57,7 +57,7 @@ STUB
 
     [ "$status" -eq 0 ]
     [[ "$output" == *"success|0|install-package|apt|git|package installation completed"* ]]
-    [ "$(cat "$log_file")" = "install -y git" ]
+    [ "$(cat "$log_file")" = "install -y --no-install-recommends git" ]
 }
 
 @test "executor preserves package identity in apt failure results" {
@@ -159,5 +159,96 @@ STUB
 
     [ "$status" -eq 70 ]
     [[ "$output" == *"apt-get exited with status 100"* ]]
-    [[ "$output" == *"bootstrap.bash: recovery: Run the native command directly for full details: sudo apt-get install -y git"* ]]
+    [[ "$output" == *"bootstrap.bash: recovery: Run the native command directly for full details: sudo apt-get install -y --no-install-recommends git"* ]]
+}
+
+
+@test "executor reports apt installation progress outside quiet mode" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" == *"Installing git...done."* ]]
+}
+
+@test "quiet mode suppresses apt installation progress" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" bash -c "source '$SCRIPT'; bootstrap_context_enable_quiet; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 0 ]
+    [[ "$output" != *"Installing git"* ]]
+}
+
+@test "executor reports a timed-out apt installation" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    timeout_log="${TEST_TMPDIR}/timeout.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/usr/bin/env bash
+exit 1
+STUB
+    cat >"${fake_bin}/timeout" <<'STUB'
+#!/usr/bin/env bash
+printf '%s
+' "$*" >"${TIMEOUT_LOG}"
+exit 124
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/usr/bin/env bash
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/timeout" "${fake_bin}/apt-get"
+
+    run env PATH="${fake_bin}:$PATH" TIMEOUT_LOG="$timeout_log" BOOTSTRAP_INSTALL_TIMEOUT=7 bash -c "source '$SCRIPT'; bootstrap_context_reset; bootstrap_config_apply_environment; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 70 ]
+    [[ "$output" == *"Installing git...failed."* ]]
+    [[ "$output" == *"package installation timed out after 7 seconds"* ]]
+    [ "$(cat "$timeout_log")" = "7 apt-get install -y --no-install-recommends git" ]
+}
+
+@test "missing timeout warns once and continues without a timeout" {
+    fake_bin="${TEST_TMPDIR}/bin"
+    apt_log="${TEST_TMPDIR}/apt.log"
+    mkdir -p "$fake_bin"
+    cat >"${fake_bin}/dpkg-query" <<'STUB'
+#!/bin/sh
+exit 1
+STUB
+    cat >"${fake_bin}/apt-get" <<'STUB'
+#!/bin/sh
+printf '%s
+' "$*" >>"${APT_GET_LOG}"
+exit 0
+STUB
+    chmod +x "${fake_bin}/dpkg-query" "${fake_bin}/apt-get"
+
+    run env PATH="$fake_bin" APT_GET_LOG="$apt_log" "$BASH" -c "source '$SCRIPT'; bootstrap_context_enable_quiet; bootstrap_privilege_effective_uid() { printf '0\n'; }; printf 'install-package|apt|git||||\ninstall-package|apt|curl||||\n' | bootstrap_executor_execute_resolved_actions"
+
+    [ "$status" -eq 0 ]
+    [ "$(grep -c 'timeout is unavailable' <<<"$output")" -eq 1 ]
+    [[ "$output" != *"Installing git"* ]]
+    [ "$(wc -l <"$apt_log")" -eq 2 ]
 }
