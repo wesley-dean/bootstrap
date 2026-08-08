@@ -1,12 +1,13 @@
 # Release Verification
 
 Bootstrap releases include a generated executable, a SHA-256 checksum, and a
-GitHub artifact attestation. These mechanisms answer related but different
-questions about a downloaded release.
+GitHub build provenance attestation. These mechanisms answer related but
+different questions about a downloaded release.
 
 The checksum confirms that the downloaded file matches the digest published
-with the release. The artifact attestation confirms that the file was produced
-by the release workflow in the `wesley-dean/bootstrap` repository.
+with the release. The signed provenance attestation binds the artifact digest
+to the GitHub Actions workflow that produced it in the
+`wesley-dean/bootstrap` repository.
 
 Neither mechanism establishes that the source code is free from defects. Users
 should continue to inspect the release artifact before executing it, especially
@@ -27,7 +28,7 @@ A successful result reports:
 bootstrap.bash: OK
 ```
 
-## Verify the GitHub artifact attestation
+## Verify the GitHub build provenance attestation
 
 Install and authenticate the GitHub CLI, then verify the executable against the
 canonical repository:
