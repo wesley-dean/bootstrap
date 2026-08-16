@@ -1,5 +1,11 @@
 # Bootstrap
 
+[![Dependabot Updates](https://github.com/wesley-dean/bootstrap/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/dependabot/dependabot-updates)
+[![MegaLinter](https://github.com/wesley-dean/bootstrap/actions/workflows/megalinter.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/megalinter.yml)
+[![Scorecard supply-chain security](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml)
+[![Tests](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml)
+[![End-to-end tests](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml)
+
 Bootstrap is a declarative package bootstrapper for reproducible system
 provisioning.
 
@@ -203,6 +209,20 @@ multiple files, the distributed tool is a single file.  Therefore,
 ### Running with Vet
 
 [`vet`](https://github.com/vet-run/vet) can be used as a safer replacement for
+the common `curl | bash` pattern. It downloads the release artifact, displays
+the script for review, and then runs it with the arguments you provide.
+
+To run Bootstrap with `packages.manifest` through `vet`:
+
+```bash
+vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
+  packages.manifest
+```
+
+The same Bootstrap arguments can be passed after the release URL:
+
+```bash
+vet https://github.com/vet-run/vet) can be used as a safer replacement for
 the common `curl | bash` pattern. It downloads the release artifact, displays
 the script for review, and then runs it with the arguments you provide.
 
