@@ -75,7 +75,11 @@ bootstrap() {
 
   local bootstrap_path="${bootstrap_path:-${HOME}/.local/bin/bootstrap.bash}"
   local bootstrap_url="${bootstrap_url:-https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash}"
-  local -a bootstrap_args=("${bootstrap_args[@]:-}")
+  local -a effective_bootstrap_args=()
+
+  if declare -p bootstrap_args &>/dev/null; then
+    effective_bootstrap_args=("${bootstrap_args[@]}")
+  fi
 
   if [[ ! -x "${bootstrap_path}" ]]; then
     mkdir -p "${bootstrap_path%/*}" \
@@ -87,7 +91,7 @@ bootstrap() {
 
   for package in "$@"; do
     printf '%s\n' "${package}"
-  done | "${bootstrap_path}" "${bootstrap_args[@]}" -
+  done | "${bootstrap_path}" "${effective_bootstrap_args[@]}" -
 }
 ```
 
