@@ -222,20 +222,6 @@ vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.
 The same Bootstrap arguments can be passed after the release URL:
 
 ```bash
-vet https://github.com/vet-run/vet) can be used as a safer replacement for
-the common `curl | bash` pattern. It downloads the release artifact, displays
-the script for review, and then runs it with the arguments you provide.
-
-To run Bootstrap with `packages.manifest` through `vet`:
-
-```bash
-vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
-  packages.manifest
-```
-
-The same Bootstrap arguments can be passed after the release URL:
-
-```bash
 vet https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
   --dry-run --explain packages.manifest
 ```
