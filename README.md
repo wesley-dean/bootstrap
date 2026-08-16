@@ -1,5 +1,11 @@
 # Bootstrap
 
+[![Dependabot Updates](https://github.com/wesley-dean/bootstrap/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/dependabot/dependabot-updates)
+[![MegaLinter](https://github.com/wesley-dean/bootstrap/actions/workflows/megalinter.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/megalinter.yml)
+[![Scorecard supply-chain security](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml)
+[![Tests](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml)
+[![End-to-end tests](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml)
+
 Bootstrap is a declarative package bootstrapper for reproducible system
 provisioning.
 
