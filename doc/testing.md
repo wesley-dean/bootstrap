@@ -63,12 +63,18 @@ Generate the Doxygen reference documentation with:
 make docs
 ```
 
-This target downloads the Bash Doxygen filter into `vendor/` when needed
-and runs Doxygen using the repository `Doxyfile`.
+This target downloads the Bash Doxygen filter into the ignored `vendor/`
+directory when needed and runs Doxygen using the repository `Doxyfile`.
 
-Generated reference documentation is written under `docs/reference/`.
-Files in that directory are generated artifacts and should be regenerated
-with `make docs` rather than edited manually.
+Generated reference documentation is written under `doc/reference/`. Both
+`doc/reference/` and `vendor/` are generated build-time artifacts and are
+excluded from source control. Regenerate the reference documentation with
+`make docs` rather than editing generated files manually.
+
+The GitHub Pages workflow at `.github/workflows/static.yml` generates the
+reference documentation from a clean checkout and publishes `doc/reference/`
+directly as the Pages artifact. The generated files do not need to be committed
+to the repository.
 
 ## Run containerized end-to-end tests
 
