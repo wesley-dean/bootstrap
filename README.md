@@ -5,6 +5,7 @@
 [![Scorecard supply-chain security](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml)
 [![Tests](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml)
 [![End-to-end tests](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml)
+[![Documentation](https://github.com/wesley-dean/bootstrap/actions/workflows/static.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/static.yml)
 
 Bootstrap is a declarative package bootstrapper for reproducible system
 provisioning.
