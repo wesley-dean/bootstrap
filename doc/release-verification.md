@@ -13,6 +13,27 @@ Neither mechanism establishes that the source code is free from defects. Users
 should continue to inspect the release artifact before executing it, especially
 when Bootstrap will run with elevated privileges.
 
+## Release build dependency preparation
+
+The release workflow explicitly prepares repository build/development dependency
+state before release validation. It runs:
+
+```bash
+make deps
+make deps-check
+```
+
+before constructing the release artifact. The Makefile independently verifies the
+pinned released `vendor/bashdeps.bash` bootstrap, and bashdeps verifies the
+ordinary external artifacts declared in `dependencies.txt`.
+
+This dependency relationship is build-time only. `make build` does not acquire or
+verify external dependencies, and the published `bootstrap.bash` artifact remains
+functional without bashdeps, `dependencies.txt`, or the generated `vendor/` tree.
+The release workflow verifies that isolation before attestation and publication.
+
+See ADR-051 for the trust and target boundaries governing this process.
+
 ## Verify the SHA-256 checksum
 
 Download `bootstrap.bash` and `bootstrap.bash.sha256` from the same GitHub
