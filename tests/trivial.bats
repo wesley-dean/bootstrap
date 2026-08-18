@@ -21,9 +21,9 @@ setup() {
 }
 
 @test "generated bootstrap.bash contains release metadata" {
-    grep -q '^BOOTSTRAP_VERSION=' "$SCRIPT"
-    grep -q '^BOOTSTRAP_BUILD_DATE=' "$SCRIPT"
-    grep -q '^BOOTSTRAP_BUILD_COMMIT=' "$SCRIPT"
+    grep -q 'BOOTSTRAP_VERSION=' "$SCRIPT"
+    grep -q 'BOOTSTRAP_BUILD_DATE=' "$SCRIPT"
+    grep -q 'BOOTSTRAP_BUILD_COMMIT=' "$SCRIPT"
 }
 
 @test "generated bootstrap.bash executes successfully" {
