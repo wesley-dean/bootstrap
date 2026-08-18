@@ -4,14 +4,18 @@
 # project.
 #
 # Developers edit the modular source files listed in SOURCE_FILES. Users consume
-# the generated dist/bootstrap.bash artifact produced by make build or make all.
+# one of the generated dist/bootstrap*.bash artifacts produced by make build or
+# make all.
 
 SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 
 DIST_DIR := dist
+DIST_DEV_SCRIPT := $(DIST_DIR)/bootstrap.dev.bash
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
-DIST_CHECKSUM := $(DIST_SCRIPT).sha256
+DIST_MIN_SCRIPT := $(DIST_DIR)/bootstrap.min.bash
+DIST_SCRIPTS := $(DIST_DEV_SCRIPT) $(DIST_SCRIPT) $(DIST_MIN_SCRIPT)
+DIST_CHECKSUMS := $(addsuffix .256,$(DIST_SCRIPTS))
 SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/apk.bash lib/backend/dnf.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/apk.bash lib/executor/dnf.bash lib/executor/executor.bash src/bootstrap.bash
 TESTS_DIR := tests/
 TEST_SCRIPTS := ${TESTS_DIR}/*.bats
@@ -24,6 +28,7 @@ BASHDEPS_VERSION := 0.0.6
 BASHDEPS_URL := https://github.com/wesley-dean/bashdeps/releases/download/v$(BASHDEPS_VERSION)/bashdeps.bash
 BASHDEPS_SHA256 := bb6c807fa12c010950bda06172ac0611d278c57aca1f8352f41502d0d76b4e6c
 DOXYGEN_BASH_FILTER := $(VENDOR_DIR)/doxygen-bash.awk
+BASH_MINIFIER := $(VENDOR_DIR)/bash-minifier.bash
 REFERENCE_DOC_DIR := doc/reference
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
@@ -37,7 +42,7 @@ BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unkno
 .PHONY: all build check checksums clean deps deps-check distclean docs docs-clean FORCE format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat verify-bashdeps
 
 ##
-# Synchronize development dependencies, then build the consumer artifact.
+# Synchronize development dependencies, then build the consumer artifacts.
 #
 # The recursive Make invocation keeps ordering explicit under parallel Make.
 # Plain `make build` remains independent of dependency synchronization and does
@@ -47,11 +52,17 @@ all: deps
 	$(MAKE) --no-print-directory build
 
 ##
-# Build the standalone Bootstrap distribution artifact from maintained source.
+# Build all standalone Bootstrap distribution artifacts and checksums.
 #
-build: $(DIST_SCRIPT)
+# This target consumes already-prepared Bash-Minifier state. It does not acquire
+# or verify dependencies and therefore remains network-free.
+#
+build: $(DIST_SCRIPTS) $(DIST_CHECKSUMS)
 
-$(DIST_SCRIPT): $(SOURCE_FILES)
+##
+# Assemble the fully commented development artifact from maintained source.
+#
+$(DIST_DEV_SCRIPT): $(SOURCE_FILES)
 	mkdir -p "$(DIST_DIR)"
 	{ \
 		printf '%s\n' '#!/usr/bin/env bash'; \
@@ -63,18 +74,62 @@ $(DIST_SCRIPT): $(SOURCE_FILES)
 		printf 'BOOTSTRAP_BUILD_DATE=%q\n' "$(BUILD_DATE)"; \
 		printf 'BOOTSTRAP_BUILD_COMMIT=%q\n' "$(BUILD_COMMIT)"; \
 		printf '\n'; \
-		cat $(SOURCE_FILES) \
-    | sed '/^#/d'; \
+		cat $(SOURCE_FILES); \
 	} >"$@.tmp"
 	chmod 0755 "$@.tmp"
 	mv "$@.tmp" "$@"
 
 ##
+# Derive the ordinary artifact by removing full-line comments from the complete
+# assembled development artifact while preserving its shebang.
+#
+$(DIST_SCRIPT): $(DIST_DEV_SCRIPT)
+	sed '1b; /^[[:space:]]*#/d' "$<" >"$@.tmp"
+	chmod 0755 "$@.tmp"
+	mv "$@.tmp" "$@"
+
+##
+# Derive the minified artifact from the complete comment-stripped artifact.
+#
+# Bash-Minifier is manifest-managed dependency state. A missing dependency is an
+# actionable build failure rather than a reason for build to access the network.
+#
+$(DIST_MIN_SCRIPT): $(DIST_SCRIPT)
+	@test -f "$(BASH_MINIFIER)" || { \
+		printf '%s\n' 'Missing build dependency vendor/bash-minifier.bash; run make deps or make all' >&2; \
+		exit 1; \
+	}
+	bash "$(BASH_MINIFIER)" -F <"$(DIST_SCRIPT)" >"$@.tmp"
+	chmod 0755 "$@.tmp"
+	mv "$@.tmp" "$@"
+
+##
+# Generate a SHA-256 checksum companion for one built executable artifact.
+#
+$(DIST_DIR)/%.bash.256: $(DIST_DIR)/%.bash
+	@digest=''; \
+	if command -v sha256sum >/dev/null 2>&1; then \
+		digest="$$(sha256sum "$<" | awk '{print $$1}')"; \
+	elif command -v shasum >/dev/null 2>&1; then \
+		digest="$$(shasum -a 256 "$<" | awk '{print $$1}')"; \
+	else \
+		printf '%s\n' 'No SHA-256 command is available for build checksums' >&2; \
+		exit 1; \
+	fi; \
+	printf '%s  %s\n' "$$digest" "$(notdir $<)" >"$@.tmp"; \
+	mv "$@.tmp" "$@"
+
+##
+# Compatibility/convenience alias: successful build already creates checksums.
+#
+checksums: build
+
+##
 # Run ShellCheck against hand-maintained Bash source files.
 #
-# The generated distribution artifact is intentionally excluded here. The
-# checked source files are the source of truth, and make build assembles them into
-# the release artifact.
+# Generated distribution artifacts are intentionally excluded here. The checked
+# source files are the source of truth, and make build derives all three consumer
+# representations from them.
 #
 check:
 	shellcheck $(SOURCE_FILES)
@@ -86,17 +141,49 @@ format:
 	shfmt -w $(SOURCE_FILES)
 
 ##
-# Run the behavior-oriented Bats test suite.
+# Run the behavior-oriented Bats test suite against every executable flavor.
 #
-# The generated distribution artifact is a prerequisite because tests exercise
-# the executable users will receive rather than the modular source files.
+# Existing tests intentionally address dist/bootstrap.bash as the consumer path.
+# The runner temporarily places each built flavor at that path, restores the
+# ordinary stripped artifact after each run, and therefore applies the same
+# observable-behavior contract to development, stripped, and minified output.
 #
-test: $(DIST_SCRIPT)
-	bats $(TEST_SCRIPTS)
+test: build
+	@set -e; \
+	backup="$(DIST_DIR)/.bootstrap.bash.test-original"; \
+	cp "$(DIST_SCRIPT)" "$$backup"; \
+	trap 'mv -f "$$backup" "$(DIST_SCRIPT)"' EXIT; \
+	for entry in \
+		'development|$(DIST_DEV_SCRIPT)' \
+		'stripped|'"$$backup" \
+		'minified|$(DIST_MIN_SCRIPT)'; do \
+		label="$${entry%%|*}"; \
+		artifact="$${entry#*|}"; \
+		cp "$$artifact" "$(DIST_SCRIPT)"; \
+		chmod 0755 "$(DIST_SCRIPT)"; \
+		printf 'Testing %s artifact\n' "$$label"; \
+		bats $(TEST_SCRIPTS); \
+	done
 
-test-report: $(DIST_SCRIPT)
-	mkdir -p "$(TEST_RESULTS_DIR)"
-	bats --formatter junit $(TEST_SCRIPTS) >"$(TEST_RESULTS_DIR)/bats.xml"
+##
+# Run the Bats suite against every flavor and emit one JUnit file per flavor.
+#
+test-report: build
+	@mkdir -p "$(TEST_RESULTS_DIR)"
+	@set -e; \
+	backup="$(DIST_DIR)/.bootstrap.bash.test-original"; \
+	cp "$(DIST_SCRIPT)" "$$backup"; \
+	trap 'mv -f "$$backup" "$(DIST_SCRIPT)"' EXIT; \
+	for entry in \
+		'development|$(DIST_DEV_SCRIPT)' \
+		'stripped|'"$$backup" \
+		'minified|$(DIST_MIN_SCRIPT)'; do \
+		label="$${entry%%|*}"; \
+		artifact="$${entry#*|}"; \
+		cp "$$artifact" "$(DIST_SCRIPT)"; \
+		chmod 0755 "$(DIST_SCRIPT)"; \
+		bats --formatter junit $(TEST_SCRIPTS) >"$(TEST_RESULTS_DIR)/bats-$${label}.xml"; \
+	done
 
 ##
 # Force the bootstrap file target to validate cached bytes whenever requested.
@@ -275,16 +362,6 @@ test-e2e-platform: build
 	trap 'rm -f "'"$${bootstrap}"'"; docker image rm "'"$${image}"'" >/dev/null 2>&1 || true' EXIT; \
 	docker build -t "$${image}" -f "$${context}/Dockerfile" "$${context}"; \
 	docker run --rm "$${image}"
-
-##
-# Generate SHA-256 checksums for release artifacts.
-#
-# The checksum file is written from inside the distribution directory so users
-# can download bootstrap.bash and bootstrap.bash.sha256 into the same working
-# directory and verify the artifact with sha256sum -c bootstrap.bash.sha256.
-#
-checksums: $(DIST_SCRIPT)
-	cd "$(DIST_DIR)" && sha256sum "$(notdir $(DIST_SCRIPT))" >"$(notdir $(DIST_CHECKSUM))"
 
 clean:
 	rm -rf "$(DIST_DIR)"
