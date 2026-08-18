@@ -30,7 +30,7 @@ jobs:
       - name: Install documentation dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --yes curl doxygen
+          sudo apt-get install --yes curl doxygen graphviz
 
       - name: Synchronize and verify build dependencies
         run: |
