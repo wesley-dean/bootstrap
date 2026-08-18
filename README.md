@@ -33,7 +33,9 @@ replacement, but a wrapper.
 - Per-package installation timeouts when GNU `timeout` is available.
 - APT installations that omit automatically recommended packages.
 - Conservative diagnostics that stop rather than guessing when input is unclear.
-- A single generated `bootstrap.bash` release artifact.
+- Three generated standalone release flavors: development, stripped, and
+  minified.
+- SHA-256 checksum companions for every executable release flavor.
 - Support for multiple system package managers:
   - APT: Ubuntu / Debian variants
   - DNF: RedHat variants
@@ -41,15 +43,33 @@ replacement, but a wrapper.
 
 ## Install
 
-The published release artifact is a standalone Bash script.
+Bootstrap releases contain three executable representations of the same program:
 
-To download the latest release with `curl`:
+- `bootstrap.dev.bash` contains the fully assembled source with comments intact.
+- `bootstrap.bash` is the ordinary/default artifact with full-line comments
+  removed.
+- `bootstrap.min.bash` is derived from `bootstrap.bash` with the pinned
+  Bash-Minifier build dependency.
+
+All three files are standalone executable Bash scripts and are tested against the
+same behavior suite. The conventional `bootstrap.bash` filename remains the
+default for existing consumers and examples.
+
+To download the latest ordinary release artifact with `curl`:
 
 ```bash
 curl -fsSL \
   https://github.com/wesley-dean/bootstrap/releases/latest/download/bootstrap.bash \
   -o bootstrap.bash
 chmod +x bootstrap.bash
+```
+
+Each executable also has a `.256` SHA-256 checksum companion in the release:
+
+```text
+bootstrap.dev.bash.256
+bootstrap.bash.256
+bootstrap.min.bash.256
 ```
 
 ### Optional shell function
@@ -207,8 +227,9 @@ external build/development files declared in `dependencies.txt`.
 
 The Makefile directly bootstraps only `vendor/bashdeps.bash`. It verifies the
 pinned release bytes against the SHA-256 digest committed in the Makefile before
-execution. The current manifest-managed dependency is the Bash Doxygen filter
-used to generate reference documentation.
+execution. Current manifest-managed dependencies include the Bash Doxygen filter
+used for reference documentation and a commit-pinned copy of Bash-Minifier used
+to derive `bootstrap.min.bash`.
 
 Synchronize dependency state explicitly with:
 
@@ -222,12 +243,15 @@ Verify already-present dependency state without network access or repair with:
 make deps-check
 ```
 
-Build the standalone consumer artifact without acquiring or verifying external
-dependencies with:
+Build all three executable flavors and their checksum companions with:
 
 ```bash
 make build
 ```
+
+`make build` remains network-free and does not repair dependency state. It does,
+however, require an already-prepared `vendor/bash-minifier.bash`; a fresh checkout
+therefore needs `make deps` before `make build`.
 
 For a fresh-checkout convenience path that synchronizes dependencies and then
 builds, use:
@@ -236,16 +260,27 @@ builds, use:
 make all
 ```
 
-`vendor/` is generated state and is not committed. The released
-`dist/bootstrap.bash` artifact does not require bashdeps, `dependencies.txt`, or
-the vendor tree at runtime. See ADR-051 and `doc/testing.md` for the detailed
+A successful build creates:
+
+```text
+dist/bootstrap.dev.bash
+dist/bootstrap.bash
+dist/bootstrap.min.bash
+dist/bootstrap.dev.bash.256
+dist/bootstrap.bash.256
+dist/bootstrap.min.bash.256
+```
+
+`vendor/` is generated state and is not committed. None of the three released
+executables requires bashdeps, Bash-Minifier, `dependencies.txt`, or the vendor
+tree at runtime. See ADR-051, ADR-052, and `doc/testing.md` for the detailed
 boundary and validation workflow.
 
 ## Running without installing
 
-The Bootstrap tool is distributed as a single Bash shell script with no
-external library dependencies.  While the source for the tool is spread across
-multiple files, the distributed tool is a single file.  Therefore,
+The Bootstrap tool is distributed as standalone Bash scripts with no external
+library dependencies at runtime. While the source for the tool is spread across
+multiple files, each release flavor is a single executable file. Therefore,
 "installation" in a traditional sense isn't a hard requirement.
 
 ### Running with Vet
