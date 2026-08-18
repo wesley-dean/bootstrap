@@ -47,13 +47,23 @@ jobs:
       - name: Install release dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y make bats shellcheck shfmt
+          sudo apt-get install -y make bats curl shellcheck shfmt
+
+      - name: Synchronize and verify build dependencies
+        run: |
+          make deps
+          make deps-check
 
       - name: Validate release inputs
         run: make check test
 
       - name: Build release artifact
         run: make checksums VERSION="${{ steps.calculate-version.outputs.version-string }}"
+
+      - name: Verify release artifact is independent of build dependencies
+        run: |
+          rm -rf vendor
+          dist/bootstrap.bash --help >/dev/null
 
       - name: Attest release artifacts
         uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # pin@v4.2.2

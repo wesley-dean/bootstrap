@@ -25,7 +25,8 @@ bootstrap surface.
 The ADR collection is the canonical source of architectural intent.
 
 Before making significant changes, review the relevant ADRs.
-Documentation work shall follow ADR-045.
+Documentation work shall follow ADR-045. Build/development dependency work
+shall preserve the boundaries established by ADR-051.
 
 ## Clarify Before Acting
 
@@ -63,8 +64,12 @@ A useful guiding principle is:
 -   Preserve stable public interfaces.
 -   Prefer explicit, deterministic, inspectable behavior.
 -   Keep the core engine intentionally small.
+-   Keep build/development dependency tooling outside the released runtime
+    artifact.
 
 ## Technology Stack
+
+Runtime and project implementation:
 
 -   Bash 5+
 -   apt-get
@@ -72,6 +77,39 @@ A useful guiding principle is:
 -   dpkg
 -   vet
 -   Plain-text manifests
+
+Development/build orchestration also uses Make and the pinned released
+`bashdeps.bash` bootstrap described by ADR-051.
+
+## Build and Dependency Boundaries
+
+The Makefile directly bootstraps only the pinned `vendor/bashdeps.bash`
+artifact. It verifies that artifact against the SHA-256 digest committed in the
+Makefile before executing it.
+
+Ordinary externally acquired build/development artifacts are declared in
+`dependencies.txt` and synchronized by bashdeps under ADR-051. Do not add new
+one-off download rules to Make for dependencies that fit the released bashdeps
+contract.
+
+Preserve these target semantics:
+
+-   `make deps` may use the network and converges dependency state.
+-   `make deps-check` verifies existing dependency state without network access
+    or repair.
+-   `make build` does not bootstrap, synchronize, or verify external
+    dependencies.
+-   `make all` explicitly synchronizes dependencies before invoking `build`.
+-   `make docs` consumes already-prepared documentation dependency state and
+    does not acquire it implicitly.
+
+`vendor/` and `doc/reference/` are generated state and are excluded from source
+control. `dist/bootstrap.bash` must remain functional without bashdeps,
+`dependencies.txt`, or the vendor tree.
+
+Treat `dependencies.txt` as data. Do not source or evaluate it as shell code.
+The committed digest, rather than a filename or URL label, is authoritative for
+approved dependency bytes.
 
 ## Coding Guidelines
 
@@ -133,6 +171,11 @@ When introducing new functionality:
 -   expand coverage for new public behavior;
 -   update examples or documentation when behavior changes.
 
+Build/dependency changes should also exercise the applicable ADR-051 boundaries:
+clean build behavior, explicit dependency synchronization, offline verification,
+tamper detection, convergence, and runtime independence from generated vendor
+state.
+
 A change is normally incomplete if the implementation changes but the
 corresponding tests do not.
 
@@ -149,6 +192,8 @@ When practical:
 
 -   review the resulting diff;
 -   run formatting, linting, and tests;
+-   run `make deps` and `make deps-check` when dependency state is relevant;
+-   verify generated consumer artifacts remain functional without `vendor/`;
 -   verify documentation-only requests changed only documentation.
 
 ## Common Failure Modes
@@ -159,7 +204,9 @@ Avoid:
 -   replacing implementation with stubs;
 -   silently expanding scope;
 -   inventing design rationale;
--   changing public behavior unintentionally.
+-   changing public behavior unintentionally;
+-   reintroducing direct Makefile acquisition for manifest-managed dependencies;
+-   making `build`, `deps-check`, or `docs` silently repair dependency state.
 
 ## Final Principle
 

@@ -73,7 +73,7 @@ Topics include:
 
 These ADRs describe how the project should evolve over time.
 
--   ADR-031 through ADR-050
+-   ADR-031 through ADR-051
 
 Topics include:
 
@@ -85,7 +85,8 @@ Topics include:
 -   documentation;
 -   trusted computing base;
 -   contributor philosophy;
--   bounded package installation and visible progress.
+-   bounded package installation and visible progress;
+-   build/development dependency acquisition and verification.
 
 ## Architectural Themes
 

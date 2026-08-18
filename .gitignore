@@ -300,3 +300,7 @@ $RECYCLE.BIN/
 
 dist/
 test-results/
+
+# Project-generated documentation artifacts
+/doc/reference/
+/vendor/

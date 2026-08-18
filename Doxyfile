@@ -1,8 +1,8 @@
 # Doxyfile
 #
 # Doxygen configuration for generating browsable reference documentation for
-# the Bootstrap shell source. The Makefile docs target downloads the Bash
-# preprocessor filter before invoking this file.
+# the Bootstrap shell source. The Makefile docs target consumes the
+# manifest-managed Bash preprocessor filter prepared by make deps.
 
 PROJECT_NAME           = "Bootstrap"
 PROJECT_BRIEF          = "Bash-based bootstrap engine reference documentation"
@@ -13,7 +13,7 @@ CREATE_SUBDIRS         = NO
 GENERATE_HTML          = YES
 HTML_OUTPUT            = .
 GENERATE_LATEX         = NO
-GENERATE_MAN           = NO
+GENERATE_MAN            = NO
 GENERATE_RTF           = NO
 GENERATE_XML           = NO
 

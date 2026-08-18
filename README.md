@@ -5,6 +5,7 @@
 [![Scorecard supply-chain security](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/scorecard.yml)
 [![Tests](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/test.yml)
 [![End-to-end tests](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/e2e.yml)
+[![Documentation](https://github.com/wesley-dean/bootstrap/actions/workflows/static.yml/badge.svg)](https://github.com/wesley-dean/bootstrap/actions/workflows/static.yml)
 
 Bootstrap is a declarative package bootstrapper for reproducible system
 provisioning.
@@ -198,6 +199,47 @@ To select the package-manager backend explicitly:
 ./bootstrap.bash --package-manager apk packages.manifest
 ./bootstrap.bash --package-manager dnf packages.manifest
 ```
+
+## Development dependency management
+
+Bootstrap uses a pinned released `bashdeps.bash` artifact to manage ordinary
+external build/development files declared in `dependencies.txt`.
+
+The Makefile directly bootstraps only `vendor/bashdeps.bash`. It verifies the
+pinned release bytes against the SHA-256 digest committed in the Makefile before
+execution. The current manifest-managed dependency is the Bash Doxygen filter
+used to generate reference documentation.
+
+Synchronize dependency state explicitly with:
+
+```bash
+make deps
+```
+
+Verify already-present dependency state without network access or repair with:
+
+```bash
+make deps-check
+```
+
+Build the standalone consumer artifact without acquiring or verifying external
+dependencies with:
+
+```bash
+make build
+```
+
+For a fresh-checkout convenience path that synchronizes dependencies and then
+builds, use:
+
+```bash
+make all
+```
+
+`vendor/` is generated state and is not committed. The released
+`dist/bootstrap.bash` artifact does not require bashdeps, `dependencies.txt`, or
+the vendor tree at runtime. See ADR-051 and `doc/testing.md` for the detailed
+boundary and validation workflow.
 
 ## Running without installing
 

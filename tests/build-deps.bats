@@ -1,0 +1,288 @@
+#!/usr/bin/env bats
+
+load 'helpers'
+
+setup() {
+    REPO_ROOT="${BATS_TEST_DIRNAME}/.."
+    TEST_TMPDIR="$(bootstrap_test_tmpdir)"
+}
+
+sha256_of() {
+    local path=$1
+
+    if command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$path" | awk '{print $1}'
+    else
+        shasum -a 256 "$path" | awk '{print $1}'
+    fi
+}
+
+prepare_make_fixture() {
+    local fixture_root=$1
+
+    mkdir -p "$fixture_root"
+    cp "${REPO_ROOT}/Makefile" "${fixture_root}/Makefile"
+}
+
+write_logging_bashdeps() {
+    local path=$1
+
+    cat >"$path" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" >>"${BASHDEPS_TEST_LOG:?}"
+EOF
+    chmod 0755 "$path"
+}
+
+write_failing_curl() {
+    local path=$1
+
+    cat >"$path" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+: >"${BASHDEPS_CURL_SENTINEL:?}"
+exit 97
+EOF
+    chmod 0755 "$path"
+}
+
+write_fixture_curl() {
+    local path=$1
+
+    cat >"$path" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+output=''
+while (($#)); do
+    case $1 in
+        -o | --output)
+            output=$2
+            shift 2
+            ;;
+        *)
+            shift
+            ;;
+    esac
+done
+
+[[ -n $output ]]
+: >"${BASHDEPS_CURL_SENTINEL:?}"
+cp "${BASHDEPS_TEST_DOWNLOAD:?}" "$output"
+EOF
+    chmod 0755 "$path"
+}
+
+@test "build succeeds without acquiring dependency state" {
+    local dist_dir vendor_dir fake_bin curl_sentinel
+
+    dist_dir="${TEST_TMPDIR}/dist"
+    vendor_dir="${TEST_TMPDIR}/vendor"
+    fake_bin="${TEST_TMPDIR}/bin"
+    curl_sentinel="${TEST_TMPDIR}/curl-called"
+    mkdir -p "$fake_bin"
+    write_failing_curl "${fake_bin}/curl"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$REPO_ROOT" build \
+        DIST_DIR="$dist_dir" \
+        VENDOR_DIR="$vendor_dir" \
+        VERSION=0.0.0-test \
+        BUILD_COMMIT=test \
+        BUILD_DATE=2026-08-18T00:00:00Z
+
+    [ "$status" -eq 0 ]
+    [ -x "${dist_dir}/bootstrap.bash" ]
+    [ ! -e "$vendor_dir" ]
+    [ ! -e "$curl_sentinel" ]
+
+    run "${dist_dir}/bootstrap.bash" --help
+    [ "$status" -eq 0 ]
+}
+
+@test "deps reuses a valid bootstrap without network access" {
+    local fixture_root fake_bin log_file curl_sentinel digest
+
+    fixture_root="${TEST_TMPDIR}/reuse-bootstrap"
+    fake_bin="${fixture_root}/bin"
+    log_file="${fixture_root}/bashdeps.log"
+    curl_sentinel="${fixture_root}/curl-called"
+    prepare_make_fixture "$fixture_root"
+    mkdir -p "${fixture_root}/vendor" "$fake_bin"
+    : >"${fixture_root}/dependencies.txt"
+    write_logging_bashdeps "${fixture_root}/vendor/bashdeps.bash"
+    write_failing_curl "${fake_bin}/curl"
+    digest="$(sha256_of "${fixture_root}/vendor/bashdeps.bash")"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_TEST_LOG="$log_file" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$fixture_root" deps \
+        BASHDEPS_SHA256="$digest" \
+        BASHDEPS_URL=https://example.test/bashdeps.bash
+
+    [ "$status" -eq 0 ]
+    [ ! -e "$curl_sentinel" ]
+    [ "$(cat "$log_file")" = "sync dependencies.txt" ]
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_TEST_LOG="$log_file" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$fixture_root" deps-check \
+        BASHDEPS_SHA256="$digest"
+
+    [ "$status" -eq 0 ]
+    [ ! -e "$curl_sentinel" ]
+    [ "$(tail -n 1 "$log_file")" = "verify dependencies.txt" ]
+}
+
+@test "failed bootstrap verification does not publish candidate bytes" {
+    local fixture_root fake_bin stale_copy candidate expected digest curl_sentinel
+
+    fixture_root="${TEST_TMPDIR}/failed-bootstrap"
+    fake_bin="${fixture_root}/bin"
+    stale_copy="${fixture_root}/stale-copy"
+    candidate="${fixture_root}/candidate"
+    expected="${fixture_root}/expected"
+    curl_sentinel="${fixture_root}/curl-called"
+    prepare_make_fixture "$fixture_root"
+    mkdir -p "${fixture_root}/vendor" "$fake_bin"
+    : >"${fixture_root}/dependencies.txt"
+    printf '%s\n' 'previous usable bytes' >"${fixture_root}/vendor/bashdeps.bash"
+    cp "${fixture_root}/vendor/bashdeps.bash" "$stale_copy"
+    printf '%s\n' 'downloaded wrong bytes' >"$candidate"
+    printf '%s\n' 'reviewed expected bytes' >"$expected"
+    digest="$(sha256_of "$expected")"
+    write_fixture_curl "${fake_bin}/curl"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        BASHDEPS_TEST_DOWNLOAD="$candidate" \
+        make -C "$fixture_root" deps \
+        BASHDEPS_SHA256="$digest" \
+        BASHDEPS_URL=https://example.test/bashdeps.bash
+
+    [ "$status" -ne 0 ]
+    [ -e "$curl_sentinel" ]
+    cmp "$stale_copy" "${fixture_root}/vendor/bashdeps.bash"
+    [ ! -e "${fixture_root}/vendor/bashdeps.bash.tmp" ]
+}
+
+@test "deps-check rejects an invalid bootstrap without network repair" {
+    local fixture_root fake_bin expected digest curl_sentinel
+
+    fixture_root="${TEST_TMPDIR}/offline-check"
+    fake_bin="${fixture_root}/bin"
+    expected="${fixture_root}/expected"
+    curl_sentinel="${fixture_root}/curl-called"
+    prepare_make_fixture "$fixture_root"
+    mkdir -p "${fixture_root}/vendor" "$fake_bin"
+    : >"${fixture_root}/dependencies.txt"
+    printf '%s\n' 'tampered bootstrap bytes' >"${fixture_root}/vendor/bashdeps.bash"
+    chmod 0755 "${fixture_root}/vendor/bashdeps.bash"
+    printf '%s\n' 'expected bootstrap bytes' >"$expected"
+    digest="$(sha256_of "$expected")"
+    write_failing_curl "${fake_bin}/curl"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$fixture_root" deps-check \
+        BASHDEPS_SHA256="$digest"
+
+    [ "$status" -ne 0 ]
+    [ ! -e "$curl_sentinel" ]
+    grep -Fq 'bashdeps.bash' <<<"$output"
+}
+
+@test "docs requires prepared dependency state without acquiring it" {
+    local filter_path fake_bin curl_sentinel reference_dir
+
+    filter_path="${TEST_TMPDIR}/vendor/doxygen-bash.awk"
+    fake_bin="${TEST_TMPDIR}/bin"
+    curl_sentinel="${TEST_TMPDIR}/curl-called"
+    reference_dir="${TEST_TMPDIR}/reference"
+    mkdir -p "$fake_bin"
+    write_failing_curl "${fake_bin}/curl"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$REPO_ROOT" docs \
+        DOXYGEN_BASH_FILTER="$filter_path" \
+        REFERENCE_DOC_DIR="$reference_dir"
+
+    [ "$status" -ne 0 ]
+    [ ! -e "$curl_sentinel" ]
+    [[ "$output" == *'run make deps or make all'* ]]
+}
+
+@test "all synchronizes dependencies before building" {
+    local fixture_root log_file digest
+
+    fixture_root="${TEST_TMPDIR}/all-ordering"
+    log_file="${fixture_root}/bashdeps.log"
+    prepare_make_fixture "$fixture_root"
+    mkdir -p "${fixture_root}/vendor"
+    : >"${fixture_root}/dependencies.txt"
+
+    cat >"${fixture_root}/vendor/bashdeps.bash" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+printf '%s\n' "$*" >>"${BASHDEPS_TEST_LOG:?}"
+if [[ ${1:-} == sync ]]; then
+    cat >vendor/generated.bash <<'SOURCE'
+bootstrap_fixture_from_deps() {
+    :
+}
+SOURCE
+fi
+EOF
+    chmod 0755 "${fixture_root}/vendor/bashdeps.bash"
+    digest="$(sha256_of "${fixture_root}/vendor/bashdeps.bash")"
+
+    run env \
+        BASHDEPS_TEST_LOG="$log_file" \
+        make -C "$fixture_root" all \
+        BASHDEPS_SHA256="$digest" \
+        SOURCE_FILES=vendor/generated.bash \
+        VERSION=0.0.0-test \
+        BUILD_COMMIT=test \
+        BUILD_DATE=2026-08-18T00:00:00Z
+
+    [ "$status" -eq 0 ]
+    [ "$(head -n 1 "$log_file")" = "sync dependencies.txt" ]
+    [ -x "${fixture_root}/dist/bootstrap.bash" ]
+    grep -Fq 'bootstrap_fixture_from_deps' "${fixture_root}/dist/bootstrap.bash"
+}
+
+@test "distclean removes generated dependency and documentation state" {
+    local fixture_root
+
+    fixture_root="${TEST_TMPDIR}/distclean"
+    prepare_make_fixture "$fixture_root"
+    mkdir -p \
+        "${fixture_root}/dist" \
+        "${fixture_root}/vendor" \
+        "${fixture_root}/doc/reference" \
+        "${fixture_root}/test-results"
+    : >"${fixture_root}/vendor/example"
+    : >"${fixture_root}/doc/reference/example"
+
+    run make -C "$fixture_root" distclean
+
+    [ "$status" -eq 0 ]
+    [ ! -e "${fixture_root}/dist" ]
+    [ ! -e "${fixture_root}/vendor" ]
+    [ ! -e "${fixture_root}/doc/reference" ]
+    [ ! -e "${fixture_root}/test-results" ]
+}
