@@ -156,10 +156,16 @@ verify-bashdeps:
 		exit 1; \
 	}
 	@if command -v sha256sum >/dev/null 2>&1; then \
-		printf '%s  %s\n' "$(BASHDEPS_SHA256)" "$(BASHDEPS)" | sha256sum -c - >/dev/null; \
+		if ! printf '%s  %s\n' "$(BASHDEPS_SHA256)" "$(BASHDEPS)" | sha256sum -c - >/dev/null 2>&1; then \
+			printf '%s\n' 'bashdeps.bash does not match the committed SHA-256 digest; run make deps' >&2; \
+			exit 1; \
+		fi; \
 	elif command -v shasum >/dev/null 2>&1; then \
 		actual="$$(shasum -a 256 "$(BASHDEPS)" | awk '{print $$1}')"; \
-		[[ "$$actual" == "$(BASHDEPS_SHA256)" ]]; \
+		if [[ "$$actual" != "$(BASHDEPS_SHA256)" ]]; then \
+			printf '%s\n' 'bashdeps.bash does not match the committed SHA-256 digest; run make deps' >&2; \
+			exit 1; \
+		fi; \
 	else \
 		printf '%s\n' 'No SHA-256 verification command is available for bashdeps.bash' >&2; \
 		exit 1; \
