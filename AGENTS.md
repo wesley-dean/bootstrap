@@ -26,7 +26,8 @@ The ADR collection is the canonical source of architectural intent.
 
 Before making significant changes, review the relevant ADRs.
 Documentation work shall follow ADR-045. Build/development dependency work
-shall preserve the boundaries established by ADR-051.
+shall preserve the boundaries established by ADR-051. Generated artifact flavor,
+minification, checksum, and release work shall preserve ADR-052.
 
 ## Clarify Before Acting
 
@@ -64,8 +65,8 @@ A useful guiding principle is:
 -   Preserve stable public interfaces.
 -   Prefer explicit, deterministic, inspectable behavior.
 -   Keep the core engine intentionally small.
--   Keep build/development dependency tooling outside the released runtime
-    artifact.
+-   Keep build/development dependency tooling outside released runtime
+    artifacts.
 
 ## Technology Stack
 
@@ -79,7 +80,9 @@ Runtime and project implementation:
 -   Plain-text manifests
 
 Development/build orchestration also uses Make and the pinned released
-`bashdeps.bash` bootstrap described by ADR-051.
+`bashdeps.bash` bootstrap described by ADR-051. Bash-Minifier is a
+manifest-managed build dependency used only to derive the minified release flavor
+under ADR-052.
 
 ## Build and Dependency Boundaries
 
@@ -90,7 +93,8 @@ Makefile before executing it.
 Ordinary externally acquired build/development artifacts are declared in
 `dependencies.txt` and synchronized by bashdeps under ADR-051. Do not add new
 one-off download rules to Make for dependencies that fit the released bashdeps
-contract.
+contract. Current manifest-managed artifacts include the Bash Doxygen filter and
+the commit-pinned Bash-Minifier input at `vendor/bash-minifier.bash`.
 
 Preserve these target semantics:
 
@@ -98,14 +102,33 @@ Preserve these target semantics:
 -   `make deps-check` verifies existing dependency state without network access
     or repair.
 -   `make build` does not bootstrap, synchronize, or verify external
-    dependencies.
+    dependencies, but it requires already-prepared Bash-Minifier state.
+-   A fresh checkout uses `make all` or `make deps` followed by `make build`.
 -   `make all` explicitly synchronizes dependencies before invoking `build`.
 -   `make docs` consumes already-prepared documentation dependency state and
     does not acquire it implicitly.
 
+`make build` produces six distribution files:
+
+```text
+dist/bootstrap.dev.bash
+dist/bootstrap.bash
+dist/bootstrap.min.bash
+dist/bootstrap.dev.bash.256
+dist/bootstrap.bash.256
+dist/bootstrap.min.bash.256
+```
+
+The development artifact retains assembled source comments. The ordinary
+`bootstrap.bash` artifact removes full-line comments while preserving the
+shebang. The minified artifact is derived from that stripped artifact using the
+prepared Bash-Minifier dependency. All three executable artifacts represent the
+same runtime program and shall remain executable.
+
 `vendor/` and `doc/reference/` are generated state and are excluded from source
-control. `dist/bootstrap.bash` must remain functional without bashdeps,
-`dependencies.txt`, or the vendor tree.
+control. All three `dist/bootstrap*.bash` consumer artifacts must remain
+functional without bashdeps, Bash-Minifier, `dependencies.txt`, or the vendor
+tree after construction.
 
 Treat `dependencies.txt` as data. Do not source or evaluate it as shell code.
 The committed digest, rather than a filename or URL label, is authoritative for
@@ -172,9 +195,16 @@ When introducing new functionality:
 -   update examples or documentation when behavior changes.
 
 Build/dependency changes should also exercise the applicable ADR-051 boundaries:
-clean build behavior, explicit dependency synchronization, offline verification,
-tamper detection, convergence, and runtime independence from generated vendor
-state.
+network-free build behavior, explicit dependency synchronization, offline
+verification, tamper detection, convergence, and runtime independence from
+generated vendor state.
+
+Artifact-generation changes shall apply the observable behavior suite to all
+three executable flavors under ADR-052. Tests should avoid assuming that release
+metadata or executable statements occupy the same physical lines in the minified
+artifact. Build-specific tests should verify all six expected files, executable
+permissions, checksum validity, transformation lineage, and runtime independence
+from `vendor/`.
 
 A change is normally incomplete if the implementation changes but the
 corresponding tests do not.
@@ -193,7 +223,8 @@ When practical:
 -   review the resulting diff;
 -   run formatting, linting, and tests;
 -   run `make deps` and `make deps-check` when dependency state is relevant;
--   verify generated consumer artifacts remain functional without `vendor/`;
+-   verify all generated consumer artifacts remain functional without `vendor/`;
+-   verify every `.256` file matches its corresponding executable;
 -   verify documentation-only requests changed only documentation.
 
 ## Common Failure Modes
@@ -206,7 +237,10 @@ Avoid:
 -   inventing design rationale;
 -   changing public behavior unintentionally;
 -   reintroducing direct Makefile acquisition for manifest-managed dependencies;
--   making `build`, `deps-check`, or `docs` silently repair dependency state.
+-   making `build`, `deps-check`, or `docs` silently repair dependency state;
+-   minifying maintained source files individually rather than the complete
+    assembled stripped artifact;
+-   treating the minified artifact as exempt from the ordinary behavior suite.
 
 ## Final Principle
 
