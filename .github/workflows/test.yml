@@ -31,11 +31,12 @@ jobs:
       - name: Verify build does not acquire missing dependencies
         run: |
           test ! -e vendor
-          if make build >build.stdout 2>build.stderr; then
+          stderr="${RUNNER_TEMP}/bootstrap-build.stderr"
+          if make build >/dev/null 2>"${stderr}"; then
             printf '%s\n' 'make build unexpectedly succeeded without Bash-Minifier' >&2
             exit 1
           fi
-          grep -F 'Missing build dependency vendor/bash-minifier.bash' build.stderr
+          grep -F 'Missing build dependency vendor/bash-minifier.bash' "${stderr}"
           test ! -e vendor
 
       - name: Synchronize and verify project dependencies
