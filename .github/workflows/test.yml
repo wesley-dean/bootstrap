@@ -26,7 +26,7 @@ jobs:
       - name: Install test dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y make bats curl shellcheck shfmt
+          sudo apt-get install -y make bats curl doxygen shellcheck shfmt
 
       - name: Verify build does not acquire dependencies
         run: |
@@ -55,6 +55,13 @@ jobs:
           fi
           make deps
           make deps-check
+
+      - name: Generate documentation from prepared dependencies
+        run: |
+          make docs
+          make deps-check
+          test -f doc/reference/index.html
+          test -z "$(git status --short)"
 
       - name: Verify consumer artifact is independent of vendor state
         run: |
