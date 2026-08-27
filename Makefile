@@ -15,7 +15,8 @@ DIST_DEV_SCRIPT := $(DIST_DIR)/bootstrap.dev.bash
 DIST_SCRIPT := $(DIST_DIR)/bootstrap.bash
 DIST_MIN_SCRIPT := $(DIST_DIR)/bootstrap.min.bash
 DIST_SCRIPTS := $(DIST_DEV_SCRIPT) $(DIST_SCRIPT) $(DIST_MIN_SCRIPT)
-DIST_CHECKSUMS := $(addsuffix .256,$(DIST_SCRIPTS))
+DIST_CHECKSUMS := $(addsuffix .sha256,$(DIST_SCRIPTS))
+LEGACY_CHECKSUMS := $(addsuffix .256,$(DIST_SCRIPTS))
 SOURCE_FILES := lib/build-metadata.bash lib/runtime/exit-codes.bash lib/runtime/context.bash lib/runtime/config.bash lib/runtime/privilege.bash lib/runtime/logging.bash lib/runtime/recovery.bash lib/runtime/diagnostics.bash lib/backend/diagnostics.bash lib/manifest/parser.bash lib/planner/action-record.bash lib/planner/planner.bash lib/resolver/resolved-action.bash lib/backend/apt.bash lib/backend/apk.bash lib/backend/dnf.bash lib/backend/backend.bash lib/resolver/resolver.bash lib/executor/execution-result.bash lib/executor/apt.bash lib/executor/apk.bash lib/executor/dnf.bash lib/executor/executor.bash src/bootstrap.bash
 TESTS_DIR := tests/
 TEST_SCRIPTS := ${TESTS_DIR}/*.bats
@@ -58,6 +59,7 @@ all: deps
 # or verify dependencies and therefore remains network-free.
 #
 build: $(DIST_SCRIPTS) $(DIST_CHECKSUMS)
+	rm -f $(LEGACY_CHECKSUMS)
 
 ##
 # Assemble the fully commented development artifact from maintained source.
@@ -106,7 +108,7 @@ $(DIST_MIN_SCRIPT): $(DIST_SCRIPT)
 ##
 # Generate a SHA-256 checksum companion for one built executable artifact.
 #
-$(DIST_DIR)/%.bash.256: $(DIST_DIR)/%.bash
+$(DIST_DIR)/%.bash.sha256: $(DIST_DIR)/%.bash
 	@digest=''; \
 	if command -v sha256sum >/dev/null 2>&1; then \
 		digest="$$(sha256sum "$<" | awk '{print $$1}')"; \
