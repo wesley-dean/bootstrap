@@ -27,7 +27,8 @@ The ADR collection is the canonical source of architectural intent.
 Before making significant changes, review the relevant ADRs.
 Documentation work shall follow ADR-045. Build/development dependency work
 shall preserve the boundaries established by ADR-051. Generated artifact flavor,
-minification, checksum, and release work shall preserve ADR-052.
+minification, checksum, and release work shall preserve ADR-052 as refined by
+ADR-053 for checksum companion naming and historical-read compatibility.
 
 ## Clarify Before Acting
 
@@ -114,10 +115,16 @@ Preserve these target semantics:
 dist/bootstrap.dev.bash
 dist/bootstrap.bash
 dist/bootstrap.min.bash
-dist/bootstrap.dev.bash.256
-dist/bootstrap.bash.256
-dist/bootstrap.min.bash.256
+dist/bootstrap.dev.bash.sha256
+dist/bootstrap.bash.sha256
+dist/bootstrap.min.bash.sha256
 ```
+
+New builds and releases publish only `.sha256` checksum companions. Historical
+`.256` release assets remain valid for the releases that contain them. Consumers
+that retrieve checksum sidecars across release generations should prefer
+`.sha256` and use `.256` only when the preferred companion is confirmed absent;
+retrieval or verification failures are not fallback conditions.
 
 The development artifact retains assembled source comments. The ordinary
 `bootstrap.bash` artifact removes full-line comments while preserving the
@@ -132,7 +139,8 @@ tree after construction.
 
 Treat `dependencies.txt` as data. Do not source or evaluate it as shell code.
 The committed digest, rather than a filename or URL label, is authoritative for
-approved dependency bytes.
+approved dependency bytes. Published checksum sidecars do not replace committed
+dependency digests.
 
 ## Coding Guidelines
 
@@ -203,8 +211,8 @@ Artifact-generation changes shall apply the observable behavior suite to all
 three executable flavors under ADR-052. Tests should avoid assuming that release
 metadata or executable statements occupy the same physical lines in the minified
 artifact. Build-specific tests should verify all six expected files, executable
-permissions, checksum validity, transformation lineage, and runtime independence
-from `vendor/`.
+permissions, checksum validity, removal of stale `.256` companions,
+transformation lineage, and runtime independence from `vendor/`.
 
 A change is normally incomplete if the implementation changes but the
 corresponding tests do not.
@@ -224,7 +232,8 @@ When practical:
 -   run formatting, linting, and tests;
 -   run `make deps` and `make deps-check` when dependency state is relevant;
 -   verify all generated consumer artifacts remain functional without `vendor/`;
--   verify every `.256` file matches its corresponding executable;
+-   verify every `.sha256` file matches its corresponding executable;
+-   verify no stale `.256` companion remains after a successful build;
 -   verify documentation-only requests changed only documentation.
 
 ## Common Failure Modes
