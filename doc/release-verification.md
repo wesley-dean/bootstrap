@@ -29,15 +29,22 @@ bootstrap.min.bash
 `bootstrap.min.bash` is derived from the stripped artifact using the pinned
 Bash-Minifier build dependency.
 
-Each executable has a corresponding `.256` checksum file:
+Each executable in a current release has a corresponding `.sha256` checksum file:
 
 ```text
-bootstrap.dev.bash.256
-bootstrap.bash.256
-bootstrap.min.bash.256
+bootstrap.dev.bash.sha256
+bootstrap.bash.sha256
+bootstrap.min.bash.sha256
 ```
 
 All six files are included in release attestation scope.
+
+Historical releases that published `.256` checksum companions remain unchanged.
+When verifying one of those releases, use the checksum filename actually attached
+to that release. Consumers that automate verification across release generations
+should prefer `.sha256` and use `.256` only when the preferred companion is
+confirmed absent; transport, authorization, server, malformed-content, and
+checksum-verification failures remain failures rather than fallback conditions.
 
 ## Release build dependency preparation
 
@@ -60,16 +67,19 @@ flavors remain functional without bashdeps, Bash-Minifier, `dependencies.txt`, o
 the generated `vendor/` tree. The release workflow verifies that isolation before
 attestation and publication.
 
-See ADR-051 for the dependency trust and target boundaries and ADR-052 for the
-three-flavor release decision.
+Published release checksum companions do not replace the committed SHA-256
+digests that authorize build/development dependencies. See ADR-051 for the
+dependency trust and target boundaries, ADR-052 for the three-flavor release
+decision, and ADR-053 for checksum companion naming and historical-read
+compatibility.
 
 ## Verify a SHA-256 checksum
 
-Download the executable flavor you want and its matching `.256` file from the same
-GitHub release. For the ordinary artifact:
+Download the executable flavor you want and its matching `.sha256` file from the
+same current GitHub release. For the ordinary artifact:
 
 ```bash
-sha256sum -c bootstrap.bash.256
+sha256sum -c bootstrap.bash.sha256
 ```
 
 A successful result reports:
@@ -81,8 +91,8 @@ bootstrap.bash: OK
 The same pattern applies to the development and minified flavors:
 
 ```bash
-sha256sum -c bootstrap.dev.bash.256
-sha256sum -c bootstrap.min.bash.256
+sha256sum -c bootstrap.dev.bash.sha256
+sha256sum -c bootstrap.min.bash.sha256
 ```
 
 ## Verify the GitHub build provenance attestation
@@ -105,8 +115,8 @@ gh attestation verify bootstrap.min.bash \
   --repo wesley-dean/bootstrap
 ```
 
-The release workflow also attests each `.256` checksum file, which may be verified
-separately with the same `gh attestation verify` command.
+The release workflow also attests each `.sha256` checksum file, which may be
+verified separately with the same `gh attestation verify` command.
 
 Verification should fail closed. Do not execute an artifact when its checksum or
 attestation does not verify successfully.
