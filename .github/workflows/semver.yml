@@ -62,6 +62,14 @@ jobs:
           make clean
           make build VERSION="${{ steps.calculate-version.outputs.version-string }}"
 
+      - name: Verify release checksums
+        run: |
+          cd dist
+          sha256sum -c \
+            bootstrap.dev.bash.sha256 \
+            bootstrap.bash.sha256 \
+            bootstrap.min.bash.sha256
+
       - name: Verify release artifacts are independent of build dependencies
         run: |
           rm -rf vendor
@@ -76,9 +84,9 @@ jobs:
             dist/bootstrap.dev.bash
             dist/bootstrap.bash
             dist/bootstrap.min.bash
-            dist/bootstrap.dev.bash.256
-            dist/bootstrap.bash.256
-            dist/bootstrap.min.bash.256
+            dist/bootstrap.dev.bash.sha256
+            dist/bootstrap.bash.sha256
+            dist/bootstrap.min.bash.sha256
 
       - name: Create release
         id: create-release
@@ -94,6 +102,6 @@ jobs:
             dist/bootstrap.dev.bash
             dist/bootstrap.bash
             dist/bootstrap.min.bash
-            dist/bootstrap.dev.bash.256
-            dist/bootstrap.bash.256
-            dist/bootstrap.min.bash.256
+            dist/bootstrap.dev.bash.sha256
+            dist/bootstrap.bash.sha256
+            dist/bootstrap.min.bash.sha256
