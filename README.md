@@ -64,13 +64,19 @@ curl -fsSL \
 chmod +x bootstrap.bash
 ```
 
-Each executable also has a `.256` SHA-256 checksum companion in the release:
+Each executable also has a `.sha256` SHA-256 checksum companion in current
+releases:
 
 ```text
-bootstrap.dev.bash.256
-bootstrap.bash.256
-bootstrap.min.bash.256
+bootstrap.dev.bash.sha256
+bootstrap.bash.sha256
+bootstrap.min.bash.sha256
 ```
+
+Historical releases that contain `.256` checksum companions remain unchanged.
+When verifying an older release, use the checksum filename attached to that
+release. Consumers that automate across release generations should prefer
+`.sha256` and use `.256` only when the preferred companion is confirmed absent.
 
 ### Optional shell function
 
@@ -266,15 +272,15 @@ A successful build creates:
 dist/bootstrap.dev.bash
 dist/bootstrap.bash
 dist/bootstrap.min.bash
-dist/bootstrap.dev.bash.256
-dist/bootstrap.bash.256
-dist/bootstrap.min.bash.256
+dist/bootstrap.dev.bash.sha256
+dist/bootstrap.bash.sha256
+dist/bootstrap.min.bash.sha256
 ```
 
 `vendor/` is generated state and is not committed. None of the three released
 executables requires bashdeps, Bash-Minifier, `dependencies.txt`, or the vendor
-tree at runtime. See ADR-051, ADR-052, and `doc/testing.md` for the detailed
-boundary and validation workflow.
+tree at runtime. See ADR-051, ADR-052, ADR-053, and `doc/testing.md` for the
+detailed boundary and validation workflow.
 
 ## Running without installing
 

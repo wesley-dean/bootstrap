@@ -66,9 +66,9 @@ A successful build creates exactly these release files:
 dist/bootstrap.dev.bash
 dist/bootstrap.bash
 dist/bootstrap.min.bash
-dist/bootstrap.dev.bash.256
-dist/bootstrap.bash.256
-dist/bootstrap.min.bash.256
+dist/bootstrap.dev.bash.sha256
+dist/bootstrap.bash.sha256
+dist/bootstrap.min.bash.sha256
 ```
 
 The executable flavors have a deliberate lineage:
@@ -80,8 +80,13 @@ The executable flavors have a deliberate lineage:
 3. `bootstrap.min.bash` passes the complete stripped artifact through the pinned
    Bash-Minifier dependency.
 
-All three executable artifacts receive mode `0755`. Each `.256` file records the
-SHA-256 digest of the corresponding executable.
+All three executable artifacts receive mode `0755`. Each `.sha256` file records
+the SHA-256 digest of the corresponding executable.
+
+New builds publish only `.sha256` companions. A successful `make build` also
+removes stale `.256` companions for the three current executable filenames so a
+working tree that contains output from the previous naming convention cannot look
+like it has two current checksum contracts.
 
 `make build` deliberately does not bootstrap, synchronize, or verify external
 dependencies and therefore remains network-free. It now requires already-prepared
@@ -147,8 +152,8 @@ content.
 The behavior tests also include regression coverage for the Make/bashdeps
 boundary, including network-free build failure when Bash-Minifier is absent, safe
 bootstrap publication, offline verification, target ordering, all six expected
-build outputs, checksum validity, transformation lineage, executable permissions,
-and generated-state cleanup.
+build outputs, checksum validity, removal of stale `.256` companions,
+transformation lineage, executable permissions, and generated-state cleanup.
 
 ## Generate test reports
 
@@ -168,10 +173,11 @@ real committed manifest, verifies it offline, tampers with the managed
 Bash-Minifier bytes to prove `deps-check` detects byte drift, and then uses an
 explicit `make deps` to converge state again.
 
-CI verifies all six release files after a fresh `make all`, checks every `.256`
-file, confirms the development artifact retains the generated comment header,
-confirms the ordinary artifact does not, and confirms the minified artifact is
-not byte-identical to the stripped artifact.
+CI verifies all six release files after a fresh `make all`, checks every
+`.sha256` file, confirms no legacy `.256` companion remains, confirms the
+development artifact retains the generated comment header, confirms the ordinary
+artifact does not, and confirms the minified artifact is not byte-identical to
+the stripped artifact.
 
 ## Generate reference documentation
 
