@@ -137,8 +137,11 @@ EOF
     vendor_dir="${TEST_TMPDIR}/prepared-vendor"
     minifier="${vendor_dir}/bash-minifier.bash"
     input_capture="${TEST_TMPDIR}/minifier-input.bash"
-    mkdir -p "$vendor_dir"
+    mkdir -p "$vendor_dir" "$dist_dir"
     write_recording_minifier "$minifier"
+    : >"${dist_dir}/bootstrap.dev.bash.256"
+    : >"${dist_dir}/bootstrap.bash.256"
+    : >"${dist_dir}/bootstrap.min.bash.256"
 
     run env \
         BASH_MINIFIER_INPUT="$input_capture" \
@@ -156,8 +159,9 @@ EOF
         "${dist_dir}/bootstrap.bash" \
         "${dist_dir}/bootstrap.min.bash"; do
         [ -x "$artifact" ]
-        checksum="${artifact}.256"
+        checksum="${artifact}.sha256"
         [ -f "$checksum" ]
+        [ ! -e "${artifact}.256" ]
         verify_checksum "$checksum"
     done
 
@@ -344,7 +348,8 @@ EOF
         "${fixture_root}/dist/bootstrap.bash" \
         "${fixture_root}/dist/bootstrap.min.bash"; do
         [ -x "$artifact" ]
-        [ -f "${artifact}.256" ]
+        [ -f "${artifact}.sha256" ]
+        [ ! -e "${artifact}.256" ]
     done
     grep -Fq 'bootstrap_fixture_from_deps' "${fixture_root}/dist/bootstrap.bash"
 }
