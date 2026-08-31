@@ -8,9 +8,9 @@ Proposed
 
 ## Intent and Documentation Posture
 
-This ADR establishes a repository-level threat-modeling practice for Bootstrap.
-The project SHALL maintain a current threat model at `doc/threat_model.md` and
-SHALL use STRIDE as the primary structured method for enumerating threats.
+This ADR establishes a repository-level threat-modeling practice.  The project
+SHALL maintain a current threat model at `doc/threat_model.md` and SHALL use
+STRIDE as the primary structured method for enumerating threats.
 
 The threat model is intended to make security reasoning inspectable.  It should
 identify what the project protects, where trust changes, what can go wrong, what
@@ -23,39 +23,40 @@ the current security model and the threats relevant to it.  Tests and other
 validation provide evidence for specific controls.  `SECURITY.md` describes how
 security concerns should be reported.
 
-The structure defined here is intentionally portable.  Related tools and
-libraries may adopt the same structure in their own repositories while replacing
-Bootstrap-specific assets, actors, boundaries, assumptions, threats, and
-controls with those appropriate to each project.
+The policy and structure defined here are intentionally repository-neutral so the
+same ADR may be adopted by related tools and libraries without rewriting its
+substance.  The threat model produced under this policy remains project-specific:
+each repository must identify and analyze its own assets, actors, boundaries,
+assumptions, threats, controls, and residual risks.
 
 ## Context
 
-Bootstrap is a small Bash program with a comparatively large potential blast
-radius.  It consumes user-controlled configuration and package manifests,
-interacts with native package-management facilities, may cross from an ordinary
-user context into elevated privilege through `sudo` or `doas`, and ultimately
-causes system software to be installed.
+Small command-line tools and libraries can have security consequences that are
+disproportionate to their code size.  They may consume untrusted or partially
+trusted input, interact with the filesystem or external commands, process data
+from the environment, depend on third-party software, participate in build and
+release pipelines, or execute in contexts with authority that an attacker may try
+to influence.
 
-The repository already contains security-relevant architectural decisions and
-controls.  Examples include conservative failure behavior, parsing configuration
-and manifests as data rather than executable shell, preflighting complete input
-before mutation, separating planning from execution, delegating package trust to
-native package managers, minimizing the trusted computing base, pinning and
-verifying build dependencies, publishing checksum companions, and providing
-release provenance attestations.
+Repositories also commonly contain security-relevant decisions and controls that
+are documented where each decision is made.  Examples may include conservative
+failure behavior, treating configuration as data rather than executable code,
+validating input before acting on it, constraining external command execution,
+minimizing the trusted computing base, pinning and verifying dependencies,
+protecting build and release workflows, publishing checksums, or providing
+provenance attestations.
 
-Those properties are currently documented where each decision is made.  That is
-appropriate for architectural history, but it makes a different question harder
-to answer:
+Documenting those properties at their point of origin is appropriate for
+architectural history, but it makes a different question harder to answer:
 
 > Given the system as it exists now, what are its meaningful attack surfaces,
 > trust boundaries, threats, mitigations, assumptions, and residual risks?
 
 A security reviewer should not need to reconstruct the current threat model from
-source code, ADRs, tests, CI workflows, release documentation, and tribal
-knowledge.  Contributors should also have a durable place to determine whether a
-new feature introduces a new trust boundary, changes an existing one, or
-invalidates an earlier security assumption.
+source code, ADRs, tests, CI workflows, release documentation, and institutional
+memory.  Contributors should also have a durable place to determine whether a new
+feature introduces a new trust boundary, changes an existing one, or invalidates
+an earlier security assumption.
 
 Threat modeling is an analytical aid rather than a security guarantee.  A threat
 model can be incomplete, assumptions can become invalid, and new attacks can
@@ -79,8 +80,8 @@ scope and uncertainty explicitly and remain maintainable as the project evolves.
   build controls, release verification, or architectural constraints.
 - Keep threat modeling useful to humans and AI-assisted contributors without
   requiring proprietary tooling or opaque model formats.
-- Make the practice reusable across related repositories without forcing every
-  project to have the same assets, threats, or architecture.
+- Make the policy reusable across repositories without assuming that different
+  projects have the same assets, threats, or architecture.
 - Avoid process weight that would discourage the threat model from being kept
   current.
 
@@ -88,7 +89,7 @@ scope and uncertainty explicitly and remain maintainable as the project evolves.
 
 ### Maintain a canonical repository threat model
 
-Bootstrap SHALL maintain its current threat model in:
+The project SHALL maintain its current threat model in:
 
 ```text
 doc/threat_model.md
@@ -151,9 +152,9 @@ The document SHALL explain what is being modeled, what execution or deployment
 contexts are covered, and what is explicitly outside the model.
 
 Scope exclusions SHALL be stated narrowly enough that they do not silently remove
-important threats.  For example, an attacker who already has unrestricted root
-control of the host may reasonably be outside Bootstrap's model, while hostile
-manifest input supplied to an otherwise uncompromised invocation remains within
+important threats.  For example, an attacker who already has unrestricted control
+of the execution environment may reasonably be outside a project's model, while
+hostile input supplied to an otherwise uncompromised invocation may remain within
 scope.
 
 #### Security objectives
@@ -167,8 +168,8 @@ release integrity, provenance, and availability.
 
 The model SHALL identify assets whose compromise would matter.  Assets are not
 limited to stored secrets.  They may include host integrity, user files,
-credentials available to the process, configuration, package-manager authority,
-build inputs, release artifacts, source provenance, and service availability.
+credentials available to the process, configuration, execution authority, build
+inputs, release artifacts, source provenance, and service availability.
 
 #### Actors and external systems
 
@@ -176,8 +177,8 @@ The model SHALL identify relevant actors and external systems, including trusted
 partially trusted, and untrusted participants where those distinctions matter.
 
 Examples may include ordinary users, privileged users, contributors, CI systems,
-native package managers, package repositories, dependency publishers, malicious
-local users, and remote attackers.
+external commands or services, dependency publishers, package or artifact
+repositories, malicious local users, and remote attackers.
 
 #### Trust assumptions and trust boundaries
 
@@ -185,10 +186,10 @@ The model SHALL state important assumptions about components or authorities the
 project relies upon.  It SHALL identify locations where data, control, privilege,
 or responsibility crosses a meaningful trust boundary.
 
-Assumptions SHOULD be concrete and reviewable.  Statements such as "the
-operating-system kernel is trusted" or "native package-manager repository and
-package-authenticity policy is delegated to the configured package manager" are
-more useful than an undefined assumption that "the environment is secure."
+Assumptions SHOULD be concrete and reviewable.  Statements such as "the operating
+system kernel is trusted" or "artifact authenticity is delegated to the
+configured platform verification mechanism" are more useful than an undefined
+assumption that "the environment is secure."
 
 #### System and trust-boundary diagram
 
@@ -268,9 +269,9 @@ The default vocabulary SHOULD favor meaningful qualitative states such as:
 - not applicable.
 
 The project SHALL NOT imply that delegating a responsibility eliminates the
-underlying risk.  For example, Bootstrap may delegate package authenticity and
-repository trust enforcement to a native package manager while still documenting
-compromise of the configured package source as a residual ecosystem risk.
+underlying risk.  When a security property depends on an external platform,
+service, dependency, repository, or user-controlled configuration, that
+relationship SHOULD remain visible in the residual-risk analysis.
 
 Numeric risk scoring is not required.  A project MAY adopt a defined scoring
 method when a specific use case requires it, but arbitrary fine-grained scores
@@ -299,11 +300,11 @@ Threat entries SHALL distinguish controls that the project implements from
 controls or precautions expected of users and operators.
 
 This distinction is particularly important for open-source tooling.  A project
-may control how it validates input, invokes external commands, verifies build
-dependencies, constructs releases, or limits privilege.  It may not control the
-trustworthiness of repositories a user configures, permissions on files the user
-creates, the security of the host operating system, or whether the user verifies
-a downloaded artifact before execution.
+may control how it validates input, invokes external commands, verifies
+dependencies, constructs releases, or limits authority.  It may not control the
+security of the host environment, permissions on files the user creates, the
+trustworthiness of external systems selected by the user, or whether the user
+verifies a downloaded artifact before execution.
 
 When responsibility is shared, the threat model SHOULD state the boundary rather
 than assigning the entire threat to either party.
@@ -331,14 +332,14 @@ security model.  Review triggers include, but are not limited to:
 
 - adding a new source of input or configuration;
 - changing how input is parsed, interpreted, or executed;
-- adding or changing a privilege boundary;
+- adding or changing a privilege or authority boundary;
 - adding network access or changing an existing network trust relationship;
 - adding a runtime, build, development, or release dependency with meaningful
   security impact;
-- changing external command execution;
+- changing external command or process execution;
 - adding authentication, authorization, credential, secret, or sensitive-data
   handling;
-- changing filesystem write scope or persistent state;
+- changing filesystem read or write scope or persistent state;
 - changing build, release, checksum, signing, attestation, or provenance
   behavior;
 - adding a supported execution environment whose trust assumptions differ from
@@ -357,19 +358,18 @@ The threat model SHALL avoid claims of completeness, absolute security, or
 elimination of all risk.
 
 Controls SHALL be described according to what they actually establish.  For
-example, verifying that downloaded bytes match a published checksum establishes
+example, verifying that downloaded bytes match an expected checksum establishes
 byte identity with that checksum; it does not establish that the corresponding
 source or artifact is free from malicious behavior or defects.
 
-Security claims should remain consistent with ADR-000's requirements for
-capability scope and epistemic honesty.
+Security claims SHALL distinguish demonstrated properties from assumptions,
+expectations, and residual uncertainty.
 
-### Keep the convention portable across related repositories
+### Keep adoption project-specific while keeping the policy reusable
 
-The threat-model structure in this ADR is deliberately project-neutral except
-where Bootstrap-specific examples are necessary to explain the decision.
+This ADR defines a reusable threat-modeling policy, not a reusable threat model.
 
-Related repositories MAY adopt the same convention, including:
+Repositories adopting this ADR MAY use the same policy text, including:
 
 - `doc/threat_model.md` as the canonical location;
 - STRIDE classifications;
@@ -379,9 +379,9 @@ Related repositories MAY adopt the same convention, including:
 - Mermaid trust-boundary diagrams when useful; and
 - security-relevant review triggers.
 
-Each repository remains responsible for its own scope, assets, assumptions,
-threats, controls, and residual risks.  Copying Bootstrap's threat entries into a
-different tool without re-performing the analysis would defeat the purpose of the
+Each repository remains responsible for performing its own analysis.  Reusing a
+threat register, assumptions, or mitigations from another project without
+verifying that they describe the current system would defeat the purpose of the
 practice.
 
 ## Considered Alternatives
@@ -411,9 +411,9 @@ method while the model remains system-oriented.
 
 A strict one-category rule would simplify tables and reporting.
 
-Real attacks frequently cross category boundaries.  Release substitution, for
+Real attacks frequently cross category boundaries.  Artifact substitution, for
 example, may involve both spoofing and tampering, while command injection across
-a privilege boundary may involve tampering and elevation of privilege.  Multiple
+an authority boundary may involve tampering and elevation of privilege.  Multiple
 classifications are therefore allowed.
 
 ### Adopt a heavyweight formal threat-modeling methodology
@@ -422,19 +422,19 @@ The project could mandate a more elaborate framework with formal process stages,
 risk scoring, specialized tooling, or extensive generated artifacts.
 
 Such approaches can be valuable for larger systems or regulated environments,
-but the additional process weight would be disproportionate for small Bash tools
-and libraries and could make models less likely to remain current.  This ADR
-selects a lightweight practice that can be expanded when a project's risk or
-compliance context requires it.
+but the additional process weight would be disproportionate for small tools and
+libraries and could make models less likely to remain current.  This ADR selects
+a lightweight practice that can be expanded when a project's risk or compliance
+context requires it.
 
 ### Require a Mermaid diagram for every repository
 
 A mandatory diagram would make the document format more uniform.
 
-Some libraries have no useful runtime or privilege boundary to draw.  Requiring a
-diagram in those cases would reward ceremony rather than understanding.  Mermaid
-is preferred when visualization clarifies the model, and omission remains
-acceptable when it does not.
+Some libraries have no useful runtime, data-flow, or authority boundary to draw.
+Requiring a diagram in those cases would reward ceremony rather than
+understanding.  Mermaid is preferred when visualization clarifies the model, and
+omission remains acceptable when it does not.
 
 ### Put the threat model in `SECURITY.md`
 
@@ -466,11 +466,23 @@ reliably from source alone.  Tooling may provide evidence or suggestions, but th
 maintained Markdown document remains the reviewed source of truth for the threat
 model.
 
+### Maintain a project-family-specific policy ADR
+
+The policy could name a particular tool, library, repository family, architecture,
+or set of existing ADRs and require each adopting repository to edit those
+references.
+
+That would provide more local context in the first repository to adopt the
+practice, but it would create unnecessary divergence among projects that intend
+to use the same threat-modeling policy.  This ADR therefore keeps the policy
+repository-neutral and leaves project-specific reasoning to each repository's
+actual `doc/threat_model.md` and other local ADRs.
+
 ## Consequences
 
-Bootstrap gains a single current document that explains its security model across
-runtime, privilege, dependency, build, release, and user-responsibility
-boundaries.
+The project gains a single current document that explains its security model
+across the runtime, dependency, build, release, operational, and user-
+responsibility boundaries that apply to it.
 
 Security reviews become easier to repeat because threats receive stable IDs and
 because project controls, user controls, assumptions, and residual risks are
@@ -490,38 +502,27 @@ STRIDE provides structure without guaranteeing completeness.  Contributors still
 need adversarial reasoning, project knowledge, and review of supply-chain,
 operational, and abuse scenarios that do not emerge cleanly from the taxonomy.
 
-The practice is reusable across related repositories, but each repository must
-perform its own analysis.  Similar document structure should improve familiarity
-without creating a false assumption that different tools have identical threat
-models.
+The policy can be reused unchanged across repositories, while each resulting
+threat model remains specific to the system it describes.  Shared structure
+improves familiarity without creating a false assumption that different projects
+have identical security properties or threats.
 
 ## Open Questions and Follow-Ups
 
-- Draft Bootstrap's initial `doc/threat_model.md` using this ADR as the governing
-  structure.
-- Decide whether a reusable threat-model template should eventually be maintained
-  in a shared repository or copied deliberately into each project.
+- Draft the repository's initial `doc/threat_model.md` using this ADR as the
+  governing structure.
 - Evaluate whether contributor guidance or pull-request review checklists should
   explicitly call out the threat-model review triggers.
 - Evaluate whether lightweight CI checks should eventually verify only structural
   invariants, such as the presence of the threat-model file, without pretending
   that automation can validate the correctness or completeness of the analysis.
-- Apply the convention to related repositories through repository-local decisions
-  or equivalent adopted policy, preserving project-specific threat analysis in
-  each repository.
+- Revisit the policy if experience across multiple repositories identifies
+  requirements that are broadly applicable and missing from this ADR.
 
 ## Related Decisions
 
-- Related to: ADR-000 (capability scope and epistemic honesty)
-- Related to: ADR-007 (inspectable and reviewable execution)
-- Related to: ADR-013 (conservative failure and surprising system changes)
-- Related to: ADR-027 (trust through inspectability)
-- Related to: ADR-029 (reproducible and verifiable releases)
-- Related to: ADR-036 (explicit architectural decisions)
-- Related to: ADR-039 (observable-behavior testing)
-- Related to: ADR-041 (documentation as part of the product)
-- Related to: ADR-042 (minimize the trusted computing base)
-- Related to: ADR-046 (documentation-driven, test-second development)
-- Related to: ADR-051 (build dependency trust)
-- Related to: ADR-052 (release artifact construction and publication)
-- Related to: ADR-053 (checksum companion naming and historical compatibility)
+Repository-local ADRs concerning documentation, security, trust boundaries,
+dependencies, build and release integrity, privilege or authority, validation,
+and architectural review SHOULD reference this ADR when they materially affect
+the threat model.  This ADR intentionally does not name specific repository-local
+ADR numbers so that its policy text remains reusable without modification.
