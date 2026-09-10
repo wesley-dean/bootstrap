@@ -220,16 +220,18 @@ diagrams.  The threat model remains maintained Markdown outside the Doxygen inpu
 expansion introduced here.
 
 Adding the executable `adrctl` documentation dependency is a security-relevant
-review trigger under ADR-054.  The review performed for this decision concludes
-that the existing build-dependency attack surface, AS-011, and build-dependency
-substitution threat, TM-016, already cover the new dependency class.  No new
-runtime trust boundary or threat identifier is introduced.
+review trigger under ADR-054.  That review was performed as part of this decision.
+The existing threat model already defines the build-dependency publisher as the
+named current tools plus future external build/development dependencies, defines
+AS-011 over `bashdeps` and all dependencies declared in `dependencies.txt`, and
+defines TM-016 as build-dependency substitution in transit or cache.
 
-The threat model SHALL nevertheless be updated to identify `adrctl` in the
-concrete development-dependency inventory and to record the review date.  TM-016
-SHALL make clear that an executable development dependency may affect generated
-reference documentation as well as build outputs according to the target that
-consumes it.
+The reviewed `adrctl` dependency therefore falls within the existing actor,
+attack-surface, trust-assumption, and TM-016 boundaries.  It does not add runtime
+authority, a release-artifact input, a new network path, or a new dependency
+acquisition mechanism.  In keeping with ADR-054's direction to avoid synthetic
+threat-model churn when the security model is unchanged, this review does not
+require an edit to `doc/threat_model.md` or a new threat identifier.
 
 ### Do not generate an ADR relationship graph
 
