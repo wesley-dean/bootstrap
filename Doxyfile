@@ -1,8 +1,9 @@
 # Doxyfile
 #
 # Doxygen configuration for generating browsable reference documentation for
-# the Bootstrap shell source. The Makefile docs target consumes the
-# manifest-managed Bash preprocessor filter prepared by make deps.
+# the Bootstrap shell source and ADR corpus. The Makefile docs target consumes
+# the manifest-managed Bash preprocessor filter and generated ADR landing page
+# prepared from already-synchronized dependency state.
 
 PROJECT_NAME           = "Bootstrap"
 PROJECT_BRIEF          = "Bash-based bootstrap engine reference documentation"
@@ -18,24 +19,35 @@ GENERATE_RTF           = NO
 GENERATE_XML           = NO
 
 INPUT                  = src \
-                         lib
+                         lib \
+                         doc/adr
 RECURSIVE              = YES
 FILE_PATTERNS          = *.bash \
-                         *.sh
+                         *.sh \
+                         *.md
 
 EXCLUDE                = dist \
                          docs \
                          tests \
-                         vendor
+                         vendor \
+                         doc/reference \
+                         doc/adr/templates \
+                         doc/adr/preflight-checklist.md \
+                         doc/adr/README.intro.md \
+                         doc/adr/README.outro.md
 EXCLUDE_PATTERNS       = */dist/* \
                          */docs/* \
                          */tests/* \
-                         */vendor/*
+                         */vendor/* \
+                         */doc/reference/* \
+                         */doc/adr/templates/* \
+                         */README.intro.md \
+                         */README.outro.md
 
 EXTENSION_MAPPING      = bash=C \
                          sh=C
 FILTER_PATTERNS        = *.bash=vendor/doxygen-bash.awk \
-                         *.sh=awkvendor/doxygen-bash.awk
+                         *.sh=vendor/doxygen-bash.awk
 
 EXTRACT_ALL            = NO
 EXTRACT_PRIVATE        = NO
@@ -46,6 +58,7 @@ HIDE_UNDOC_CLASSES     = YES
 OPTIMIZE_OUTPUT_FOR_C  = YES
 MARKDOWN_SUPPORT       = YES
 AUTOLINK_SUPPORT       = YES
+USE_MDFILE_AS_MAINPAGE = doc/adr/README.md
 
 QUIET                  = YES
 WARNINGS               = YES

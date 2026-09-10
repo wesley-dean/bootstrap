@@ -1,4 +1,4 @@
-ADR-001: Use a Single Bash 5+ Script as the Bootstrap Entry Point
+# ADR-001: Use a Single Bash 5+ Script as the Bootstrap Entry Point
 
 Date: 2026-07-04
 

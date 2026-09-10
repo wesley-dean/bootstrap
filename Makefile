@@ -30,6 +30,11 @@ BASHDEPS_URL := https://github.com/wesley-dean/bashdeps/releases/download/v$(BAS
 BASHDEPS_SHA256 := bb6c807fa12c010950bda06172ac0611d278c57aca1f8352f41502d0d76b4e6c
 DOXYGEN_BASH_FILTER := $(VENDOR_DIR)/doxygen-bash.awk
 BASH_MINIFIER := $(VENDOR_DIR)/bash-minifier.bash
+ADRCTL := $(VENDOR_DIR)/adrctl.bash
+ADR_DIR := doc/adr
+ADR_INDEX_INTRO := $(ADR_DIR)/README.intro.md
+ADR_INDEX_OUTRO := $(ADR_DIR)/README.outro.md
+ADR_INDEX_FILE := $(ADR_DIR)/README.md
 REFERENCE_DOC_DIR := doc/reference
 
 E2E_TEST_DIR := ${TESTS_DIR}/e2e
@@ -40,7 +45,7 @@ VERSION ?= $(shell git describe --tags --always 2>/dev/null || printf '0.0.0-dev
 BUILD_COMMIT ?= $(shell git rev-parse --short=12 HEAD 2>/dev/null || printf 'unknown')
 BUILD_DATE ?= $(shell git show -s --format=%cI HEAD 2>/dev/null || printf 'unknown')
 
-.PHONY: all build check checksums clean deps deps-check distclean docs docs-clean FORCE format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat verify-bashdeps
+.PHONY: all adr-index build check checksums clean deps deps-check distclean docs docs-clean FORCE format test test-report test-e2e test-e2e-platform test-e2e-apt test-e2e-apk test-e2e-dnf test-e2e-ubuntu test-e2e-alpine test-e2e-redhat verify-bashdeps
 
 ##
 # Synchronize development dependencies, then build the consumer artifacts.
@@ -276,27 +281,61 @@ deps-check: verify-bashdeps $(DEPENDENCY_MANIFEST)
 	"$(BASHDEPS)" verify "$(DEPENDENCY_MANIFEST)"
 
 ##
-# Remove generated Doxygen reference documentation.
+# Generate the linked ADR landing page from maintained framing and ADR source.
 #
-# Reference output is generated locally or by CI and is intentionally excluded
-# from source control.
+# This target consumes prepared adrctl dependency state and remains offline and
+# non-repairing. The generated README is disposable Doxygen input.
+#
+adr-index:
+	@test -f "$(ADRCTL)" || { \
+		printf '%s\n' 'Missing documentation dependency vendor/adrctl.bash; run make deps or make all' >&2; \
+		exit 1; \
+	}
+	@test -f "$(ADR_INDEX_INTRO)" || { \
+		printf 'Missing ADR index introduction: %s\n' "$(ADR_INDEX_INTRO)" >&2; \
+		exit 1; \
+	}
+	@test -f "$(ADR_INDEX_OUTRO)" || { \
+		printf 'Missing ADR index conclusion: %s\n' "$(ADR_INDEX_OUTRO)" >&2; \
+		exit 1; \
+	}
+	@chmod 0755 "$(ADRCTL)"
+	@tmp="$(ADR_INDEX_FILE).tmp"; \
+	trap 'rm -f "$$tmp"' EXIT; \
+	bash "$(ADRCTL)" generate toc -i "$(ADR_INDEX_INTRO)" >"$$tmp"; \
+	printf '\n' >>"$$tmp"; \
+	cat "$(ADR_INDEX_OUTRO)" >>"$$tmp"; \
+	mv "$$tmp" "$(ADR_INDEX_FILE)"; \
+	trap - EXIT
+
+##
+# Remove generated Doxygen reference documentation and ADR landing-page input.
+#
+# Reference output and the assembled ADR README are generated locally or by CI
+# and are intentionally excluded from source control.
 #
 docs-clean:
 	rm -rf "$(REFERENCE_DOC_DIR)"
+	rm -f "$(ADR_INDEX_FILE)"
 
 ##
 # Generate browsable reference documentation with Doxygen.
 #
-# The Doxygen filter is manifest-managed dependency state. Documentation
-# generation consumes already-prepared bytes and deliberately does not invoke
-# dependency synchronization or network acquisition.
+# The Doxygen filter and adrctl are manifest-managed dependency state.
+# Documentation generation consumes already-prepared bytes and deliberately does
+# not invoke dependency synchronization or network acquisition.
 #
 docs:
 	@test -f "$(DOXYGEN_BASH_FILTER)" || { \
 		printf '%s\n' 'Missing documentation dependency vendor/doxygen-bash.awk; run make deps or make all' >&2; \
 		exit 1; \
 	}
+	@test -f "$(ADRCTL)" || { \
+		printf '%s\n' 'Missing documentation dependency vendor/adrctl.bash; run make deps or make all' >&2; \
+		exit 1; \
+	}
 	$(MAKE) --no-print-directory docs-clean
+	$(MAKE) --no-print-directory adr-index
 	chmod 0755 "$(DOXYGEN_BASH_FILTER)"
 	mkdir -p "$(REFERENCE_DOC_DIR)"
 	doxygen Doxyfile

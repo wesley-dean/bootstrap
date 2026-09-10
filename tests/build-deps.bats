@@ -279,10 +279,11 @@ EOF
     grep -Fq 'bashdeps.bash' <<<"$output"
 }
 
-@test "docs requires prepared dependency state without acquiring it" {
-    local filter_path fake_bin curl_sentinel reference_dir
+@test "docs requires prepared Doxygen dependency state without acquiring it" {
+    local filter_path adrctl_path fake_bin curl_sentinel reference_dir
 
     filter_path="${TEST_TMPDIR}/vendor/doxygen-bash.awk"
+    adrctl_path="${TEST_TMPDIR}/vendor/adrctl.bash"
     fake_bin="${TEST_TMPDIR}/bin"
     curl_sentinel="${TEST_TMPDIR}/curl-called"
     reference_dir="${TEST_TMPDIR}/reference"
@@ -294,10 +295,38 @@ EOF
         BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
         make -C "$REPO_ROOT" docs \
         DOXYGEN_BASH_FILTER="$filter_path" \
+        ADRCTL="$adrctl_path" \
         REFERENCE_DOC_DIR="$reference_dir"
 
     [ "$status" -ne 0 ]
     [ ! -e "$curl_sentinel" ]
+    [[ "$output" == *'vendor/doxygen-bash.awk'* ]]
+    [[ "$output" == *'run make deps or make all'* ]]
+}
+
+@test "docs requires prepared adrctl state without acquiring it" {
+    local filter_path adrctl_path fake_bin curl_sentinel reference_dir
+
+    filter_path="${TEST_TMPDIR}/vendor/doxygen-bash.awk"
+    adrctl_path="${TEST_TMPDIR}/vendor/adrctl.bash"
+    fake_bin="${TEST_TMPDIR}/bin"
+    curl_sentinel="${TEST_TMPDIR}/curl-called"
+    reference_dir="${TEST_TMPDIR}/reference"
+    mkdir -p "$(dirname "$filter_path")" "$fake_bin"
+    : >"$filter_path"
+    write_failing_curl "${fake_bin}/curl"
+
+    run env \
+        PATH="${fake_bin}:${PATH}" \
+        BASHDEPS_CURL_SENTINEL="$curl_sentinel" \
+        make -C "$REPO_ROOT" docs \
+        DOXYGEN_BASH_FILTER="$filter_path" \
+        ADRCTL="$adrctl_path" \
+        REFERENCE_DOC_DIR="$reference_dir"
+
+    [ "$status" -ne 0 ]
+    [ ! -e "$curl_sentinel" ]
+    [[ "$output" == *'vendor/adrctl.bash'* ]]
     [[ "$output" == *'run make deps or make all'* ]]
 }
 
@@ -362,9 +391,11 @@ EOF
     mkdir -p \
         "${fixture_root}/dist" \
         "${fixture_root}/vendor" \
+        "${fixture_root}/doc/adr" \
         "${fixture_root}/doc/reference" \
         "${fixture_root}/test-results"
     : >"${fixture_root}/vendor/example"
+    : >"${fixture_root}/doc/adr/README.md"
     : >"${fixture_root}/doc/reference/example"
 
     run make -C "$fixture_root" distclean
@@ -372,6 +403,7 @@ EOF
     [ "$status" -eq 0 ]
     [ ! -e "${fixture_root}/dist" ]
     [ ! -e "${fixture_root}/vendor" ]
+    [ ! -e "${fixture_root}/doc/adr/README.md" ]
     [ ! -e "${fixture_root}/doc/reference" ]
     [ ! -e "${fixture_root}/test-results" ]
 }
