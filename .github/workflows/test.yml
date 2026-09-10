@@ -85,7 +85,11 @@ jobs:
         run: |
           make docs
           make deps-check
+          test -f doc/adr/README.md
+          grep -F 'ADR-055' doc/adr/README.md
+          git check-ignore -q doc/adr/README.md
           test -f doc/reference/index.html
+          git check-ignore -q doc/reference/index.html
           test -z "$(git status --short)"
 
       - name: Run static checks
