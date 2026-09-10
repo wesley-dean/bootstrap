@@ -1,5 +1,3 @@
-# Architecture Decision Records (ADRs)
-
 This directory contains the Architecture Decision Records for the Bootstrap
 engine.
 
