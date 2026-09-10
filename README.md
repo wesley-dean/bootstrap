@@ -234,8 +234,9 @@ external build/development files declared in `dependencies.txt`.
 The Makefile directly bootstraps only `vendor/bashdeps.bash`. It verifies the
 pinned release bytes against the SHA-256 digest committed in the Makefile before
 execution. Current manifest-managed dependencies include the Bash Doxygen filter
-used for reference documentation and a commit-pinned copy of Bash-Minifier used
-to derive `bootstrap.min.bash`.
+used for reference documentation, the released `adrctl` artifact used to generate
+the ADR reference landing page, and a commit-pinned copy of Bash-Minifier used to
+derive `bootstrap.min.bash`.
 
 Synchronize dependency state explicitly with:
 
@@ -278,9 +279,9 @@ dist/bootstrap.min.bash.sha256
 ```
 
 `vendor/` is generated state and is not committed. None of the three released
-executables requires bashdeps, Bash-Minifier, `dependencies.txt`, or the vendor
-tree at runtime. See ADR-051, ADR-052, ADR-053, and `doc/testing.md` for the
-detailed boundary and validation workflow.
+executables requires bashdeps, Bash-Minifier, adrctl, `dependencies.txt`, or the
+vendor tree at runtime. See ADR-051, ADR-052, ADR-053, ADR-055, and
+`doc/testing.md` for the detailed boundary and validation workflow.
 
 ## Running without installing
 
@@ -369,7 +370,15 @@ in focused files:
   work.
 - [`CONTRIBUTING.md`](CONTRIBUTING.md) describes contribution expectations.
 - [`SECURITY.md`](SECURITY.md) explains how to report security concerns.
-- [`Reference Documentation`](https://wesley-dean.github.io/bootstrap/) development reference material
+- [`Reference Documentation`](https://wesley-dean.github.io/bootstrap/) publishes
+  generated source reference material with an ADR-oriented landing page assembled
+  from maintained framing and a current linked ADR index.
+
+The generated `doc/adr/README.md` landing page and `doc/reference/` HTML tree are
+disposable documentation output and are not committed.  After dependency state
+has been prepared with `make deps`, `make adr-index` regenerates only the landing
+page and `make docs` regenerates the complete reference site without acquiring or
+repairing dependencies.
 
 ## Project status
 
