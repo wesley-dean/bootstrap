@@ -15,6 +15,7 @@ builds, tests, and continuous integration behavior consistent.
   Format the source                          `make format`
   Run the test suite against all flavors     `make test`
   Generate CI-style test reports             `make test-report`
+  Generate the ADR reference landing page    `make adr-index`
   Generate reference documentation           `make docs`
   Run end-to-end tests                       `make test-e2e`
 
@@ -35,7 +36,9 @@ artifact, it runs bashdeps synchronization against the committed manifest.
 
 The manifest-managed dependencies include:
 
-- `vendor/doxygen-bash.awk`, used for reference documentation; and
+- `vendor/doxygen-bash.awk`, used for reference documentation;
+- `vendor/adrctl.bash`, the pinned released adrctl artifact used to generate the
+  ADR reference landing page; and
 - `vendor/bash-minifier.bash`, the commit-pinned Bash-Minifier artifact used to
   derive the minified release flavor.
 
@@ -107,7 +110,7 @@ make build
 Make execution.
 
 After construction, none of the three executable release flavors depends on
-bashdeps, Bash-Minifier, `dependencies.txt`, or `vendor/` at runtime.
+bashdeps, Bash-Minifier, adrctl, `dependencies.txt`, or `vendor/` at runtime.
 
 ## Check the source
 
@@ -153,7 +156,8 @@ The behavior tests also include regression coverage for the Make/bashdeps
 boundary, including network-free build failure when Bash-Minifier is absent, safe
 bootstrap publication, offline verification, target ordering, all six expected
 build outputs, checksum validity, removal of stale `.256` companions,
-transformation lineage, executable permissions, and generated-state cleanup.
+transformation lineage, executable permissions, documentation failure without
+prepared Doxygen or adrctl state, and generated-state cleanup.
 
 ## Generate test reports
 
@@ -188,27 +192,48 @@ make deps
 make deps-check
 ```
 
-Then generate Doxygen reference documentation with:
+Generate only the linked ADR landing page with:
+
+``` bash
+make adr-index
+```
+
+`make adr-index` consumes the prepared `vendor/adrctl.bash` dependency and
+atomically assembles `doc/adr/README.md` from maintained
+`doc/adr/README.intro.md`, the current linked ADR list, and maintained
+`doc/adr/README.outro.md`.  It does not acquire or repair dependencies.  The
+assembled README is ignored generated state and should not be edited or committed.
+
+Generate the complete Doxygen reference site with:
 
 ``` bash
 make docs
 ```
 
 `make docs` deliberately does not acquire missing dependencies. It consumes the
-prepared `vendor/doxygen-bash.awk` file, applies the executable mode required by
-Doxygen, and runs Doxygen using the repository `Doxyfile`. If the filter is
-missing, the target fails with guidance to prepare dependency state explicitly.
+prepared `vendor/doxygen-bash.awk` and `vendor/adrctl.bash` files, removes prior
+generated documentation state, regenerates the ADR landing page, applies the
+executable mode required by the Doxygen filter, and runs Doxygen using the
+repository `Doxyfile`. If either documentation dependency is missing, the target
+fails with guidance to prepare dependency state explicitly.
 
-Generated reference documentation is written under `doc/reference/`. Both
-`doc/reference/` and `vendor/` are generated build-time artifacts and are
-excluded from source control. Regenerate reference documentation rather than
+Doxygen uses the generated `doc/adr/README.md` as its main page and includes the
+ADR corpus along with maintained Bash source.  The broader `doc/` tree is not
+implicitly added to the Doxygen corpus; in particular, the separately maintained
+STRIDE threat model and its Mermaid diagrams remain outside this rendering path.
+Routine documentation generation does not produce an ADR relationship graph.
+
+Generated reference documentation is written under `doc/reference/`.
+`doc/adr/README.md`, `doc/reference/`, and `vendor/` are generated build-time
+artifacts and are excluded from source control. Regenerate them rather than
 editing generated files manually.
 
 The GitHub Pages workflow at `.github/workflows/static.yml` synchronizes and
-verifies dependencies from a clean checkout, generates the reference
-documentation, verifies dependency byte identity again, and publishes
-`doc/reference/` directly as the Pages artifact. Generated files do not need to
-be committed to the repository.
+verifies dependencies from a clean checkout, generates the ADR landing page and
+reference documentation, verifies dependency byte identity again, confirms both
+generated documentation surfaces are ignored, and publishes `doc/reference/`
+directly as the Pages artifact. Generated files do not need to be committed to
+the repository.
 
 ## Run containerized end-to-end tests
 
@@ -258,7 +283,10 @@ That release end-to-end workflow will also be a required check.
 `make clean` removes the complete generated `dist/` tree, including all executable
 flavors and checksum companions.
 
-`make distclean` additionally removes generated reference documentation, test
-results, and the entire generated `vendor/` dependency tree. A subsequent
-`make deps` or `make all` can reproduce dependency state from the committed
-bootstrap pin and `dependencies.txt`.
+`make docs-clean` removes both the generated `doc/adr/README.md` landing page and
+the generated `doc/reference/` tree.
+
+`make distclean` additionally removes generated documentation, test results, and
+the entire generated `vendor/` dependency tree. A subsequent `make deps` or
+`make all` can reproduce dependency state from the committed bootstrap pin and
+`dependencies.txt`.
