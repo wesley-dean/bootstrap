@@ -5,11 +5,20 @@ consequential engineering decisions recorded in `doc/adr/ADR*.md`.  It does not
 replace the ADR corpus.  When a summary is incomplete, ambiguous, or inconsistent
 with its source ADR, the source ADR is authoritative.
 
-Each entry below reports the status recorded by its source ADR.  A `Proposed`
-entry is summarized because it is part of the repository's decision history; its
-presence here does not promote it to `Accepted`.  Where a later ADR explicitly
-supersedes or refines part of an earlier decision, the summary notes that
-relationship.
+## Maintenance
+
+Every ADR in this repository uses `Accepted` as its status.  Merging a pull
+request that contains a new or materially changed ADR is generally understood to
+accept that ADR; supersession, replacement, deprecation, and similar relationships
+belong in the ADR narrative rather than in alternate status values.  Each ADR
+should have a generally three-to-five-sentence summary here with a direct
+reference to the governing ADR.  Adding or materially changing an ADR requires
+reviewing and updating that summary in the same pull request, including earlier
+summaries affected by a superseding or refining decision.
+
+Where a later ADR explicitly supersedes or refines part of an earlier decision,
+the summary notes that relationship so the effective decision can be discovered
+without rewriting the historical ADR.
 
 ## ADR-000: Capability Scope, Epistemic Honesty, and Separation of Concerns
 
@@ -25,7 +34,7 @@ Source: [ADR-000](adr/ADR-000-capability-scope-and-epistemic-honesty.md)
 
 ## ADR-001: Use a Single Bash 5+ Script as the Bootstrap Entry Point
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap proposes Bash 5+ as the universal first-run surface so a fresh system
 can begin becoming useful from one inspectable script with minimal prerequisites.
@@ -37,7 +46,7 @@ Source: [ADR-001](adr/ADR-001-bash-tooling.md)
 
 ## ADR-002: Describe Desired State Rather Than Installation Procedures
 
-**Status:** Proposed
+**Status:** Accepted
 
 Configuration should describe what a system should become rather than embed the
 commands used to construct it.  Procedural implementation belongs in the
@@ -48,7 +57,7 @@ Source: [ADR-002](adr/ADR-002-Describe-Desired-State-Rather-Than-Installation-Pr
 
 ## ADR-003: Treat Native Package Managers as the Source of Truth
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should interpret package intent while leaving dependency resolution,
 version semantics, repository trust, package authenticity, and installation
@@ -59,7 +68,7 @@ Source: [ADR-003](adr/ADR-003-Treat-Native-Package-Managers-as-the-Source-of-Tru
 
 ## ADR-004: Separate the Bootstrap Engine from User Intent
 
-**Status:** Proposed
+**Status:** Accepted
 
 Reusable Bootstrap behavior should remain separate from user- or
 organization-specific policy such as manifests, profiles, dotfiles, and host
@@ -70,7 +79,7 @@ Source: [ADR-004](adr/ADR-004-Separate-the-Bootstrap-Engine-from-User-Intent.md)
 
 ## ADR-005: Design the Bootstrap Experience Around Progressive Adoption
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should provide useful value at the smallest level of adoption and make
 later capabilities additive rather than mandatory prerequisites.  Users should
@@ -81,7 +90,7 @@ Source: [ADR-005](adr/ADR-005-Design-the-Bootstrap-Experience-Around-Progressive
 
 ## ADR-006: Preserve a Stable Bootstrap Interface While Allowing Internal Evolution
 
-**Status:** Proposed
+**Status:** Accepted
 
 The command-line interface, manifest semantics, and user workflow should remain
 small and stable while internal implementations may evolve.  Refactoring,
@@ -92,7 +101,7 @@ Source: [ADR-006](adr/ADR-006-Preserve-a-Stable-Bootstrap-Interface-While-Allowi
 
 ## ADR-007: Prefer Inspectable and Reviewable Bootstrap Execution
 
-**Status:** Proposed
+**Status:** Accepted
 
 The preferred execution path should let users inspect Bootstrap before it runs,
 with `vet` and manual download-and-review workflows favored over blind remote
@@ -103,7 +112,7 @@ Source: [ADR-007](adr/ADR-007-Prefer-Inspectable-and-Reviewable-Bootstrap-Execut
 
 ## ADR-008: Define a Human-Centered Package Manifest Format
 
-**Status:** Proposed
+**Status:** Accepted
 
 The package manifest should be plain UTF-8 text with one package requirement per
 logical line, comments and blank lines for readability, insignificant surrounding
@@ -114,7 +123,7 @@ Source: [ADR-008](adr/ADR-008-Define-a-Human-Centered-Package-Manifest-Format.md
 
 ## ADR-009: Distribute the Bootstrap Engine as a Single Executable Artifact
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap may be maintained as modular source, while users receive standalone
 executable Bash artifacts rather than the source tree.  The original decision
@@ -126,7 +135,7 @@ Source: [ADR-009](adr/ADR-009-Distribute-the-Bootstrap-Engine-as-a-Single-Execut
 
 ## ADR-010: Build the Distribution Artifact from Modular Source Files
 
-**Status:** Proposed
+**Status:** Accepted
 
 Maintained Bash source should be organized by responsibility and assembled by the
 build system into generated distribution output under `dist/`, which is not a
@@ -138,7 +147,7 @@ Source: [ADR-010](adr/ADR-010-Build-the-Distribution-Artifact-from-Modular-Sourc
 
 ## ADR-011: Publish Release Artifacts Through GitHub Releases
 
-**Status:** Proposed
+**Status:** Accepted
 
 GitHub Releases should be the canonical publication mechanism for generated
 Bootstrap artifacts built from tagged, validated source, while `dist/` remains
@@ -149,7 +158,7 @@ Source: [ADR-011](adr/ADR-011-Publish-Release-Artifacts-Through-GitHub-Releases.
 
 ## ADR-012: Use Make as the Local and CI Orchestration Interface
 
-**Status:** Proposed
+**Status:** Accepted
 
 Make should provide the canonical project interface for recurring development,
 validation, testing, build, and release-preparation operations.  CI workflows
@@ -160,7 +169,7 @@ Source: [ADR-012](adr/ADR-012-Use-Make-as-the-Local-and-CI-Orchestration-Interfa
 
 ## ADR-013: Fail Conservatively and Avoid Surprising System Changes
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should stop with useful diagnostics when user intent is malformed,
 ambiguous, or unsupported rather than guess.  Package removals must not occur
@@ -171,7 +180,7 @@ Source: [ADR-013](adr/ADR-013-Fail-Conservatively-and-Avoid-Surprising-System-Ch
 
 ## ADR-014: Separate Manifest Parsing from Package Installation
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should completely parse and validate manifests into an internal
 representation before package installation begins.  Installation consumes that
@@ -183,7 +192,7 @@ Source: [ADR-014](adr/ADR-014-Separate-Manifest-Parsing-from-Package-Installatio
 
 ## ADR-015: Perform a Planning Phase Before Making System Changes
 
-**Status:** Proposed
+**Status:** Accepted
 
 After parsing, Bootstrap should construct a complete execution plan describing the
 intended operation for each request before making system modifications.  Planning
@@ -194,7 +203,7 @@ Source: [ADR-015](adr/ADR-015-Perform-a-Planning-Phase-Before-Making-System-Chan
 
 ## ADR-016: Provide Dry-Run and Explain Modes for Planned Changes
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should provide non-mutating dry-run behavior that performs parsing,
 validation, package-manager queries, and planning without changing the system.
@@ -205,7 +214,7 @@ Source: [ADR-016](adr/ADR-016-Provide-Dry-Run-and-Explain-Modes-for-Planned-Chan
 
 ## ADR-017: Delegate Package Operations to Native Package Managers
 
-**Status:** Proposed
+**Status:** Accepted
 
 Package discovery, dependency resolution, version comparison, and installation
 should use native package-manager facilities instead of custom Bootstrap
@@ -217,7 +226,7 @@ Source: [ADR-017](adr/ADR-017-Delegate-Package-Operations-to-Native-Package-Mana
 
 ## ADR-018: Define a Stable Manifest Grammar
 
-**Status:** Proposed
+**Status:** Accepted
 
 The manifest language should remain intentionally minimal: blank lines, comments,
 one package requirement per logical line, and optional version constraints.
@@ -228,7 +237,7 @@ Source: [ADR-018](adr/ADR-018-Define-a-Stable-Manifest-Grammar.md)
 
 ## ADR-019: Define Stable Version Constraint Semantics
 
-**Status:** Proposed
+**Status:** Accepted
 
 The initial manifest grammar proposes package-only requirements plus `=`, `==`,
 `>`, and `>=` constraints, with `=` and `==` treated as equivalent exact-version
@@ -240,7 +249,7 @@ Source: [ADR-019](adr/ADR-019-Define-Stable-Version-Constraint-Semantics.md)
 
 ## ADR-020: Provide Human-Centered Diagnostics
 
-**Status:** Proposed
+**Status:** Accepted
 
 Diagnostics should be written for humans first and, where practical, explain what
 happened, where it happened, why Bootstrap stopped, and what the user can do next.
@@ -251,7 +260,7 @@ Source: [ADR-020](adr/ADR-020-Provide-Human-Centered-Diagnostics.md)
 
 ## ADR-021: Layer the Bootstrap Engine Around Well-Defined Responsibilities
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should be organized as a pipeline of configuration loading, manifest
 parsing, validation, planning, backend execution, and reporting/diagnostics.
@@ -262,7 +271,7 @@ Source: [ADR-021](adr/ADR-021-Layer-the-Bootstrap-Engine-Around-Well-Defined-Res
 
 ## ADR-022: Define a Stable Package Backend Interface
 
-**Status:** Proposed
+**Status:** Accepted
 
 Operating-system-specific package behavior should be isolated behind a small
 backend interface that exposes capabilities without leaking native command syntax
@@ -274,7 +283,7 @@ Source: [ADR-022](adr/ADR-022-Define-a-Stable-Package-Backend-Interface.md)
 
 ## ADR-023: Prefer Explicit Configuration Over Implicit Discovery
 
-**Status:** Proposed
+**Status:** Accepted
 
 Primary inputs should be supplied explicitly whenever practical, while any default
 locations must be few, deterministic, documented, and easy to explain.
@@ -285,7 +294,7 @@ Source: [ADR-023](adr/ADR-023-Prefer-Explicit-Configuration-Over-Implicit-Discov
 
 ## ADR-024: Provide a Stable and Explicit Command-Line Interface
 
-**Status:** Proposed
+**Status:** Accepted
 
 The CLI should be a stable public contract built around clear, orthogonal,
 deterministic options, with long options preferred for clarity and contradictory
@@ -296,7 +305,7 @@ Source: [ADR-024](adr/ADR-024-Provide-a-Stable-and-Explicit-Command-Line-Interfa
 
 ## ADR-025: Provide Human-Centered Logging with Progressive Levels of Detail
 
-**Status:** Proposed
+**Status:** Accepted
 
 Default logging should communicate meaningful execution phases, decisions,
 installation progress, and completion without exposing unnecessary implementation
@@ -307,7 +316,7 @@ Source: [ADR-025](adr/ADR-025-Provide-Human-Centered-Logging-with-Progressive-Le
 
 ## ADR-026: Define a Stable Exit Code Philosophy
 
-**Status:** Proposed
+**Status:** Accepted
 
 Exit statuses should form a stable public contract representing broad outcome
 categories rather than every internal failure condition.  Nonzero statuses should
@@ -318,7 +327,7 @@ Source: [ADR-026](adr/ADR-026-Define-a-Stable-Exit-Code-Philosophy.md)
 
 ## ADR-027: Establish Trust Through Inspectability
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should earn trust through transparent source, build, release, planning,
 logging, diagnostics, and documentation rather than require opaque trust in the
@@ -330,7 +339,7 @@ Source: [ADR-027](adr/ADR-027-Establish-Trust-Through-Inspectability.md)
 
 ## ADR-028: Favor the Principle of Least Surprise
 
-**Status:** Proposed
+**Status:** Accepted
 
 When several behaviors are reasonable, Bootstrap should favor the most explicit,
 deterministic, documented, and predictable one.  Hidden state, guesses, and silent
@@ -341,7 +350,7 @@ Source: [ADR-028](adr/ADR-028-Favor-the-Principle-of-Least-Surprise.md)
 
 ## ADR-029: Ensure Reproducible and Verifiable Releases
 
-**Status:** Proposed
+**Status:** Accepted
 
 Release artifacts should be generated from version-controlled source through a
 documented build process and tied to immutable source revisions.  Rebuilds should
@@ -352,7 +361,7 @@ Source: [ADR-029](adr/ADR-029-Ensure-Reproducible-and-Verifiable-Releases.md)
 
 ## ADR-030: Preserve Stable Public Interfaces
 
-**Status:** Proposed
+**Status:** Accepted
 
 Manifest semantics, CLI behavior, exit-code categories, documented behavior, and
 release artifact formats should be treated as architectural contracts.
@@ -364,7 +373,7 @@ Source: [ADR-030](adr/ADR-030-Preserve-Stable-Public-Interfaces.md)
 
 ## ADR-031: Adopt Semantic Versioning and Deliberate Compatibility
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap proposes Semantic Versioning so release numbers communicate expected
 compatibility impact: patches correct defects without public-interface changes,
@@ -376,7 +385,7 @@ Source: [ADR-031](adr/ADR-031-Adopt-Semantic-Versioning-and-Deliberate-Compatibi
 
 ## ADR-033: Prefer Composition Over Special Cases
 
-**Status:** Proposed
+**Status:** Accepted
 
 New capabilities should reuse and compose existing parsing, planning, backend,
 logging, diagnostic, and execution concepts wherever practical.  Feature-specific
@@ -387,7 +396,7 @@ Source: [ADR-033](adr/ADR-033-Prefer-Composition-Over-Special-Cases.md)
 
 ## ADR-034: Keep the Core Engine Small
 
-**Status:** Proposed
+**Status:** Accepted
 
 The core should remain focused on manifest interpretation, validation, execution
 planning, backend delegation, logging, and diagnostics.  Optional policy or
@@ -398,7 +407,7 @@ Source: [ADR-034](adr/ADR-034-Keep-the-Core-Engine-Small.md)
 
 ## ADR-035: Prefer Data Over Code
 
-**Status:** Proposed
+**Status:** Accepted
 
 User intent should be represented as declarative data rather than executable
 configuration whenever practical.  New needs should first be addressed through
@@ -410,7 +419,7 @@ Source: [ADR-035](adr/ADR-035-Prefer-Data-Over-Code.md)
 
 ## ADR-036: Make Architectural Decisions Explicit
 
-**Status:** Proposed
+**Status:** Accepted
 
 Significant architectural decisions should be recorded in ADRs that preserve the
 problem, context, selected approach, rationale, alternatives, and consequences.
@@ -421,7 +430,7 @@ Source: [ADR-036](adr/ADR-036-Make-Architectural-Decisions-Explicit.md)
 
 ## ADR-037: Establish a Deliberate Deprecation Policy
 
-**Status:** Proposed
+**Status:** Accepted
 
 Public behavior should normally be deprecated before removal, with the replacement,
 rationale, and migration path documented and removal generally deferred to a
@@ -432,7 +441,7 @@ Source: [ADR-037](adr/ADR-037-Establish-a-Deliberate-Deprecation-Policy.md)
 
 ## ADR-038: Introduce Experimental Features Deliberately
 
-**Status:** Proposed
+**Status:** Accepted
 
 Experimental capabilities may be used to evaluate ideas without creating stable
 compatibility commitments, but they must be explicitly identified, documented,
@@ -443,7 +452,7 @@ Source: [ADR-038](adr/ADR-038-Introduce-Experimental-Features-Deliberately.md)
 
 ## ADR-039: Test Observable Behavior Rather Than Implementation
 
-**Status:** Proposed
+**Status:** Accepted
 
 Automated tests should primarily protect observable contracts such as parsing
 results, CLI behavior, diagnostics, logging, exit categories, planning, and
@@ -455,7 +464,7 @@ Source: [ADR-039](adr/ADR-039-Test-Observable-Behavior-Rather-Than-Implementatio
 
 ## ADR-040: Prefer Deterministic Behavior
 
-**Status:** Proposed
+**Status:** Accepted
 
 Given equivalent inputs and operating conditions, Bootstrap should produce the
 same observable behavior whenever practical.  Unavoidable variability introduced
@@ -466,7 +475,7 @@ Source: [ADR-040](adr/ADR-040-Prefer-Deterministic-Behavior.md)
 
 ## ADR-041: Treat Documentation as Part of the Product
 
-**Status:** Proposed
+**Status:** Accepted
 
 Documentation should be treated as part of Bootstrap's product surface and kept
 reasonably current with user-visible behavior.  ADRs preserve architectural
@@ -477,7 +486,7 @@ Source: [ADR-041](adr/ADR-041-Treat-Documentation-as-Part-of-the-Product.md)
 
 ## ADR-042: Minimize the Trusted Computing Base
 
-**Status:** Proposed
+**Status:** Accepted
 
 Bootstrap should minimize the software that must be trusted in its critical
 runtime path and prefer existing platform capabilities where they provide the
@@ -488,7 +497,7 @@ Source: [ADR-042](adr/ADR-042-Minimize-the-Trusted-Computing-Base.md)
 
 ## ADR-043: Favor Stable Concepts Over Clever Implementations
 
-**Status:** Proposed
+**Status:** Accepted
 
 Competing designs should favor the solution that is easier to explain, document,
 inspect, maintain, and reconcile with existing architectural concepts rather than
@@ -499,7 +508,7 @@ Source: [ADR-043](adr/ADR-043-Favor-Stable-Concepts-Over-Clever-Implementations.
 
 ## ADR-044: Optimize for the Next Contributor
 
-**Status:** Proposed
+**Status:** Accepted
 
 Design choices should reduce the context and cognitive load required by the next
 person who must understand or change the project, including the original author
@@ -523,7 +532,7 @@ Source: [ADR-045](adr/ADR-045-documentation-first-source-code-commenting-standar
 
 ## ADR-046: Adopt Documentation-Driven, Test-Second Development
 
-**Status:** Proposed
+**Status:** Accepted
 
 Development should proceed from documented intent to the smallest correct
 implementation and then immediately to automated tests of the observable
@@ -558,7 +567,7 @@ Source: [ADR-048](adr/ADR-048-Execution-SHALL-Consume-Only-Resolved-Actions.md)
 
 ## ADR-049: Preflight All Manifests Before Execution
 
-**Status:** Proposed
+**Status:** Accepted
 
 A single invocation should accept one or more ordered manifest operands while
 preserving each record's original source path and line number.  Bootstrap should
@@ -656,3 +665,19 @@ separately maintained STRIDE threat model and its Mermaid diagrams; routine ADR
 relationship graph generation remains outside the documentation build.
 
 Source: [ADR-055](adr/ADR-055-Publish-Ephemeral-ADR-Navigation-as-the-Reference-Landing-Page.md)
+
+## ADR-056: Adopt shared coding standards
+
+**Status:** Accepted
+
+The repository adopts the complete verified `coding_standards@v1.0.9` snapshot
+beneath `doc/standards/`, with exact release provenance recorded in
+`.codingstandardrc`.  Applicable imported standards govern where relevant while
+accepted repository-specific ADRs and explicit local policy retain precedence for
+intentional refinements; presence in the snapshot does not itself imply
+applicability.  Duplicate live documentation-standard files are removed where
+present so shared documentation rules have one authoritative managed path, while
+historical ADR text remains unchanged.  Future standards upgrades replace the
+complete snapshot through normal review rather than local edits or automatic
+synchronization.  See
+[ADR-056](adr/ADR-056-adopt-shared-coding-standards.md).
