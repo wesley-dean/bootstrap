@@ -4,7 +4,7 @@ Date: 2026-07-04
 
 ## Status
 
-Proposed
+Accepted
 
 ## Intent and Scope
 
