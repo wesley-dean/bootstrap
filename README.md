@@ -391,9 +391,22 @@ are future work.
 
 See [`LICENSE`](LICENSE) for license information.
 
+## Dependabot maintenance
+
+The repository uses weekly GitHub Actions version updates and a seven-day
+cooldown.  The `actions-version-updates` group makes eligible major, minor,
+and patch releases part of the same routine version-update group, while
+security updates remain independent.  The existing major-update auto-merge
+exclusion remains unchanged, and high-privilege CI/release actions require
+focused validation.
+
+Existing Dependabot PRs are not automatically replaced by the change; GitHub
+security-update enablement and required CODEOWNER review remain separately
+enforced settings.  See [ADR-057](doc/adr/ADR-057-consolidate-github-actions-dependabot-updates.md).
+
 ## Shared Coding Standards
 
-This repository adopts the complete pinned `coding_standards@v2.1.0` snapshot under `doc/standards/`; `.codingstandardrc` records its verified release digest.  Applicable imported standards are governing requirements unless an accepted local ADR or explicit policy refines them.  Presence does not imply applicability, examples remain illustrative, imported standards are not edited locally, and upgrades are reviewed repository changes rather than automatic synchronization.
+This repository adopts the complete pinned `coding_standards@v3.2.0` snapshot under `doc/standards/`; `.codingstandardrc` records its verified release digest.  Applicable imported standards are governing requirements unless an accepted local ADR or explicit policy refines them.  Presence does not imply applicability, examples remain illustrative, imported standards are not edited locally, and upgrades are reviewed repository changes rather than automatic synchronization.
 
 Authoritative shared documentation standards used here:
 
