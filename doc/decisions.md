@@ -670,7 +670,7 @@ Source: [ADR-055](adr/ADR-055-Publish-Ephemeral-ADR-Navigation-as-the-Reference-
 
 **Status:** Accepted
 
-The repository adopts the complete verified `coding_standards@v2.1.0` snapshot
+The repository adopts the complete verified `coding_standards@v3.2.0` snapshot
 beneath `doc/standards/`, with exact release provenance recorded in
 `.codingstandardrc`.  Applicable imported standards govern where relevant while
 accepted repository-specific ADRs and explicit local policy retain precedence for
@@ -681,3 +681,18 @@ historical ADR text remains unchanged.  Future standards upgrades replace the
 complete snapshot through normal review rather than local edits or automatic
 synchronization.  See
 [ADR-056](adr/ADR-056-adopt-shared-coding-standards.md).
+
+## ADR-057: Consolidate Scheduled GitHub Actions Dependabot Updates
+
+**Status:** Accepted
+
+The repository retains its weekly GitHub Actions version-update schedule and
+seven-day cooldown, consolidating routine major, minor, and patch updates in
+one wildcard `actions-version-updates` group.  This applies only to version
+updates; security updates remain independent, and major-containing groups
+still require ordinary review rather than automatic merge.  Existing
+branch protections, required checks, code-owner review, and release-path
+testing boundaries remain separately authoritative.  Existing open Dependabot
+PRs are not retroactively closed; measured reduction in review workload
+remains an expected outcome rather than a guarantee.  See
+[ADR-057](adr/ADR-057-consolidate-github-actions-dependabot-updates.md).
