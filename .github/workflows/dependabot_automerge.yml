@@ -10,6 +10,7 @@ jobs:
   dependabot:
     permissions:
       pull-requests: write
+      contents: write
 
     runs-on: ubuntu-22.04
     if: github.event.pull_request.user.login == 'dependabot[bot]'
