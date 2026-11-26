@@ -696,3 +696,15 @@ testing boundaries remain separately authoritative.  Existing open Dependabot
 PRs are not retroactively closed; measured reduction in review workload
 remains an expected outcome rather than a guarantee.  See
 [ADR-057](adr/ADR-057-consolidate-github-actions-dependabot-updates.md).
+
+## ADR-058: Migrate Routine Dependency Updates to Central Renovate
+
+The repository explicitly enrolls in central Jenkins Renovate using root
+`renovate.json`, and scheduled Dependabot version updates are disabled.
+Independent Dependabot security updates and alerts, required CI, code-owner
+review, and immutable verified dependency pins remain protected. ADR-058
+partially supersedes ADR-057 solely for the routine update provider and its
+PR-limit rules; remaining supply-chain constraints continue to govern.
+Unverifiable SHA pins may temporarily use a version ref pending Renovate
+re-pinning, with that trust downgrade documented for review. See
+[ADR-058](adr/ADR-058-migrate-routine-dependency-updates-to-renovate.md).
